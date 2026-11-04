@@ -1,0 +1,7 @@
+bin/
+obj/
+App_Data/
+wwwroot/uploads/
+appsettings.*.json
+*.user
+*.suo
