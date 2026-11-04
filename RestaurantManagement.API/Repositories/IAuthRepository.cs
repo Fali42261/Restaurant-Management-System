@@ -9,4 +9,5 @@ public interface IAuthRepository{
  Task<bool> StoreRefreshTokenAsync(long id,string hash,DateTime expiry,CancellationToken ct);
  Task<long?> RotateRefreshTokenAsync(string oldHash,string newHash,DateTime expiry,CancellationToken ct);
  Task RevokeRefreshTokenAsync(string hash,CancellationToken ct);
+ Task UpdatePasswordHashAsync(long userId,string passwordHash,CancellationToken ct);
 }
