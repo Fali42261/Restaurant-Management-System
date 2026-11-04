@@ -50,6 +50,12 @@ public sealed class AuthRepository(ISqlConnectionFactory factory,IConfiguration 
   cmd.Parameters.Add("@old",SqlDbType.Char,64).Value=oldHash;cmd.Parameters.Add("@new",SqlDbType.Char,64).Value=newHash;cmd.Parameters.Add("@exp",SqlDbType.DateTime2).Value=expiry;
   var x=await cmd.ExecuteScalarAsync(ct);return x is null or DBNull?null:Convert.ToInt64(x);
  }
+ public async Task UpdatePasswordHashAsync(long userId,string passwordHash,CancellationToken ct){
+  await using var c=factory.CreateConnection();await c.OpenAsync(ct);
+  await using var cmd=new SqlCommand("UPDATE auth.Users SET PasswordHash=@p,UpdatedAtUtc=SYSUTCDATETIME() WHERE UserId=@id AND IsActive=1 AND IsDeleted=0",c){CommandTimeout=Timeout};
+  cmd.Parameters.Add("@p",SqlDbType.NVarChar,500).Value=passwordHash;cmd.Parameters.Add("@id",SqlDbType.BigInt).Value=userId;
+  await cmd.ExecuteNonQueryAsync(ct);
+ }
  public async Task RevokeRefreshTokenAsync(string hash,CancellationToken ct){
   await using var c=factory.CreateConnection();await c.OpenAsync(ct);
   await using var cmd=new SqlCommand("UPDATE auth.RefreshTokens SET RevokedAtUtc=SYSUTCDATETIME() WHERE TokenHash=@h AND RevokedAtUtc IS NULL",c){CommandTimeout=Timeout};
