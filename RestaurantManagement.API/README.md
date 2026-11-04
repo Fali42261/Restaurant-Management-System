@@ -44,6 +44,16 @@ dotnet run --project RestaurantManagement.API
 
 Swagger is at /swagger; health is at /health. Run only over HTTPS outside local development.
 
+## Automated tests
+
+Run the API authentication service tests without a SQL Server instance:
+
+```bash
+dotnet test RestaurantManagement.API.Tests/RestaurantManagement.API.Tests.csproj --configuration Release
+```
+
+The unit tests cover registration normalization and Staff-role assignment, password policy, duplicate email/mobile rejection, email/mobile login, invalid credentials, inactive accounts, refresh-token rotation and replay rejection, logout revocation, and the current-user response. The fake repository isolates service behavior; SQL Server schema and repository integration still require a configured database.
+
 ## Verification status
 
-Repository edits are committed, but this environment has not executed .NET restore/build, SQL migrations, endpoint integration tests, or a deployment. GitHub Actions is configured to build the API on DevApi pushes and pull requests. Production readiness still requires automated tests, rate limiting, operational secret management, and review of the existing database before migration.
+GitHub Actions runs the authentication unit tests and then builds the API on DevApi pushes and pull requests. SQL migrations, live SQL Server repository tests, endpoint integration tests, deployment, production secret management, and rate-limit load testing still require environment-level verification.
