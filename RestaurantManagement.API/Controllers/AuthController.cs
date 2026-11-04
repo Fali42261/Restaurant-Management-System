@@ -1,6 +1,6 @@
-using System.Security.Claims;using Microsoft.AspNetCore.Authorization;using Microsoft.AspNetCore.Mvc;using RestaurantManagement.API.Models;using RestaurantManagement.API.Services;
+using System.Security.Claims;using Microsoft.AspNetCore.Authorization;using Microsoft.AspNetCore.Mvc;using Microsoft.AspNetCore.RateLimiting;using RestaurantManagement.API.Models;using RestaurantManagement.API.Services;
 namespace RestaurantManagement.API.Controllers;
-[ApiController][Route("api/v1/auth")]
+[ApiController][Route("api/v1/auth")][EnableRateLimiting("auth")]
 public sealed class AuthController(IAuthService auth):ControllerBase{
  [AllowAnonymous,HttpPost("register")]public async Task<IActionResult> Register(RegisterRequest r,CancellationToken ct)=>StatusCode(201,ApiResponse<AuthResponse>.Ok(await auth.Register(r,ct),"Account created."));
  [AllowAnonymous,HttpPost("login")]public async Task<IActionResult> Login(LoginRequest r,CancellationToken ct)=>Ok(ApiResponse<AuthResponse>.Ok(await auth.Login(r,ct),"Login successful."));
