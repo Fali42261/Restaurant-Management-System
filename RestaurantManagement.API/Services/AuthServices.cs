@@ -64,7 +64,7 @@ public sealed class AuthService(IAuthRepository repo,IPasswordHasher<AuthUser> h
   if(verification==PasswordVerificationResult.Failed)throw new UnauthorizedAccessException("Invalid email/mobile or password.");
   if(verification==PasswordVerificationResult.SuccessRehashNeeded){
    u.PasswordHash=hasher.HashPassword(u,r.Password);
-   // Password hash upgrade is deferred to a dedicated credential update operation; never return credentials or log them.
+   await repo.UpdatePasswordHashAsync(u.UserId,u.PasswordHash,ct);
   }
   if(cfg.Auth.RequireEmailVerification&&!u.IsEmailVerified)throw new UnauthorizedAccessException("Account verification is required.");
   u.Roles=await repo.GetRolesAsync(u.UserId,ct);
