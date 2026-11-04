@@ -2,7 +2,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using RestaurantManagement.API.Configuration;
 using RestaurantManagement.API.Middleware;
 using RestaurantManagement.API.Models;
