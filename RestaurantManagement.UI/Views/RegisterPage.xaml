@@ -32,7 +32,7 @@
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" x:Name="PasswordEyeButton" Text="👁 Show" Clicked="TogglePasswordVisibility" FontSize="14" BackgroundColor="Transparent" TextColor="#1F6B57" FontSize="12" Padding="10,0" /></Grid>
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" x:Name="PasswordEyeButton" Text="👁 Show" Clicked="TogglePasswordVisibility" FontSize="14" BackgroundColor="Transparent" TextColor="#1F6B57" Padding="10,0" /></Grid>
                                 
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">

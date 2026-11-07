@@ -220,7 +220,6 @@
                                         </Grid>
                                     </Grid>
                                 </Grid>
-                                </Grid>
                                 <Grid ColumnDefinitions="42,*,*,*,*,*,*,*" ColumnSpacing="0">
                                     <Label Grid.Column="1" Text="Mon" FontSize="16" TextColor="#929C96" />
                                     <Label Grid.Column="2" Text="Tue" FontSize="16" TextColor="#929C96" />
