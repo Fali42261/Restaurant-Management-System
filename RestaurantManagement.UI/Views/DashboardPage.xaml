@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RestaurantManagement.UI.Views.DashboardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Dashboard"
+    BackgroundColor="#F4F7FB">
+
+    <Grid RowDefinitions="Auto,*">
+        <Grid Padding="22,18"
+              ColumnDefinitions="*,Auto"
+              BackgroundColor="White">
+            <VerticalStackLayout Spacing="3">
+                <Label Text="Restaurant Management"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="#173B35" />
+                <Label Text="Overview of your restaurant"
+                       FontSize="12"
+                       TextColor="#788780" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1"
+                    Text="Logout"
+                    Command="{Binding LogoutCommand}"
+                    BackgroundColor="#FDECEC"
+                    TextColor="#B42318"
+                    CornerRadius="10"
+                    Padding="16,8"
+                    FontAttributes="Bold"
+                    VerticalOptions="Center" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="22" Spacing="22">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Good evening!"
+                           FontSize="27"
+                           FontAttributes="Bold"
+                           TextColor="#172B27" />
+                    <Label Text="Here is what's happening today."
+                           FontSize="14"
+                           TextColor="#718078" />
+                </VerticalStackLayout>
+
+                <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="SpaceBetween">
+                    <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1"
+                            StrokeShape="RoundRectangle 18" Padding="17" Margin="0,0,8,12"
+                            WidthRequest="155">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Today's Sales" FontSize="12" TextColor="#718078" />
+                            <Label Text="₹24,850" FontSize="23" FontAttributes="Bold" TextColor="#173B35" />
+                            <Label Text="+12.5% from yesterday" FontSize="10" TextColor="#16835D" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1"
+                            StrokeShape="RoundRectangle 18" Padding="17" Margin="0,0,0,12"
+                            WidthRequest="155">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Total Orders" FontSize="12" TextColor="#718078" />
+                            <Label Text="128" FontSize="23" FontAttributes="Bold" TextColor="#173B35" />
+                            <Label Text="18 pending" FontSize="10" TextColor="#C17A17" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1"
+                            StrokeShape="RoundRectangle 18" Padding="17" Margin="0,0,8,0"
+                            WidthRequest="155">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Products" FontSize="12" TextColor="#718078" />
+                            <Label Text="86" FontSize="23" FontAttributes="Bold" TextColor="#173B35" />
+                            <Label Text="4 low in stock" FontSize="10" TextColor="#C17A17" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1"
+                            StrokeShape="RoundRectangle 18" Padding="17"
+                            WidthRequest="155">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Active Staff" FontSize="12" TextColor="#718078" />
+                            <Label Text="12" FontSize="23" FontAttributes="Bold" TextColor="#173B35" />
+                            <Label Text="On duty today" FontSize="10" TextColor="#16835D" />
+                        </VerticalStackLayout>
+                    </Border>
+                </FlexLayout>
+
+                <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1"
+                        StrokeShape="RoundRectangle 18" Padding="18">
+                    <VerticalStackLayout Spacing="15">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Recent Orders" FontSize="18" FontAttributes="Bold" TextColor="#172B27" />
+                            <Label Grid.Column="1" Text="View all" FontSize="12" FontAttributes="Bold"
+                                   TextColor="#1F6B57" VerticalTextAlignment="Center" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+                            <Label Text="#ORD-1048" FontAttributes="Bold" TextColor="#344A43" />
+                            <Label Grid.Column="1" Text="₹1,250" FontAttributes="Bold" TextColor="#173B35" />
+                            <Label Grid.Row="1" Text="Table 04 • 7:42 PM" FontSize="12" TextColor="#87958E" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="Completed" FontSize="11" TextColor="#16835D" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#EDF1EF" />
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+                            <Label Text="#ORD-1047" FontAttributes="Bold" TextColor="#344A43" />
+                            <Label Grid.Column="1" Text="₹860" FontAttributes="Bold" TextColor="#173B35" />
+                            <Label Grid.Row="1" Text="Table 02 • 7:35 PM" FontSize="12" TextColor="#87958E" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="Preparing" FontSize="11" TextColor="#C17A17" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="#EDF1EF" />
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="4">
+                            <Label Text="#ORD-1046" FontAttributes="Bold" TextColor="#344A43" />
+                            <Label Grid.Column="1" Text="₹2,100" FontAttributes="Bold" TextColor="#173B35" />
+                            <Label Grid.Row="1" Text="Takeaway • 7:18 PM" FontSize="12" TextColor="#87958E" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="Completed" FontSize="11" TextColor="#16835D" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="UI preview • Sample dashboard data"
+                       FontSize="11"
+                       TextColor="#91A099"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
