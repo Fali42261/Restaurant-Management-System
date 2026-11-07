@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using RestaurantManagement.UI.Views;
 
 namespace RestaurantManagement.UI.ViewModels;
 
@@ -11,9 +12,9 @@ public sealed class LoginViewModel : BaseViewModel
     public LoginViewModel()
     {
         Title = "Sign in";
-        SignInCommand = new Command(SignIn);
+        SignInCommand = new Command(async () => await SignInAsync());
         GoToRegisterCommand = new Command(async () =>
-            await Shell.Current.GoToAsync(nameof(Views.RegisterPage)));
+            await Shell.Current.GoToAsync(nameof(RegisterPage)));
     }
 
     public string EmailOrMobile
@@ -43,7 +44,7 @@ public sealed class LoginViewModel : BaseViewModel
     public ICommand SignInCommand { get; }
     public ICommand GoToRegisterCommand { get; }
 
-    private void SignIn()
+    private async Task SignInAsync()
     {
         if (string.IsNullOrWhiteSpace(EmailOrMobile))
         {
@@ -57,6 +58,9 @@ public sealed class LoginViewModel : BaseViewModel
             return;
         }
 
-        StatusMessage = "The sign-in screen is ready. Connect the authentication service to enable login.";
+        // UI phase only: accept non-empty demo credentials and open the dashboard.
+        // Real authentication will be connected in the API/database phase.
+        StatusMessage = string.Empty;
+        await Shell.Current.GoToAsync(nameof(DashboardPage));
     }
 }
