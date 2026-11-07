@@ -31,15 +31,15 @@
                 <Setter Property="BackgroundColor" Value="White" />
                 <Setter Property="TextColor" Value="#65716A" />
                 <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="FontSize" Value="10" />
-                <Setter Property="Padding" Value="12,6" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Padding" Value="12,8" />
             </Style>
             <Style x:Key="TinyPeriodButtonStyle" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="#F4F6F4" />
                 <Setter Property="TextColor" Value="#66736B" />
                 <Setter Property="CornerRadius" Value="5" />
-                <Setter Property="FontSize" Value="8" />
-                <Setter Property="Padding" Value="7,3" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="8,5" />
                 <Setter Property="HeightRequest" Value="24" />
             </Style>
         </ResourceDictionary>
@@ -51,9 +51,9 @@
               BackgroundColor="White" Padding="14,20,12,14">
             <VerticalStackLayout Spacing="5" Padding="8,0,0,22">
                 <Label Text="SwapDigit" FontSize="27" FontAttributes="Bold" TextColor="#56A83B" />
-                <Label Text="RESTAURANT MANAGEMENT" FontSize="8" CharacterSpacing="1.2"
+                <Label Text="RESTAURANT MANAGEMENT" FontSize="12" CharacterSpacing="1.2"
                        TextColor="#9AA49E" />
-                <Label Text="Ananda Food" FontSize="12" FontAttributes="Bold"
+                <Label Text="Ananda Food" FontSize="14" FontAttributes="Bold"
                        TextColor="#34433A" Margin="0,7,0,0" />
             </VerticalStackLayout>
 
@@ -84,14 +84,14 @@
             <Border Grid.Row="2" BackgroundColor="#67B83C" StrokeThickness="0"
                     StrokeShape="RoundRectangle 16" Padding="13">
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="SUPPORT" FontSize="9" TextColor="#E8F7DF" />
+                    <Label Text="SUPPORT" FontSize="13" TextColor="#E8F7DF" />
                     <Label Text="Do you need help?" FontSize="19" FontAttributes="Bold"
                            TextColor="White" />
-                    <Label Text="Contact support for assistance" FontSize="10"
+                    <Label Text="Contact support for assistance" FontSize="13"
                            TextColor="#F2FBEA" />
                     <Button Text="Get support" Command="{Binding SupportCommand}"
                             BackgroundColor="White" TextColor="#438E2B" CornerRadius="9"
-                            FontSize="11" HeightRequest="34" />
+                            FontSize="14" HeightRequest="34" />
                 </VerticalStackLayout>
             </Border>
         </Grid>
@@ -101,12 +101,12 @@
             <Grid Grid.Row="0" BackgroundColor="White" Padding="16,7"
                   ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="14">
                 <Label Text="Welcome back, Here's what's happening today."
-                       FontSize="11" TextColor="#7A8580" VerticalTextAlignment="Center" />
+                       FontSize="14" TextColor="#7A8580" VerticalTextAlignment="Center" />
                 <Border x:Name="SearchPanel" Grid.Column="1" Stroke="#E6EAE8" StrokeThickness="1"
                         StrokeShape="RoundRectangle 10" Padding="9,0" WidthRequest="190"
                         VerticalOptions="Center">
                     <Entry Placeholder="⌕  Search" Text="{Binding SearchText}"
-                           FontSize="12" HeightRequest="36" />
+                           FontSize="14" HeightRequest="36" />
                 </Border>
                 <Button Grid.Column="2" Text="♧" Command="{Binding NotificationCommand}"
                         BackgroundColor="Transparent" TextColor="#53635A" FontSize="18"
@@ -119,7 +119,7 @@
                             <Label Text="A" TextColor="#397D2A" FontAttributes="Bold"
                                    HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
                         </Border>
-                        <Label Text="Arthur" FontSize="11" FontAttributes="Bold"
+                        <Label Text="Arthur" FontSize="14" FontAttributes="Bold"
                                TextColor="#34433A" VerticalTextAlignment="Center" />
                     </HorizontalStackLayout>
                 </Border>
@@ -149,7 +149,7 @@
                         <VerticalStackLayout Spacing="10">
                             <Label Text="{Binding SectionTitle}" FontSize="22" FontAttributes="Bold" TextColor="#26332D" />
                             <Label Text="{Binding SectionDescription}" FontSize="13" TextColor="#7C8780" />
-                            <Label Text="This section is ready for its UI module. Sample navigation is active; API and database integration will follow in the next phase." FontSize="12" TextColor="#7C8780" />
+                            <Label Text="This section is ready for its UI module. Sample navigation is active; API and database integration will follow in the next phase." FontSize="14" TextColor="#7C8780" />
                         </VerticalStackLayout>
                     </Border>
 
@@ -157,34 +157,34 @@
                     <Grid x:Name="StatsGrid" IsVisible="{Binding IsDashboardSection}" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="9" RowSpacing="9">
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
-                                <Label Text="TODAY'S REVENUE" FontSize="9" CharacterSpacing="0.8" TextColor="#7C8780" />
+                                <Label Text="TODAY'S REVENUE" FontSize="13" CharacterSpacing="0.8" TextColor="#7C8780" />
                                 <Label Text="₹12,304" FontSize="24" TextColor="#202923" />
-                                <Label Text="↗  3.5%  than last day" FontSize="10" TextColor="#368C55" />
+                                <Label Text="↗  3.5%  than last day" FontSize="13" TextColor="#368C55" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
-                                <Label Text="ACTIVE ORDERS" FontSize="9" CharacterSpacing="0.8" TextColor="#7C8780" />
+                                <Label Text="ACTIVE ORDERS" FontSize="13" CharacterSpacing="0.8" TextColor="#7C8780" />
                                 <Label Text="24" FontSize="24" TextColor="#202923" />
                                 <HorizontalStackLayout Spacing="7">
-                                    <Label Text="16 Online" FontSize="9" TextColor="#368C55" />
-                                    <Label Text="7 Dine-in" FontSize="9" TextColor="#7B8580" />
-                                    <Label Text="1 Takeaway" FontSize="9" TextColor="#7B8580" />
+                                    <Label Text="16 Online" FontSize="13" TextColor="#368C55" />
+                                    <Label Text="7 Dine-in" FontSize="13" TextColor="#7B8580" />
+                                    <Label Text="1 Takeaway" FontSize="13" TextColor="#7B8580" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="2" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
-                                <Label Text="TABLES OCCUPIED" FontSize="9" CharacterSpacing="0.8" TextColor="#7C8780" />
+                                <Label Text="TABLES OCCUPIED" FontSize="13" CharacterSpacing="0.8" TextColor="#7C8780" />
                                 <Label Text="4/12" FontSize="24" TextColor="#202923" />
-                                <Label Text="8 available" FontSize="10" TextColor="#7B8580" />
+                                <Label Text="8 available" FontSize="13" TextColor="#7B8580" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="3" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
-                                <Label Text="RESERVATIONS TODAY" FontSize="9" CharacterSpacing="0.8" TextColor="#7C8780" />
+                                <Label Text="RESERVATIONS TODAY" FontSize="13" CharacterSpacing="0.8" TextColor="#7C8780" />
                                 <Label Text="2" FontSize="24" TextColor="#202923" />
-                                <Label Text="12 upcoming guests" FontSize="10" TextColor="#7B8580" />
+                                <Label Text="12 upcoming guests" FontSize="13" TextColor="#7B8580" />
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
@@ -194,15 +194,15 @@
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="TODAY'S REVENUE" FontSize="11" CharacterSpacing="0.8" TextColor="#536159" FontAttributes="Bold" />
+                                    <Label Text="TODAY'S REVENUE" FontSize="14" CharacterSpacing="0.8" TextColor="#536159" FontAttributes="Bold" />
                                 </Grid>
                                 <Grid ColumnDefinitions="30,*" ColumnSpacing="8" HeightRequest="180">
                                     <VerticalStackLayout Grid.Column="0" Spacing="0" VerticalOptions="Fill">
-                                        <Label Text="80K" FontSize="8" TextColor="#9AA39E" />
-                                        <Label Text="60K" FontSize="8" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
-                                        <Label Text="40K" FontSize="8" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
-                                        <Label Text="20K" FontSize="8" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
-                                        <Label Text="0" FontSize="8" TextColor="#9AA39E" VerticalOptions="End" />
+                                        <Label Text="80K" FontSize="12" TextColor="#9AA39E" />
+                                        <Label Text="60K" FontSize="12" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
+                                        <Label Text="40K" FontSize="12" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
+                                        <Label Text="20K" FontSize="12" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
+                                        <Label Text="0" FontSize="12" TextColor="#9AA39E" VerticalOptions="End" />
                                     </VerticalStackLayout>
                                     <Grid Grid.Column="1" RowDefinitions="*,*,*,*,*" RowSpacing="0" HeightRequest="180">
                                         <BoxView Grid.Row="0" HeightRequest="1" Color="#EDF0EE" VerticalOptions="End" />
@@ -221,13 +221,13 @@
                                     </Grid>
                                 </Grid>
                                 <Grid ColumnDefinitions="*,*,*,*,*,*,*">
-                                    <Label Text="Mon" FontSize="8" TextColor="#929C96" />
-                                    <Label Grid.Column="1" Text="Tue" FontSize="8" TextColor="#929C96" />
-                                    <Label Grid.Column="2" Text="Wed" FontSize="8" TextColor="#929C96" />
-                                    <Label Grid.Column="3" Text="Thu" FontSize="8" TextColor="#929C96" />
-                                    <Label Grid.Column="4" Text="Fri" FontSize="8" TextColor="#929C96" />
-                                    <Label Grid.Column="5" Text="Sat" FontSize="8" TextColor="#929C96" />
-                                    <Label Grid.Column="6" Text="Sun" FontSize="8" TextColor="#929C96" HorizontalTextAlignment="End" />
+                                    <Label Text="Mon" FontSize="12" TextColor="#929C96" />
+                                    <Label Grid.Column="1" Text="Tue" FontSize="12" TextColor="#929C96" />
+                                    <Label Grid.Column="2" Text="Wed" FontSize="12" TextColor="#929C96" />
+                                    <Label Grid.Column="3" Text="Thu" FontSize="12" TextColor="#929C96" />
+                                    <Label Grid.Column="4" Text="Fri" FontSize="12" TextColor="#929C96" />
+                                    <Label Grid.Column="5" Text="Sat" FontSize="12" TextColor="#929C96" />
+                                    <Label Grid.Column="6" Text="Sun" FontSize="12" TextColor="#929C96" HorizontalTextAlignment="End" />
                                 </Grid>
                             </VerticalStackLayout>
                         </Border>
@@ -235,54 +235,54 @@
                         <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="ORDERS" FontSize="11" CharacterSpacing="0.8"
+                                    <Label Text="ORDERS" FontSize="14" CharacterSpacing="0.8"
                                            TextColor="#536159" FontAttributes="Bold" />
-                                    <Label Grid.Column="1" Text="1D   1W   1M   6M" FontSize="8" TextColor="#929C96" />
+                                    <Label Grid.Column="1" Text="1D   1W   1M   6M" FontSize="12" TextColor="#929C96" />
                                 </Grid>
                                 <Label Text="24" FontSize="29" TextColor="#202923" />
                                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
                                     <VerticalStackLayout Spacing="4">
-                                        <Label Text="Delivery" FontSize="9" TextColor="#65716A" />
-                                        <Label Text="16  ━━━━━" FontSize="10" TextColor="#E77D28" />
-                                        <Label Text="65%" FontSize="8" TextColor="#929C96" />
+                                        <Label Text="Delivery" FontSize="13" TextColor="#65716A" />
+                                        <Label Text="16  ━━━━━" FontSize="13" TextColor="#E77D28" />
+                                        <Label Text="65%" FontSize="12" TextColor="#929C96" />
                                     </VerticalStackLayout>
                                     <VerticalStackLayout Grid.Column="1" Spacing="4">
-                                        <Label Text="Dine-in" FontSize="9" TextColor="#65716A" />
-                                        <Label Text="7  ━━━" FontSize="10" TextColor="#D9B52E" />
-                                        <Label Text="30%" FontSize="8" TextColor="#929C96" />
+                                        <Label Text="Dine-in" FontSize="13" TextColor="#65716A" />
+                                        <Label Text="7  ━━━" FontSize="13" TextColor="#D9B52E" />
+                                        <Label Text="30%" FontSize="12" TextColor="#929C96" />
                                     </VerticalStackLayout>
                                     <VerticalStackLayout Grid.Column="2" Spacing="4">
-                                        <Label Text="Takeaway" FontSize="9" TextColor="#65716A" />
-                                        <Label Text="1  ━" FontSize="10" TextColor="#4AA65A" />
-                                        <Label Text="5%" FontSize="8" TextColor="#929C96" />
+                                        <Label Text="Takeaway" FontSize="13" TextColor="#65716A" />
+                                        <Label Text="1  ━" FontSize="13" TextColor="#4AA65A" />
+                                        <Label Text="5%" FontSize="12" TextColor="#929C96" />
                                     </VerticalStackLayout>
                                 </Grid>
                                 <BoxView HeightRequest="1" Color="#EDF0EE" />
-                                <Label Text="RECENT ORDERS" FontSize="10" CharacterSpacing="0.7"
+                                <Label Text="RECENT ORDERS" FontSize="13" CharacterSpacing="0.7"
                                        TextColor="#536159" FontAttributes="Bold" />
                                 <Grid ColumnDefinitions="1.2*,*,*,Auto" ColumnSpacing="5">
-                                    <Label Text="Order ID" FontSize="8" TextColor="#9AA39E" />
-                                    <Label Grid.Column="1" Text="Qty" FontSize="8" TextColor="#9AA39E" />
-                                    <Label Grid.Column="2" Text="Type" FontSize="8" TextColor="#9AA39E" />
-                                    <Label Grid.Column="3" Text="Price" FontSize="8" TextColor="#9AA39E" />
+                                    <Label Text="Order ID" FontSize="12" TextColor="#9AA39E" />
+                                    <Label Grid.Column="1" Text="Qty" FontSize="12" TextColor="#9AA39E" />
+                                    <Label Grid.Column="2" Text="Type" FontSize="12" TextColor="#9AA39E" />
+                                    <Label Grid.Column="3" Text="Price" FontSize="12" TextColor="#9AA39E" />
                                 </Grid>
                                 <Grid ColumnDefinitions="1.2*,*,*,Auto" ColumnSpacing="5">
-                                    <Label Text="◉ OE 69820" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="1" Text="3 items" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="2" Text="Delivery" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="3" Text="$56.5" FontSize="9" TextColor="#45534A" />
+                                    <Label Text="◉ OE 69820" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="1" Text="3 items" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="2" Text="Delivery" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="3" Text="$56.5" FontSize="13" TextColor="#45534A" />
                                 </Grid>
                                 <Grid ColumnDefinitions="1.2*,*,*,Auto" ColumnSpacing="5">
-                                    <Label Text="◉ OE 69819" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="1" Text="2 items" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="2" Text="Dine-in" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="3" Text="$38.5" FontSize="9" TextColor="#45534A" />
+                                    <Label Text="◉ OE 69819" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="1" Text="2 items" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="2" Text="Dine-in" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="3" Text="$38.5" FontSize="13" TextColor="#45534A" />
                                 </Grid>
                                 <Grid ColumnDefinitions="1.2*,*,*,Auto" ColumnSpacing="5">
-                                    <Label Text="◉ OE 69818" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="1" Text="2 items" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="2" Text="Takeaway" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="3" Text="$65" FontSize="9" TextColor="#45534A" />
+                                    <Label Text="◉ OE 69818" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="1" Text="2 items" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="2" Text="Takeaway" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="3" Text="$65" FontSize="13" TextColor="#45534A" />
                                 </Grid>
                             </VerticalStackLayout>
                         </Border>
@@ -293,36 +293,36 @@
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="TODAY'S RESERVATIONS" FontSize="11" CharacterSpacing="0.7"
+                                    <Label Text="TODAY'S RESERVATIONS" FontSize="14" CharacterSpacing="0.7"
                                            TextColor="#536159" FontAttributes="Bold" />
                                     <Button Grid.Column="1" Text="+ Add Reservation"
                                             Command="{Binding AddReservationCommand}"
                                             BackgroundColor="#202923" TextColor="White"
-                                            CornerRadius="8" FontSize="9" Padding="10,6" />
+                                            CornerRadius="8" FontSize="13" Padding="10,6" />
                                 </Grid>
                                 <Grid ColumnDefinitions="1.2*,*,*,Auto">
-                                    <Label Text="Booking ID" FontSize="8" TextColor="#9AA39E" />
-                                    <Label Grid.Column="1" Text="Date &amp; time" FontSize="8" TextColor="#9AA39E" />
-                                    <Label Grid.Column="2" Text="Table" FontSize="8" TextColor="#9AA39E" />
-                                    <Label Grid.Column="3" Text="Status" FontSize="8" TextColor="#9AA39E" />
+                                    <Label Text="Booking ID" FontSize="12" TextColor="#9AA39E" />
+                                    <Label Grid.Column="1" Text="Date &amp; time" FontSize="12" TextColor="#9AA39E" />
+                                    <Label Grid.Column="2" Text="Table" FontSize="12" TextColor="#9AA39E" />
+                                    <Label Grid.Column="3" Text="Status" FontSize="12" TextColor="#9AA39E" />
                                 </Grid>
                                 <Grid ColumnDefinitions="1.2*,*,*,Auto" ColumnSpacing="5">
-                                    <Label Text="● Michael Chen" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="1" Text="Feb 8, 12:30" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="2" Text="Table 5" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="3" Text="Confirmed" FontSize="8" TextColor="#397D9C" />
+                                    <Label Text="● Michael Chen" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="1" Text="Feb 8, 12:30" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="2" Text="Table 5" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="3" Text="Confirmed" FontSize="12" TextColor="#397D9C" />
                                 </Grid>
                                 <Grid ColumnDefinitions="1.2*,*,*,Auto" ColumnSpacing="5">
-                                    <Label Text="● Olivia Martin" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="1" Text="Feb 8, 1:00" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="2" Text="—" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="3" Text="Pending" FontSize="8" TextColor="#D48B28" />
+                                    <Label Text="● Olivia Martin" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="1" Text="Feb 8, 1:00" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="2" Text="—" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="3" Text="Pending" FontSize="12" TextColor="#D48B28" />
                                 </Grid>
                                 <Grid ColumnDefinitions="1.2*,*,*,Auto" ColumnSpacing="5">
-                                    <Label Text="● Daniel Smith" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="1" Text="Feb 8, 1:30" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="2" Text="Table 5" FontSize="9" TextColor="#45534A" />
-                                    <Label Grid.Column="3" Text="Completed" FontSize="8" TextColor="#7C8780" />
+                                    <Label Text="● Daniel Smith" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="1" Text="Feb 8, 1:30" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="2" Text="Table 5" FontSize="13" TextColor="#45534A" />
+                                    <Label Grid.Column="3" Text="Completed" FontSize="12" TextColor="#7C8780" />
                                 </Grid>
                             </VerticalStackLayout>
                         </Border>
@@ -330,44 +330,44 @@
                         <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="POPULAR ITEMS" FontSize="11" CharacterSpacing="0.7"
+                                    <Label Text="POPULAR ITEMS" FontSize="14" CharacterSpacing="0.7"
                                            TextColor="#536159" FontAttributes="Bold" />
-                                    <Label Grid.Column="1" Text="1D   1W" FontSize="8" TextColor="#929C96" />
+                                    <Label Grid.Column="1" Text="1D   1W" FontSize="12" TextColor="#929C96" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,Auto">
                                     <VerticalStackLayout Spacing="3">
-                                        <Label Text="🍣  Sushi and Sashimi" FontSize="10" TextColor="#45534A" />
-                                        <Label Text="       87 orders" FontSize="8" TextColor="#9AA39E" />
+                                        <Label Text="🍣  Sushi and Sashimi" FontSize="13" TextColor="#45534A" />
+                                        <Label Text="       87 orders" FontSize="12" TextColor="#9AA39E" />
                                     </VerticalStackLayout>
-                                    <Label Grid.Column="1" Text="↗ 3.5%" FontSize="9" TextColor="#368C55" />
+                                    <Label Grid.Column="1" Text="↗ 3.5%" FontSize="13" TextColor="#368C55" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,Auto">
                                     <VerticalStackLayout Spacing="3">
-                                        <Label Text="🐟  Grilled Salmon" FontSize="10" TextColor="#45534A" />
-                                        <Label Text="       65 orders" FontSize="8" TextColor="#9AA39E" />
+                                        <Label Text="🐟  Grilled Salmon" FontSize="13" TextColor="#45534A" />
+                                        <Label Text="       65 orders" FontSize="12" TextColor="#9AA39E" />
                                     </VerticalStackLayout>
-                                    <Label Grid.Column="1" Text="↗ 1.5%" FontSize="9" TextColor="#368C55" />
+                                    <Label Grid.Column="1" Text="↗ 1.5%" FontSize="13" TextColor="#368C55" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,Auto">
                                     <VerticalStackLayout Spacing="3">
-                                        <Label Text="🥗  Caesar Salad" FontSize="10" TextColor="#45534A" />
-                                        <Label Text="       42 orders" FontSize="8" TextColor="#9AA39E" />
+                                        <Label Text="🥗  Caesar Salad" FontSize="13" TextColor="#45534A" />
+                                        <Label Text="       42 orders" FontSize="12" TextColor="#9AA39E" />
                                     </VerticalStackLayout>
-                                    <Label Grid.Column="1" Text="↘ 0.5%" FontSize="9" TextColor="#C75A50" />
+                                    <Label Grid.Column="1" Text="↘ 0.5%" FontSize="13" TextColor="#C75A50" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,Auto">
                                     <VerticalStackLayout Spacing="3">
-                                        <Label Text="🍰  Tiramisu" FontSize="10" TextColor="#45534A" />
-                                        <Label Text="       32 orders" FontSize="8" TextColor="#9AA39E" />
+                                        <Label Text="🍰  Tiramisu" FontSize="13" TextColor="#45534A" />
+                                        <Label Text="       32 orders" FontSize="12" TextColor="#9AA39E" />
                                     </VerticalStackLayout>
-                                    <Label Grid.Column="1" Text="↗ 0.3%" FontSize="9" TextColor="#368C55" />
+                                    <Label Grid.Column="1" Text="↗ 0.3%" FontSize="13" TextColor="#368C55" />
                                 </Grid>
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
 
                     <Label Text="UI preview • Sample dashboard data only"
-                           FontSize="9" TextColor="#A0AAA4" HorizontalTextAlignment="Center" />
+                           FontSize="13" TextColor="#A0AAA4" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
