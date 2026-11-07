@@ -19,7 +19,7 @@
                             StrokeShape="RoundRectangle 20"
                             Padding="15"
                             HorizontalOptions="Center">
-                        <Label Text="RM"
+                        <Label Text="SWD"
                                TextColor="White"
                                FontSize="25"
                                FontAttributes="Bold"
@@ -73,10 +73,7 @@
                                    FontSize="13"
                                    FontAttributes="Bold"
                                    TextColor="#344A43" />
-                            <Border Stroke="#DCE5E0"
-                                    StrokeThickness="1"
-                                    StrokeShape="RoundRectangle 12"
-                                    Padding="12,2">
+                            <Border StrokeThickness="0" Padding="0">
                                 <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" Text="Show" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" TextColor="#1F6B57" Padding="8,0" /></Grid>
                             </Border>
                         </VerticalStackLayout>
