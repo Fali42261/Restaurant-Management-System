@@ -50,9 +50,17 @@
         <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*,Auto"
               BackgroundColor="White" Padding="14,20,12,14">
             <VerticalStackLayout Spacing="5" Padding="8,0,0,22">
-                <Label Text="Abam" FontSize="29" FontAttributes="Bold" TextColor="#56A83B" />
-                <Label Text="RESTAURANT SUITE" FontSize="9" CharacterSpacing="1.6"
+                <Label Text="SwapDigit" FontSize="27" FontAttributes="Bold" TextColor="#56A83B" />
+                <Label Text="RESTAURANT MANAGEMENT" FontSize="8" CharacterSpacing="1.2"
                        TextColor="#9AA49E" />
+                <Picker Title="Select Restaurant"
+                        ItemsSource="{Binding Restaurants}"
+                        SelectedItem="{Binding SelectedRestaurant}"
+                        FontSize="11"
+                        TextColor="#34433A"
+                        BackgroundColor="#F5F7F5"
+                        HeightRequest="42"
+                        Margin="0,7,0,0" />
             </VerticalStackLayout>
 
             <VerticalStackLayout Grid.Row="1" Spacing="5">
