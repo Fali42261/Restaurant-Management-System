@@ -127,21 +127,7 @@
 
             <ScrollView Grid.Row="1">
                 <VerticalStackLayout Padding="16" Spacing="13">
-                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
-                        <Label Text="{Binding SectionTitle}" FontSize="23" FontAttributes="Bold"
-                               TextColor="#222D27" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="{Binding SelectedPeriod}"
-                                Command="{Binding PeriodCommand}" BackgroundColor="White"
-                                TextColor="#536159" BorderColor="#E6EAE8" BorderWidth="1"
-                                CornerRadius="9" FontSize="10" Padding="12,7" />
-                        <Button Grid.Column="2" Text="⇧  Export" Command="{Binding ExportCommand}"
-                                BackgroundColor="White" TextColor="#536159" BorderColor="#E6EAE8"
-                                BorderWidth="1" CornerRadius="9" FontSize="10" Padding="12,7" />
-                        <Button Grid.Column="3" Text="Generate Insights"
-                                Command="{Binding InsightsCommand}" BackgroundColor="#202923"
-                                TextColor="White" CornerRadius="9" FontSize="10"
-                                FontAttributes="Bold" Padding="12,7" />
-                    </Grid>
+                    <Label Text="{Binding SectionTitle}" FontSize="23" FontAttributes="Bold" TextColor="#222D27" />
 
                     <ScrollView x:Name="MobileNavigation" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
                         <HorizontalStackLayout Spacing="6" Padding="0,2">
@@ -158,7 +144,7 @@
                         </HorizontalStackLayout>
                     </ScrollView>
 
-                    <Label Text="{Binding FeedbackMessage}" FontSize="11" TextColor="#438E2B" IsVisible="{Binding HasFeedback}" />
+                    
                     <Border IsVisible="{Binding IsOtherSection}" BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="22">
                         <VerticalStackLayout Spacing="10">
                             <Label Text="{Binding SectionTitle}" FontSize="22" FontAttributes="Bold" TextColor="#26332D" />
@@ -208,45 +194,29 @@
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="REVENUE OVERVIEW" FontSize="11" CharacterSpacing="0.8"
-                                           TextColor="#536159" FontAttributes="Bold" />
-                                    <HorizontalStackLayout Grid.Column="1" Spacing="4">
-                                        <Button Text="1D" Command="{Binding ChartPeriodCommand}" CommandParameter="1D"
-                                                Style="{StaticResource TinyPeriodButtonStyle}" />
-                                        <Button Text="1W" Command="{Binding ChartPeriodCommand}" CommandParameter="1W"
-                                                Style="{StaticResource TinyPeriodButtonStyle}" />
-                                        <Button Text="1M" Command="{Binding ChartPeriodCommand}" CommandParameter="1M"
-                                                Style="{StaticResource TinyPeriodButtonStyle}" />
-                                        <Button Text="6M" Command="{Binding ChartPeriodCommand}" CommandParameter="6M"
-                                                Style="{StaticResource TinyPeriodButtonStyle}" />
-                                    </HorizontalStackLayout>
+                                    <Label Text="TODAY'S REVENUE" FontSize="11" CharacterSpacing="0.8" TextColor="#536159" FontAttributes="Bold" />
                                 </Grid>
-                                <Grid ColumnDefinitions="28,*" RowDefinitions="*,*,*,*,*" HeightRequest="155">
-                                    <VerticalStackLayout Grid.Column="0" Grid.RowSpan="5" VerticalOptions="Fill">
+                                <Grid ColumnDefinitions="30,*" ColumnSpacing="8" HeightRequest="180">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="0" VerticalOptions="Fill">
                                         <Label Text="80K" FontSize="8" TextColor="#9AA39E" />
-                                        <Label Text="60K" FontSize="8" TextColor="#9AA39E" />
-                                        <Label Text="40K" FontSize="8" TextColor="#9AA39E" />
-                                        <Label Text="20K" FontSize="8" TextColor="#9AA39E" />
-                                        <Label Text="0" FontSize="8" TextColor="#9AA39E" />
+                                        <Label Text="60K" FontSize="8" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
+                                        <Label Text="40K" FontSize="8" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
+                                        <Label Text="20K" FontSize="8" TextColor="#9AA39E" VerticalOptions="CenterAndExpand" />
+                                        <Label Text="0" FontSize="8" TextColor="#9AA39E" VerticalOptions="End" />
                                     </VerticalStackLayout>
-                                    <Grid Grid.Column="1" RowDefinitions="*,*,*,*,*" RowSpacing="0">
+                                    <Grid Grid.Column="1" RowDefinitions="*,*,*,*,*" RowSpacing="0" HeightRequest="180">
                                         <BoxView Grid.Row="0" HeightRequest="1" Color="#EDF0EE" VerticalOptions="End" />
                                         <BoxView Grid.Row="1" HeightRequest="1" Color="#EDF0EE" VerticalOptions="End" />
                                         <BoxView Grid.Row="2" HeightRequest="1" Color="#EDF0EE" VerticalOptions="End" />
                                         <BoxView Grid.Row="3" HeightRequest="1" Color="#EDF0EE" VerticalOptions="End" />
-                                        <Grid Grid.RowSpan="5" ColumnDefinitions="*,*,*,*,*,*,*,*,*,*,*,*" VerticalOptions="Fill" ColumnSpacing="4" Padding="3,0">
+                                        <Grid Grid.RowSpan="5" ColumnDefinitions="*,*,*,*,*,*,*" VerticalOptions="Fill" ColumnSpacing="8" Padding="4,0">
                                             <BoxView Grid.Column="0" HeightRequest="76" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="1" HeightRequest="103" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="2" HeightRequest="88" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="3" HeightRequest="115" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="4" HeightRequest="94" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="5" HeightRequest="121" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="6" HeightRequest="107" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="7" HeightRequest="117" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="8" HeightRequest="98" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="9" HeightRequest="124" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="10" HeightRequest="91" VerticalOptions="End" BackgroundColor="#76B66A" />
-                                            <BoxView Grid.Column="11" HeightRequest="111" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="1" HeightRequest="112" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="2" HeightRequest="91" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="3" HeightRequest="145" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="4" HeightRequest="108" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="5" HeightRequest="128" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="6" HeightRequest="95" VerticalOptions="End" BackgroundColor="#76B66A" />
                                         </Grid>
                                     </Grid>
                                 </Grid>
@@ -401,6 +371,7 @@
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
+    <Border IsVisible="{Binding HasFeedback}" BackgroundColor="#26332D" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14,10" HorizontalOptions="Center" VerticalOptions="Start" Margin="16,12,16,0" ZIndex="20"><Label Text="{Binding FeedbackMessage}" TextColor="White" FontSize="13" /></Border>
     </Grid>
 
 
