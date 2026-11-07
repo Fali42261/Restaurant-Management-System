@@ -13,12 +13,12 @@ public partial class RegisterPage : ContentPage
     private void TogglePasswordVisibility(object sender, EventArgs e)
     {
         PasswordEntry.IsPassword = !PasswordEntry.IsPassword;
-        PasswordEyeButton.Text = PasswordEntry.IsPassword ? "Show" : "Hide";
+        PasswordEyeButton.Text = PasswordEntry.IsPassword ? "👁 Show" : "🙈 Hide";
     }
 
     private void ToggleConfirmPasswordVisibility(object sender, EventArgs e)
     {
         ConfirmPasswordEntry.IsPassword = !ConfirmPasswordEntry.IsPassword;
-        ConfirmPasswordEyeButton.Text = ConfirmPasswordEntry.IsPassword ? "Show" : "Hide";
+        ConfirmPasswordEyeButton.Text = ConfirmPasswordEntry.IsPassword ? "👁 Show" : "🙈 Hide";
     }
 }

@@ -10,8 +10,8 @@
             <Grid Padding="24" RowDefinitions="*,Auto,*">
                 <VerticalStackLayout Grid.Row="1" Spacing="18" HorizontalOptions="Center" MaximumWidthRequest="560" VerticalOptions="Center">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                        <Label Text="Create your account" FontSize="26" FontAttributes="Bold" TextColor="#172B27" HorizontalTextAlignment="Center" />
-                        <Label Text="Register as a restaurant staff member." FontSize="14" TextColor="#718078" HorizontalTextAlignment="Center" />
+                        <Label Text="Create owner account" FontSize="26" FontAttributes="Bold" TextColor="#172B27" HorizontalTextAlignment="Center" />
+                        <Label Text="Register your restaurant as the owner." FontSize="14" TextColor="#718078" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
                     <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 24" Padding="26">
                         <VerticalStackLayout Spacing="14">
@@ -32,15 +32,15 @@
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" x:Name="PasswordEyeButton" Text="Show" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" TextColor="#1F6B57" FontSize="12" Padding="10,0" /></Grid>
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" x:Name="PasswordEyeButton" Text="👁 Show" Clicked="TogglePasswordVisibility" FontSize="14" BackgroundColor="Transparent" TextColor="#1F6B57" FontSize="12" Padding="10,0" /></Grid>
                                 
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Confirm password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="ConfirmPasswordEntry" BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" x:Name="ConfirmPasswordEyeButton" Text="Show" Clicked="ToggleConfirmPasswordVisibility" BackgroundColor="Transparent" TextColor="#1F6B57" FontSize="12" Padding="10,0" /></Grid>
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="ConfirmPasswordEntry" BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" x:Name="ConfirmPasswordEyeButton" Text="👁 Show" Clicked="ToggleConfirmPasswordVisibility" FontSize="14" BackgroundColor="Transparent" TextColor="#1F6B57" FontSize="12" Padding="10,0" /></Grid>
                                 
                             </VerticalStackLayout>
-                            <Label Text="New accounts are created with the Staff role and may require approval." FontSize="12" TextColor="#718078" />
+                            <Label Text="Owner account registration. Staff members must sign in with credentials provided by the owner." FontSize="12" TextColor="#718078" />
                             <Button Text="Create account" Command="{Binding RegisterCommand}" BackgroundColor="#1F6B57" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="52" />
                             <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
                                 <Label Text="Already have an account?" TextColor="#718078" FontSize="13" VerticalTextAlignment="Center" />

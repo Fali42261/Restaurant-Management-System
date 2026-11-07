@@ -9,7 +9,7 @@ public sealed class RegisterViewModel : BaseViewModel
     private CancellationTokenSource? _toastCts;
     public RegisterViewModel()
     {
-        Title="Create account";
+        Title="Create owner account";
         RegisterCommand=new Command(Register);
         GoToLoginCommand=new Command(async()=>await Shell.Current.GoToAsync(".."));
     }
@@ -29,7 +29,7 @@ public sealed class RegisterViewModel : BaseViewModel
         if(string.IsNullOrWhiteSpace(MobileNumber)||MobileNumber.Count(char.IsDigit)<10) { ShowToast("Mobile number is required. Enter at least 10 digits."); return; }
         if(Password.Length<8) { ShowToast("Password must contain at least 8 characters."); return; }
         if(!string.Equals(Password,ConfirmPassword,StringComparison.Ordinal)) { ShowToast("Passwords do not match."); return; }
-        ShowToast("Details validated. Registration will be connected in the API/database phase.");
+        ShowToast("Owner details validated. Owner registration will be connected in the API/database phase.");
     }
     private async void ShowToast(string message)
     {

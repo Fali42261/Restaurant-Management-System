@@ -74,7 +74,7 @@
                                    FontAttributes="Bold"
                                    TextColor="#344A43" />
                             <Border StrokeThickness="0" Padding="0">
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" Text="Show" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" TextColor="#1F6B57" Padding="8,0" /></Grid>
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" Text="👁 Show" Clicked="TogglePasswordVisibility" FontSize="14" BackgroundColor="Transparent" TextColor="#1F6B57" Padding="8,0" /></Grid>
                             </Border>
                         </VerticalStackLayout>
 
@@ -90,11 +90,11 @@
 
                         <HorizontalStackLayout HorizontalOptions="Center"
                                                Spacing="5">
-                            <Label Text="Don't have an account?"
+                            <Label Text="Restaurant owner?"
                                    TextColor="#718078"
                                    FontSize="13"
                                    VerticalTextAlignment="Center" />
-                            <Label Text="Create account"
+                            <Label Text="Create owner account"
                                    TextColor="#1F6B57"
                                    FontSize="13"
                                    FontAttributes="Bold"
