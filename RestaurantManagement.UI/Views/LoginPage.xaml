@@ -6,7 +6,7 @@
     Title="Sign in"
     BackgroundColor="#F4F7FB">
 
-    <ScrollView>
+    <Grid><ScrollView>
         <Grid Padding="24" RowDefinitions="*,Auto,*">
             <VerticalStackLayout Grid.Row="1"
                                  Spacing="22"
@@ -26,7 +26,7 @@
                                HorizontalTextAlignment="Center"
                                VerticalTextAlignment="Center" />
                     </Border>
-                    <Label Text="Restaurant Management"
+                    <Label Text="SwapDigit"
                            FontSize="25"
                            FontAttributes="Bold"
                            TextColor="#172B27"
@@ -58,11 +58,8 @@
                                    FontSize="13"
                                    FontAttributes="Bold"
                                    TextColor="#344A43" />
-                            <Border Stroke="#DCE5E0"
-                                    StrokeThickness="1"
-                                    StrokeShape="RoundRectangle 12"
-                                    Padding="12,2">
-                                <Entry Placeholder="name@example.com or +91..."
+                            <Border StrokeThickness="0" Padding="0">
+                                <Entry BackgroundColor="Transparent" Placeholder="name@example.com or +91..."
                                        Keyboard="Email"
                                        Text="{Binding EmailOrMobile}"
                                        TextColor="#172B27"
@@ -80,18 +77,11 @@
                                     StrokeThickness="1"
                                     StrokeShape="RoundRectangle 12"
                                     Padding="12,2">
-                                <Entry Placeholder="Enter your password"
-                                       IsPassword="True"
-                                       Text="{Binding Password}"
-                                       TextColor="#172B27"
-                                       PlaceholderColor="#9AA9A2" />
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" Text="Show" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" TextColor="#1F6B57" Padding="8,0" /></Grid>
                             </Border>
                         </VerticalStackLayout>
 
-                        <Label Text="{Binding StatusMessage}"
-                               TextColor="#B45309"
-                               FontSize="13"
-                               IsVisible="{Binding HasStatusMessage}" />
+                        
 
                         <Button Text="Sign in"
                                 Command="{Binding SignInCommand}"
@@ -126,5 +116,5 @@
                        HorizontalTextAlignment="Center" />
             </VerticalStackLayout>
         </Grid>
-    </ScrollView>
+    </ScrollView><Border IsVisible="{Binding HasStatusMessage}" BackgroundColor="#26332D" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14,10" HorizontalOptions="Center" VerticalOptions="Start" Margin="18,12,18,0" ZIndex="10"><Label Text="{Binding StatusMessage}" TextColor="White" FontSize="13" /></Border></Grid>
 </ContentPage>

@@ -5,88 +5,86 @@ namespace RestaurantManagement.UI.Views;
 public partial class DashboardPage : ContentPage
 {
     private double _lastWidth = -1;
-
     public DashboardPage()
     {
         InitializeComponent();
-        BindingContext = new DashboardViewModel();
+        var vm = new DashboardViewModel();
+        BindingContext = vm;
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DashboardViewModel.SelectedSection))
+                UpdateNavigationSelection(vm.SelectedSection);
+        };
+        Loaded += (_, _) => UpdateNavigationSelection(vm.SelectedSection);
     }
 
     protected override void OnSizeAllocated(double width, double height)
     {
         base.OnSizeAllocated(width, height);
-
-        if (width <= 0 || Math.Abs(width - _lastWidth) < 1)
-            return;
-
+        if (width <= 0 || Math.Abs(width - _lastWidth) < 1) return;
         _lastWidth = width;
-        var isCompact = width < 850;
-
-        Sidebar.IsVisible = !isCompact;
-        MobileNavigation.IsVisible = isCompact;
-        RootLayout.ColumnDefinitions[0].Width = isCompact ? new GridLength(0) : new GridLength(190);
+        var compact = width < 850;
+        Sidebar.IsVisible = !compact;
+        MobileNavigation.IsVisible = compact;
+        RootLayout.ColumnDefinitions[0].Width = compact ? new GridLength(0) : new GridLength(190);
         SearchPanel.IsVisible = width >= 650;
-
-        if (width < 650)
+        StatsGrid.ColumnDefinitions.Clear();
+        var count = width < 650 ? 2 : 4;
+        for (var i = 0; i < count; i++) StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        for (var i = 0; i < StatsGrid.Children.Count; i++)
         {
-            StatsGrid.ColumnDefinitions.Clear();
-            StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            Grid.SetColumn((BindableObject)StatsGrid.Children[0], 0);
-            Grid.SetColumn((BindableObject)StatsGrid.Children[1], 1);
-            Grid.SetColumn((BindableObject)StatsGrid.Children[2], 0);
-            Grid.SetRow((BindableObject)StatsGrid.Children[2], 1);
-            Grid.SetColumn((BindableObject)StatsGrid.Children[3], 1);
-            Grid.SetRow((BindableObject)StatsGrid.Children[3], 1);
+            Grid.SetColumn((BindableObject)StatsGrid.Children[i], i % count);
+            Grid.SetRow((BindableObject)StatsGrid.Children[i], i / count);
         }
-        else
+        ConfigureResponsiveGrid(AnalyticsGrid, width < 720, 1.2);
+        ConfigureResponsiveGrid(BottomGrid, width < 720, 1.25);
+    }
+
+    private static void ConfigureResponsiveGrid(Grid grid, bool stacked, double weight)
+    {
+        grid.ColumnDefinitions.Clear();
+        grid.RowDefinitions.Clear();
+        if (stacked)
         {
-            StatsGrid.ColumnDefinitions.Clear();
-            for (var i = 0; i < 4; i++)
-                StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            for (var i = 0; i < 4; i++)
+            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            for (var i = 0; i < grid.Children.Count; i++)
             {
-                Grid.SetColumn((BindableObject)StatsGrid.Children[i], i);
-                Grid.SetRow((BindableObject)StatsGrid.Children[i], 0);
+                grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                Grid.SetColumn((BindableObject)grid.Children[i], 0);
+                Grid.SetRow((BindableObject)grid.Children[i], i);
             }
         }
-
-        var stackSections = width < 720;
-        AnalyticsGrid.ColumnDefinitions.Clear();
-        BottomGrid.ColumnDefinitions.Clear();
-        if (stackSections)
-        {
-            AnalyticsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            Grid.SetColumn((BindableObject)AnalyticsGrid.Children[0], 0);
-            Grid.SetColumn((BindableObject)AnalyticsGrid.Children[1], 0);
-            Grid.SetRow((BindableObject)AnalyticsGrid.Children[1], 1);
-            AnalyticsGrid.RowDefinitions.Clear();
-            AnalyticsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            AnalyticsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-
-            BottomGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            Grid.SetColumn((BindableObject)BottomGrid.Children[0], 0);
-            Grid.SetColumn((BindableObject)BottomGrid.Children[1], 0);
-            Grid.SetRow((BindableObject)BottomGrid.Children[1], 1);
-            BottomGrid.RowDefinitions.Clear();
-            BottomGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            BottomGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        }
         else
         {
-            AnalyticsGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(1.2, GridUnitType.Star)));
-            AnalyticsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            AnalyticsGrid.RowDefinitions.Clear();
-            Grid.SetColumn((BindableObject)AnalyticsGrid.Children[0], 0);
-            Grid.SetColumn((BindableObject)AnalyticsGrid.Children[1], 1);
-            Grid.SetRow((BindableObject)AnalyticsGrid.Children[1], 0);
-
-            BottomGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(1.25, GridUnitType.Star)));
-            BottomGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            BottomGrid.RowDefinitions.Clear();
-            Grid.SetColumn((BindableObject)BottomGrid.Children[0], 0);
-            Grid.SetColumn((BindableObject)BottomGrid.Children[1], 1);
-            Grid.SetRow((BindableObject)BottomGrid.Children[1], 0);
+            grid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(weight, GridUnitType.Star)));
+            grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            for (var i = 0; i < grid.Children.Count; i++)
+            {
+                Grid.SetColumn((BindableObject)grid.Children[i], i);
+                Grid.SetRow((BindableObject)grid.Children[i], 0);
+            }
         }
+    }
+
+    private void UpdateNavigationSelection(string selected)
+    {
+        UpdateButtons(Sidebar, selected);
+        UpdateButtons(MobileNavigation, selected);
+    }
+
+    private static void UpdateButtons(Element root, string selected)
+    {
+        if (root is Button button && button.CommandParameter is string section)
+        {
+            var active = section.Equals(selected, StringComparison.OrdinalIgnoreCase);
+            button.BackgroundColor = Color.FromArgb(active ? "#EAF3E6" : "#FFFFFF");
+            button.TextColor = Color.FromArgb(active ? "#397D2A" : "#65716A");
+            button.FontAttributes = active ? FontAttributes.Bold : FontAttributes.None;
+            button.CornerRadius = 9;
+        }
+        if (root is IElementController controller)
+            foreach (var child in controller.LogicalChildren)
+                if (child is Element element) UpdateButtons(element, selected);
     }
 }

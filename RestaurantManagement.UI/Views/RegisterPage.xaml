@@ -6,7 +6,7 @@
     Title="Create account"
     BackgroundColor="#F4F7FB">
 
-    <ScrollView>
+    <Grid><ScrollView>
         <Grid Padding="24" RowDefinitions="*,Auto,*">
             <VerticalStackLayout Grid.Row="1"
                                  Spacing="18"
@@ -33,36 +33,36 @@
                     <VerticalStackLayout Spacing="14">
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Full name" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                            <Border Stroke="#DCE5E0" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,2">
-                                <Entry Placeholder="Your full name" Text="{Binding FullName}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                            <Border StrokeThickness="0" Padding="0">
+                                <Entry BackgroundColor="Transparent" Placeholder="Your full name" Text="{Binding FullName}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                             </Border>
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Email address" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                             <Border Stroke="#DCE5E0" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,2">
-                                <Entry Placeholder="name@example.com" Keyboard="Email" Text="{Binding Email}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <Entry BackgroundColor="Transparent" Placeholder="name@example.com" Keyboard="Email" Text="{Binding Email}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                             </Border>
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="6">
-                            <Label Text="Mobile number (optional)" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
+                            <Label Text="Mobile number *" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                             <Border Stroke="#DCE5E0" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,2">
-                                <Entry Placeholder="+91 98765 43210" Keyboard="Telephone" Text="{Binding MobileNumber}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <Entry BackgroundColor="Transparent" Placeholder="+91 98765 43210" Keyboard="Telephone" Text="{Binding MobileNumber}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                             </Border>
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                             <Border Stroke="#DCE5E0" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,2">
-                                <Entry Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <Entry BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                             </Border>
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Confirm password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                             <Border Stroke="#DCE5E0" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,2">
-                                <Entry Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <Entry BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                             </Border>
                         </VerticalStackLayout>
 
@@ -102,5 +102,5 @@
                 </Border>
             </VerticalStackLayout>
         </Grid>
-    </ScrollView>
+    </ScrollView><Border IsVisible="{Binding HasStatusMessage}" BackgroundColor="#26332D" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14,10" HorizontalOptions="Center" VerticalOptions="Start" Margin="18,12,18,0" ZIndex="10"><Label Text="{Binding StatusMessage}" TextColor="White" FontSize="13" /></Border></Grid>
 </ContentPage>

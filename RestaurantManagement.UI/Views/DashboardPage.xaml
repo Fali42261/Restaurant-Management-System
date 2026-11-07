@@ -128,7 +128,7 @@
             <ScrollView Grid.Row="1">
                 <VerticalStackLayout Padding="16" Spacing="13">
                     <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
-                        <Label Text="Dashboard" FontSize="23" FontAttributes="Bold"
+                        <Label Text="{Binding SectionTitle}" FontSize="23" FontAttributes="Bold"
                                TextColor="#222D27" VerticalTextAlignment="Center" />
                         <Button Grid.Column="1" Text="{Binding SelectedPeriod}"
                                 Command="{Binding PeriodCommand}" BackgroundColor="White"
@@ -143,39 +143,32 @@
                                 FontAttributes="Bold" Padding="12,7" />
                     </Grid>
 
-                    <HorizontalStackLayout x:Name="MobileNavigation" IsVisible="False"
-                                           Spacing="5">
-                        <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-                            <HorizontalStackLayout Spacing="5">
-                                <Button Text="Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"
-                                        BackgroundColor="#EAF3E6" TextColor="#397D2A" CornerRadius="8" FontSize="10" />
-                                <Button Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders"
-                                        Style="{StaticResource NavChipStyle}" />
-                                <Button Text="Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables"
-                                        Style="{StaticResource NavChipStyle}" />
-                                <Button Text="Menu" Command="{Binding NavigateCommand}" CommandParameter="Menu"
-                                        Style="{StaticResource NavChipStyle}" />
-                                <Button Text="Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory"
-                                        Style="{StaticResource NavChipStyle}" />
-                                <Button Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations"
-                                        Style="{StaticResource NavChipStyle}" />
-                                <Button Text="Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers"
-                                        Style="{StaticResource NavChipStyle}" />
-                                <Button Text="Staff" Command="{Binding NavigateCommand}" CommandParameter="Staff"
-                                        Style="{StaticResource NavChipStyle}" />
-                                <Button Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports"
-                                        Style="{StaticResource NavChipStyle}" />
-                                <Button Text="Settings" Command="{Binding NavigateCommand}" CommandParameter="Settings"
-                                        Style="{StaticResource NavChipStyle}" />
-                            </HorizontalStackLayout>
-                        </ScrollView>
-                    </HorizontalStackLayout>
+                    <ScrollView x:Name="MobileNavigation" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                        <HorizontalStackLayout Spacing="6" Padding="0,2">
+                            <Button Text="Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" />
+                            <Button Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" />
+                            <Button Text="Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables" />
+                            <Button Text="Menu" Command="{Binding NavigateCommand}" CommandParameter="Menu" />
+                            <Button Text="Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory" />
+                            <Button Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" />
+                            <Button Text="Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers" />
+                            <Button Text="Staff" Command="{Binding NavigateCommand}" CommandParameter="Staff" />
+                            <Button Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" />
+                            <Button Text="Settings" Command="{Binding NavigateCommand}" CommandParameter="Settings" />
+                        </HorizontalStackLayout>
+                    </ScrollView>
 
-                    <Label Text="{Binding FeedbackMessage}" FontSize="11" TextColor="#438E2B"
-                           IsVisible="{Binding HasFeedback}" />
+                    <Label Text="{Binding FeedbackMessage}" FontSize="11" TextColor="#438E2B" IsVisible="{Binding HasFeedback}" />
+                    <Border IsVisible="{Binding IsOtherSection}" BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="22">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="{Binding SectionTitle}" FontSize="22" FontAttributes="Bold" TextColor="#26332D" />
+                            <Label Text="{Binding SectionDescription}" FontSize="13" TextColor="#7C8780" />
+                            <Label Text="This section is ready for its UI module. Sample navigation is active; API and database integration will follow in the next phase." FontSize="12" TextColor="#7C8780" />
+                        </VerticalStackLayout>
+                    </Border>
 
                     <!-- KPI cards -->
-                    <Grid x:Name="StatsGrid" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="9" RowSpacing="9">
+                    <Grid x:Name="StatsGrid" IsVisible="{Binding IsDashboardSection}" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="9" RowSpacing="9">
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
                                 <Label Text="TODAY'S REVENUE" FontSize="9" CharacterSpacing="0.8" TextColor="#7C8780" />
@@ -211,7 +204,7 @@
                     </Grid>
 
                     <!-- Revenue and orders -->
-                    <Grid x:Name="AnalyticsGrid" ColumnDefinitions="1.2*,1*" RowDefinitions="Auto" ColumnSpacing="10">
+                    <Grid x:Name="AnalyticsGrid" IsVisible="{Binding IsDashboardSection}" ColumnDefinitions="1.2*,1*" RowDefinitions="Auto" ColumnSpacing="10">
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -241,21 +234,20 @@
                                         <BoxView Grid.Row="1" HeightRequest="1" Color="#EDF0EE" VerticalOptions="End" />
                                         <BoxView Grid.Row="2" HeightRequest="1" Color="#EDF0EE" VerticalOptions="End" />
                                         <BoxView Grid.Row="3" HeightRequest="1" Color="#EDF0EE" VerticalOptions="End" />
-                                        <HorizontalStackLayout Grid.RowSpan="5" VerticalOptions="End"
-                                                               HorizontalOptions="Fill" Spacing="5" HeightRequest="130">
-                                            <BoxView HeightRequest="76" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="103" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="88" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="115" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="94" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="121" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="107" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="117" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="98" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="124" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="91" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                            <BoxView HeightRequest="111" VerticalOptions="End" BackgroundColor="#76B66A" WidthRequest="8" />
-                                        </HorizontalStackLayout>
+                                        <Grid Grid.RowSpan="5" ColumnDefinitions="*,*,*,*,*,*,*,*,*,*,*,*" VerticalOptions="Fill" ColumnSpacing="4" Padding="3,0">
+                                            <BoxView Grid.Column="0" HeightRequest="76" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="1" HeightRequest="103" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="2" HeightRequest="88" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="3" HeightRequest="115" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="4" HeightRequest="94" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="5" HeightRequest="121" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="6" HeightRequest="107" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="7" HeightRequest="117" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="8" HeightRequest="98" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="9" HeightRequest="124" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="10" HeightRequest="91" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                            <BoxView Grid.Column="11" HeightRequest="111" VerticalOptions="End" BackgroundColor="#76B66A" />
+                                        </Grid>
                                     </Grid>
                                 </Grid>
                                 <Grid ColumnDefinitions="*,*,*,*,*,*,*">
@@ -327,7 +319,7 @@
                     </Grid>
 
                     <!-- Reservations and popular items -->
-                    <Grid x:Name="BottomGrid" ColumnDefinitions="1.25*,1*" RowDefinitions="Auto" ColumnSpacing="10">
+                    <Grid x:Name="BottomGrid" IsVisible="{Binding IsDashboardSection}" ColumnDefinitions="1.25*,1*" RowDefinitions="Auto" ColumnSpacing="10">
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
