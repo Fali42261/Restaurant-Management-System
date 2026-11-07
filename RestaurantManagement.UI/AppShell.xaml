@@ -3,12 +3,12 @@
     x:Class="RestaurantManagement.UI.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:RestaurantManagement.UI"
-    Title="RestaurantManagement.UI">
+    xmlns:views="clr-namespace:RestaurantManagement.UI.Views"
+    Title="Restaurant Management"
+    FlyoutBehavior="Disabled">
 
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
-
+        Title="Sign in"
+        ContentTemplate="{DataTemplate views:LoginPage}"
+        Route="LoginPage" />
 </Shell>

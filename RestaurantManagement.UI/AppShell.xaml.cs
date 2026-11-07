@@ -1,10 +1,12 @@
-﻿namespace RestaurantManagement.UI
+using RestaurantManagement.UI.Views;
+
+namespace RestaurantManagement.UI;
+
+public partial class AppShell : Shell
 {
-    public partial class AppShell : Shell
+    public AppShell()
     {
-        public AppShell()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+        Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
     }
 }

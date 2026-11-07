@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RestaurantManagement.UI.Views.LoginPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Sign in"
+    BackgroundColor="#F4F7FB">
+
+    <ScrollView>
+        <Grid Padding="24" RowDefinitions="*,Auto,*">
+            <VerticalStackLayout Grid.Row="1"
+                                 Spacing="22"
+                                 HorizontalOptions="Center"
+                                 MaximumWidthRequest="520"
+                                 VerticalOptions="Center">
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <Border BackgroundColor="#173B35"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20"
+                            Padding="15"
+                            HorizontalOptions="Center">
+                        <Label Text="RM"
+                               TextColor="White"
+                               FontSize="25"
+                               FontAttributes="Bold"
+                               HorizontalTextAlignment="Center"
+                               VerticalTextAlignment="Center" />
+                    </Border>
+                    <Label Text="Restaurant Management"
+                           FontSize="25"
+                           FontAttributes="Bold"
+                           TextColor="#172B27"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Welcome back. Sign in to continue."
+                           FontSize="14"
+                           TextColor="#718078"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+
+                <Border BackgroundColor="White"
+                        Stroke="#E5EBE8"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 24"
+                        Padding="26">
+                    <VerticalStackLayout Spacing="17">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Sign in"
+                                   FontSize="23"
+                                   FontAttributes="Bold"
+                                   TextColor="#172B27" />
+                            <Label Text="Enter your account details below."
+                                   FontSize="13"
+                                   TextColor="#788780" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="7">
+                            <Label Text="Email or mobile number"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="#344A43" />
+                            <Border Stroke="#DCE5E0"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 12"
+                                    Padding="12,2">
+                                <Entry Placeholder="name@example.com or +91..."
+                                       Keyboard="Email"
+                                       Text="{Binding EmailOrMobile}"
+                                       TextColor="#172B27"
+                                       PlaceholderColor="#9AA9A2"
+                                       ClearButtonVisibility="WhileEditing" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="7">
+                            <Label Text="Password"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   TextColor="#344A43" />
+                            <Border Stroke="#DCE5E0"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 12"
+                                    Padding="12,2">
+                                <Entry Placeholder="Enter your password"
+                                       IsPassword="True"
+                                       Text="{Binding Password}"
+                                       TextColor="#172B27"
+                                       PlaceholderColor="#9AA9A2" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Label Text="{Binding StatusMessage}"
+                               TextColor="#B45309"
+                               FontSize="13"
+                               IsVisible="{Binding HasStatusMessage}" />
+
+                        <Button Text="Sign in"
+                                Command="{Binding SignInCommand}"
+                                BackgroundColor="#1F6B57"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                CornerRadius="12"
+                                HeightRequest="52" />
+
+                        <HorizontalStackLayout HorizontalOptions="Center"
+                                               Spacing="5">
+                            <Label Text="Don't have an account?"
+                                   TextColor="#718078"
+                                   FontSize="13"
+                                   VerticalTextAlignment="Center" />
+                            <Label Text="Create account"
+                                   TextColor="#1F6B57"
+                                   FontSize="13"
+                                   FontAttributes="Bold"
+                                   VerticalTextAlignment="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding GoToRegisterCommand}" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="Secure access for your restaurant team"
+                       FontSize="12"
+                       TextColor="#91A099"
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+    </ScrollView>
+</ContentPage>
