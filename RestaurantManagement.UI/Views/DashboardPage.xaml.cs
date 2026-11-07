@@ -1,3 +1,4 @@
+using Microsoft.Maui.ApplicationModel;
 using RestaurantManagement.UI.ViewModels;
 
 namespace RestaurantManagement.UI.Views;
