@@ -28,7 +28,7 @@
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
 		<!-- Display name -->
-		<ApplicationTitle>RestaurantManagement.UI</ApplicationTitle>
+		<ApplicationTitle>SwapDigit</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.restaurantmanagement.ui</ApplicationId>
