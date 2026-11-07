@@ -6,6 +6,46 @@
     Title="Dashboard"
     BackgroundColor="#F3F5F4">
 
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style x:Key="DashboardCardStyle" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="White" />
+                <Setter Property="Stroke" Value="#E7EBE8" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="StrokeShape">
+                    <Setter.Value>
+                        <RoundRectangle CornerRadius="13" />
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="Padding" Value="13" />
+            </Style>
+            <Style x:Key="NavButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="Transparent" />
+                <Setter Property="TextColor" Value="#7C8780" />
+                <Setter Property="CornerRadius" Value="9" />
+                <Setter Property="HorizontalOptions" Value="Fill" />
+                <Setter Property="HorizontalContentAlignment" Value="Start" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="12,8" />
+            </Style>
+            <Style x:Key="NavChipStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="White" />
+                <Setter Property="TextColor" Value="#65716A" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="FontSize" Value="10" />
+                <Setter Property="Padding" Value="12,6" />
+            </Style>
+            <Style x:Key="TinyPeriodButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#F4F6F4" />
+                <Setter Property="TextColor" Value="#66736B" />
+                <Setter Property="CornerRadius" Value="5" />
+                <Setter Property="FontSize" Value="8" />
+                <Setter Property="Padding" Value="7,3" />
+                <Setter Property="HeightRequest" Value="24" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
     <Grid x:Name="RootLayout" ColumnDefinitions="190,*" RowDefinitions="*">
         <!-- Desktop navigation -->
         <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*,Auto"
@@ -19,7 +59,7 @@
             <VerticalStackLayout Grid.Row="1" Spacing="5">
                 <Button Text="▦   Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"
                         BackgroundColor="#EFF2F0" TextColor="#26332D" CornerRadius="10"
-                        HorizontalOptions="Fill" HorizontalContentAlignment="Start" FontAttributes="Bold" />
+                        HorizontalOptions="Fill" HorizontalTextAlignment="Start" FontAttributes="Bold" />
                 <Button Text="▤   Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders"
                         Style="{StaticResource NavButtonStyle}" />
                 <Button Text="▦   Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables"
@@ -134,7 +174,7 @@
                            IsVisible="{Binding HasFeedback}" />
 
                     <!-- KPI cards -->
-                    <Grid x:Name="StatsGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="9">
+                    <Grid x:Name="StatsGrid" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="9" RowSpacing="9">
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
                                 <Label Text="TODAY'S REVENUE" FontSize="9" CharacterSpacing="0.8" TextColor="#7C8780" />
@@ -170,7 +210,7 @@
                     </Grid>
 
                     <!-- Revenue and orders -->
-                    <Grid x:Name="AnalyticsGrid" ColumnDefinitions="1.2*,1*" ColumnSpacing="10">
+                    <Grid x:Name="AnalyticsGrid" ColumnDefinitions="1.2*,1*" RowDefinitions="Auto" ColumnSpacing="10">
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -188,8 +228,7 @@
                                     </HorizontalStackLayout>
                                 </Grid>
                                 <Grid ColumnDefinitions="28,*" RowDefinitions="*,*,*,*,*" HeightRequest="155">
-                                    <VerticalStackLayout Grid.Column="0" Grid.RowSpan="5" VerticalOptions="Fill"
-                                                         JustifyContent="SpaceBetween">
+                                    <VerticalStackLayout Grid.Column="0" Grid.RowSpan="5" VerticalOptions="Fill">
                                         <Label Text="80K" FontSize="8" TextColor="#9AA39E" />
                                         <Label Text="60K" FontSize="8" TextColor="#9AA39E" />
                                         <Label Text="40K" FontSize="8" TextColor="#9AA39E" />
@@ -287,7 +326,7 @@
                     </Grid>
 
                     <!-- Reservations and popular items -->
-                    <Grid x:Name="BottomGrid" ColumnDefinitions="1.25*,1*" ColumnSpacing="10">
+                    <Grid x:Name="BottomGrid" ColumnDefinitions="1.25*,1*" RowDefinitions="Auto" ColumnSpacing="10">
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
@@ -371,43 +410,5 @@
         </Grid>
     </Grid>
 
-    <ContentPage.Resources>
-        <ResourceDictionary>
-            <Style x:Key="DashboardCardStyle" TargetType="Border">
-                <Setter Property="BackgroundColor" Value="White" />
-                <Setter Property="Stroke" Value="#E7EBE8" />
-                <Setter Property="StrokeThickness" Value="1" />
-                <Setter Property="StrokeShape">
-                    <Setter.Value>
-                        <RoundRectangle CornerRadius="13" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="Padding" Value="13" />
-            </Style>
-            <Style x:Key="NavButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="Transparent" />
-                <Setter Property="TextColor" Value="#7C8780" />
-                <Setter Property="CornerRadius" Value="9" />
-                <Setter Property="HorizontalOptions" Value="Fill" />
-                <Setter Property="HorizontalContentAlignment" Value="Start" />
-                <Setter Property="FontSize" Value="12" />
-                <Setter Property="Padding" Value="12,8" />
-            </Style>
-            <Style x:Key="NavChipStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="White" />
-                <Setter Property="TextColor" Value="#65716A" />
-                <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="FontSize" Value="10" />
-                <Setter Property="Padding" Value="12,6" />
-            </Style>
-            <Style x:Key="TinyPeriodButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="#F4F6F4" />
-                <Setter Property="TextColor" Value="#66736B" />
-                <Setter Property="CornerRadius" Value="5" />
-                <Setter Property="FontSize" Value="8" />
-                <Setter Property="Padding" Value="7,3" />
-                <Setter Property="HeightRequest" Value="24" />
-            </Style>
-        </ResourceDictionary>
-    </ContentPage.Resources>
+
 </ContentPage>
