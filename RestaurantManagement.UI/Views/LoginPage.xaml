@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Sign in"
+    Shell.NavBarIsVisible="False"
     BackgroundColor="#F4F7FB">
 
     <Grid><ScrollView>
@@ -14,20 +15,8 @@
                                  MaximumWidthRequest="520"
                                  VerticalOptions="Center">
                 <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
-                    <Border BackgroundColor="#173B35"
-                            StrokeThickness="0"
-                            StrokeShape="RoundRectangle 20"
-                            Padding="15"
-                            HorizontalOptions="Center">
-                        <Label Text="SWD"
-                               TextColor="White"
-                               FontSize="25"
-                               FontAttributes="Bold"
-                               HorizontalTextAlignment="Center"
-                               VerticalTextAlignment="Center" />
-                    </Border>
                     <Label Text="SwapDigit"
-                           FontSize="25"
+                           FontSize="29"
                            FontAttributes="Bold"
                            TextColor="#172B27"
                            HorizontalTextAlignment="Center" />
@@ -78,7 +67,14 @@
                             </Border>
                         </VerticalStackLayout>
 
-                        
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Label Text="Forgot password?" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="Start">
+                                <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding GoToResetPasswordCommand}" /></Label.GestureRecognizers>
+                            </Label>
+                            <Label Grid.Column="1" Text="Change password" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="End">
+                                <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding GoToChangePasswordCommand}" /></Label.GestureRecognizers>
+                            </Label>
+                        </Grid>
 
                         <Button Text="Sign in"
                                 Command="{Binding SignInCommand}"

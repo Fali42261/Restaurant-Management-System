@@ -1,4 +1,5 @@
 using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.ApplicationModel;
 using RestaurantManagement.UI.ViewModels;
 
 namespace RestaurantManagement.UI.Views;
@@ -6,6 +7,11 @@ namespace RestaurantManagement.UI.Views;
 public partial class DashboardPage : ContentPage
 {
     private double _lastWidth = -1;
+
+    private async void OpenOfficialWebsite(object sender, TappedEventArgs e)
+    {
+        await Browser.OpenAsync("https://swapdigit.com", BrowserLaunchMode.SystemPreferred);
+    }
     public DashboardPage()
     {
         InitializeComponent();

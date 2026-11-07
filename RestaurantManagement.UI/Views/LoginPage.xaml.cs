@@ -13,6 +13,6 @@ public partial class LoginPage : ContentPage
     private void TogglePasswordVisibility(object sender, EventArgs e)
     {
         PasswordEntry.IsPassword = !PasswordEntry.IsPassword;
-        PasswordEyeButton.Source = PasswordEntry.IsPassword ? "eye.svg" : "eye-off.svg";
+        PasswordEyeButton.Source = PasswordEntry.IsPassword ? "eye.svg" : "eye_off.svg";
     }
 }

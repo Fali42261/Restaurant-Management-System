@@ -371,8 +371,13 @@
                         </Border>
                     </Grid>
 
-                    <Label Text="UI preview • Sample dashboard data only"
-                           FontSize="15" TextColor="#A0AAA4" HorizontalTextAlignment="Center" />
+                    <Label Text="SwapDigit • Official Website ↗"
+                           FontSize="13" FontAttributes="Bold" TextColor="#1F6B57"
+                           TextDecorations="Underline" HorizontalTextAlignment="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OpenOfficialWebsite" />
+                        </Label.GestureRecognizers>
+                    </Label>
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>

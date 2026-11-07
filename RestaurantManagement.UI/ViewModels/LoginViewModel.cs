@@ -14,6 +14,8 @@ public sealed class LoginViewModel : BaseViewModel
         Title="Sign in";
         SignInCommand=new Command(async()=>await SignInAsync());
         GoToRegisterCommand=new Command(async()=>await Shell.Current.GoToAsync(nameof(RegisterPage)));
+        GoToResetPasswordCommand=new Command(async()=>await Shell.Current.GoToAsync(nameof(ResetPasswordPage)));
+        GoToChangePasswordCommand=new Command(async()=>await Shell.Current.GoToAsync(nameof(ChangePasswordPage)));
     }
     public string EmailOrMobile { get=>_emailOrMobile; set=>SetProperty(ref _emailOrMobile,value); }
     public string Password { get=>_password; set=>SetProperty(ref _password,value); }
@@ -21,6 +23,8 @@ public sealed class LoginViewModel : BaseViewModel
     public bool HasStatusMessage=>!string.IsNullOrWhiteSpace(StatusMessage);
     public ICommand SignInCommand{get;}
     public ICommand GoToRegisterCommand{get;}
+    public ICommand GoToResetPasswordCommand{get;}
+    public ICommand GoToChangePasswordCommand{get;}
     private async Task SignInAsync()
     {
         if(string.IsNullOrWhiteSpace(EmailOrMobile)) { ShowToast("Enter your email address or mobile number."); return; }
