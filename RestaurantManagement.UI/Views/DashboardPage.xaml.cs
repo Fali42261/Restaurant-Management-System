@@ -32,12 +32,12 @@ public partial class DashboardPage : ContentPage
             StatsGrid.ColumnDefinitions.Clear();
             StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            StatsGrid.Children[0].SetValue(Grid.ColumnProperty, 0);
-            StatsGrid.Children[1].SetValue(Grid.ColumnProperty, 1);
-            StatsGrid.Children[2].SetValue(Grid.ColumnProperty, 0);
-            StatsGrid.Children[2].SetValue(Grid.RowProperty, 1);
-            StatsGrid.Children[3].SetValue(Grid.ColumnProperty, 1);
-            StatsGrid.Children[3].SetValue(Grid.RowProperty, 1);
+            Grid.SetColumn((BindableObject)StatsGrid.Children[0], 0);
+            Grid.SetColumn((BindableObject)StatsGrid.Children[1], 1);
+            Grid.SetColumn((BindableObject)StatsGrid.Children[2], 0);
+            Grid.SetRow((BindableObject)StatsGrid.Children[2], 1);
+            Grid.SetColumn((BindableObject)StatsGrid.Children[3], 1);
+            Grid.SetRow((BindableObject)StatsGrid.Children[3], 1);
         }
         else
         {
@@ -57,17 +57,17 @@ public partial class DashboardPage : ContentPage
         if (stackSections)
         {
             AnalyticsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            AnalyticsGrid.Children[0].SetValue(Grid.ColumnProperty, 0);
-            AnalyticsGrid.Children[1].SetValue(Grid.ColumnProperty, 0);
-            AnalyticsGrid.Children[1].SetValue(Grid.RowProperty, 1);
+            Grid.SetColumn((BindableObject)AnalyticsGrid.Children[0], 0);
+            Grid.SetColumn((BindableObject)AnalyticsGrid.Children[1], 0);
+            Grid.SetRow((BindableObject)AnalyticsGrid.Children[1], 1);
             AnalyticsGrid.RowDefinitions.Clear();
             AnalyticsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             AnalyticsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
 
             BottomGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            BottomGrid.Children[0].SetValue(Grid.ColumnProperty, 0);
-            BottomGrid.Children[1].SetValue(Grid.ColumnProperty, 0);
-            BottomGrid.Children[1].SetValue(Grid.RowProperty, 1);
+            Grid.SetColumn((BindableObject)BottomGrid.Children[0], 0);
+            Grid.SetColumn((BindableObject)BottomGrid.Children[1], 0);
+            Grid.SetRow((BindableObject)BottomGrid.Children[1], 1);
             BottomGrid.RowDefinitions.Clear();
             BottomGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             BottomGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
@@ -77,16 +77,16 @@ public partial class DashboardPage : ContentPage
             AnalyticsGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(1.2, GridUnitType.Star)));
             AnalyticsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             AnalyticsGrid.RowDefinitions.Clear();
-            AnalyticsGrid.Children[0].SetValue(Grid.ColumnProperty, 0);
-            AnalyticsGrid.Children[1].SetValue(Grid.ColumnProperty, 1);
-            AnalyticsGrid.Children[1].SetValue(Grid.RowProperty, 0);
+            Grid.SetColumn((BindableObject)AnalyticsGrid.Children[0], 0);
+            Grid.SetColumn((BindableObject)AnalyticsGrid.Children[1], 1);
+            Grid.SetRow((BindableObject)AnalyticsGrid.Children[1], 0);
 
             BottomGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(1.25, GridUnitType.Star)));
             BottomGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             BottomGrid.RowDefinitions.Clear();
-            BottomGrid.Children[0].SetValue(Grid.ColumnProperty, 0);
-            BottomGrid.Children[1].SetValue(Grid.ColumnProperty, 1);
-            BottomGrid.Children[1].SetValue(Grid.RowProperty, 0);
+            Grid.SetColumn((BindableObject)BottomGrid.Children[0], 0);
+            Grid.SetColumn((BindableObject)BottomGrid.Children[1], 1);
+            Grid.SetRow((BindableObject)BottomGrid.Children[1], 0);
         }
     }
 }
