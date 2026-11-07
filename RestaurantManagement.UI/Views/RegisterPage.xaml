@@ -37,7 +37,7 @@
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Confirm password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="ConfirmPasswordEntry" BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" x:Name="ConfirmPasswordEyeButton" Text="👁 Show" Clicked="ToggleConfirmPasswordVisibility" FontSize="14" BackgroundColor="Transparent" TextColor="#1F6B57" FontSize="12" Padding="10,0" /></Grid>
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="ConfirmPasswordEntry" BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" x:Name="ConfirmPasswordEyeButton" Text="👁 Show" Clicked="ToggleConfirmPasswordVisibility" FontSize="14" BackgroundColor="Transparent" TextColor="#1F6B57" Padding="10,0" /></Grid>
                                 
                             </VerticalStackLayout>
                             <Label Text="Owner account registration. Staff members must sign in with credentials provided by the owner." FontSize="12" TextColor="#718078" />

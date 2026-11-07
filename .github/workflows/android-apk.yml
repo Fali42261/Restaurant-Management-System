@@ -1,4 +1,4 @@
-name: Android APK (DevUI)
+name: Android APK (DevUI) # rebuild after XAML validation fix
 
 on:
   push:
