@@ -7,6 +7,10 @@ public sealed class DashboardViewModel : BaseViewModel
     private string _feedbackMessage = string.Empty;
     private string _searchText = string.Empty;
     private string _selectedPeriod = "Monthly";
+    private string _selectedRestaurant = "Ananda Food";
+
+    public IReadOnlyList<string> Restaurants { get; } =
+        new[] { "Ananda Food", "Ajanta Sweets" };
 
     public DashboardViewModel()
     {
@@ -42,6 +46,16 @@ public sealed class DashboardViewModel : BaseViewModel
     {
         get => _searchText;
         set => SetProperty(ref _searchText, value);
+    }
+
+    public string SelectedRestaurant
+    {
+        get => _selectedRestaurant;
+        set
+        {
+            if (SetProperty(ref _selectedRestaurant, value))
+                ShowFeedback($"Restaurant switched to {value} (sample UI data).");
+        }
     }
 
     public string SelectedPeriod
