@@ -53,12 +53,8 @@
                 <Label Text="SwapDigit" FontSize="27" FontAttributes="Bold" TextColor="#56A83B" />
                 <Label Text="RESTAURANT MANAGEMENT" FontSize="8" CharacterSpacing="1.2"
                        TextColor="#9AA49E" />
-                <VerticalStackLayout Spacing="3" Margin="0,7,0,0">
-                    <Label Text="Ananda Food" FontSize="12" FontAttributes="Bold"
-                           TextColor="#34433A" />
-                    <Label Text="Ajanta Sweets" FontSize="12" FontAttributes="Bold"
-                           TextColor="#34433A" />
-                </VerticalStackLayout>
+                <Label Text="Ananda Food" FontSize="12" FontAttributes="Bold"
+                       TextColor="#34433A" Margin="0,7,0,0" />
             </VerticalStackLayout>
 
             <VerticalStackLayout Grid.Row="1" Spacing="5">
