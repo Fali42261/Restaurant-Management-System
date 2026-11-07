@@ -46,8 +46,8 @@ public partial class DashboardPage : ContentPage
                 StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
             for (var i = 0; i < 4; i++)
             {
-                StatsGrid.Children[i].SetValue(Grid.ColumnProperty, i);
-                StatsGrid.Children[i].SetValue(Grid.RowProperty, 0);
+                Grid.SetColumn((BindableObject)StatsGrid.Children[i], i);
+                Grid.SetRow((BindableObject)StatsGrid.Children[i], 0);
             }
         }
 
