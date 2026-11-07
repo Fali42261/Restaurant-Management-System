@@ -240,10 +240,9 @@
 
                         <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="10">
-                                <Grid ColumnDefinitions="*,Auto">
+                                <Grid ColumnDefinitions="*">
                                     <Label Text="ORDERS" FontSize="16" CharacterSpacing="0.8"
                                            TextColor="#536159" FontAttributes="Bold" />
-                                    <Label Grid.Column="1" Text="1D   1W   1M   6M" FontSize="16" TextColor="#929C96" />
                                 </Grid>
                                 <Label Text="24" FontSize="29" TextColor="#202923" />
                                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
@@ -306,7 +305,7 @@
                                             BackgroundColor="#202923" TextColor="White"
                                             CornerRadius="8" FontSize="15" Padding="10,6" />
                                 </Grid>
-                                <Grid ColumnDefinitions="1.2*,*,*,Auto">
+                                <Grid ColumnDefinitions="1.25*,0.65*,1*,0.75*" ColumnSpacing="4">
                                     <Label Text="Booking ID" FontSize="12" TextColor="#9AA39E" />
                                     <Label Grid.Column="1" Text="Date &amp; time" FontSize="12" TextColor="#9AA39E" />
                                     <Label Grid.Column="2" Text="Table" FontSize="12" TextColor="#9AA39E" />
