@@ -5,81 +5,58 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Create account"
     BackgroundColor="#F4F7FB">
-
-    <Grid><ScrollView>
-        <Grid Padding="24" RowDefinitions="*,Auto,*">
-            <VerticalStackLayout Grid.Row="1"
-                                 Spacing="18"
-                                 HorizontalOptions="Center"
-                                 MaximumWidthRequest="560"
-                                 VerticalOptions="Center">
-                <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                    <Label Text="Create your account"
-                           FontSize="26"
-                           FontAttributes="Bold"
-                           TextColor="#172B27"
-                           HorizontalTextAlignment="Center" />
-                    <Label Text="Register as a restaurant staff member."
-                           FontSize="14"
-                           TextColor="#718078"
-                           HorizontalTextAlignment="Center" />
-                </VerticalStackLayout>
-
-                <Border BackgroundColor="White"
-                        Stroke="#E5EBE8"
-                        StrokeThickness="1"
-                        StrokeShape="RoundRectangle 24"
-                        Padding="26">
-                    <VerticalStackLayout Spacing="14">
-                        <VerticalStackLayout Spacing="6">
-                            <Label Text="Full name" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                            <Border StrokeThickness="0" Padding="0">
+    <Grid>
+        <ScrollView>
+            <Grid Padding="24" RowDefinitions="*,Auto,*">
+                <VerticalStackLayout Grid.Row="1" Spacing="18" HorizontalOptions="Center" MaximumWidthRequest="560" VerticalOptions="Center">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Label Text="Create your account" FontSize="26" FontAttributes="Bold" TextColor="#172B27" HorizontalTextAlignment="Center" />
+                        <Label Text="Register as a restaurant staff member." FontSize="14" TextColor="#718078" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                    <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 24" Padding="26">
+                        <VerticalStackLayout Spacing="14">
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="Full name" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                                 <Entry BackgroundColor="Transparent" Placeholder="Your full name" Text="{Binding FullName}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                                 <BoxView HeightRequest="1" Color="#CBD5CF" />
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="6">
-                            <Label Text="Email address" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                            <Border StrokeThickness="0" Padding="0">
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="Email address" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                                 <Entry BackgroundColor="Transparent" Placeholder="name@example.com" Keyboard="Email" Text="{Binding Email}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                                 <BoxView HeightRequest="1" Color="#CBD5CF" />
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="6">
-                            <Label Text="Mobile number *" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                            <Border StrokeThickness="0" Padding="0">
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="Mobile number *" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                                 <Entry BackgroundColor="Transparent" Placeholder="+91 98765 43210" Keyboard="Telephone" Text="{Binding MobileNumber}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                                 <BoxView HeightRequest="1" Color="#CBD5CF" />
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="6">
-                            <Label Text="Password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                            <Border StrokeThickness="0" Padding="0">
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="Password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                                 <Entry BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                                 <BoxView HeightRequest="1" Color="#CBD5CF" />
-                            </Border>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="6">
-                            <Label Text="Confirm password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                            <Border StrokeThickness="0" Padding="0">
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="Confirm password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
                                 <Entry BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                                 <BoxView HeightRequest="1" Color="#CBD5CF" />
-                            </Border>
+                            </VerticalStackLayout>
+                            <Label Text="New accounts are created with the Staff role and may require approval." FontSize="12" TextColor="#718078" />
+                            <Button Text="Create account" Command="{Binding RegisterCommand}" BackgroundColor="#1F6B57" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="52" />
+                            <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+                                <Label Text="Already have an account?" TextColor="#718078" FontSize="13" VerticalTextAlignment="Center" />
+                                <Label Text="Sign in" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" VerticalTextAlignment="Center">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding GoToLoginCommand}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
-
-                        <Label Text="New accounts are created with the Staff role and may require approval."
-                               FontSize="12"
-                               TextColor="#718078" />
-
-                        
-                        </HorizontalStackLayout>
-                    </VerticalStackLayout>
-                </Border>
-            </VerticalStackLayout>
-        </Grid>
-    </ScrollView><Border IsVisible="{Binding HasStatusMessage}" BackgroundColor="#26332D" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14,10" HorizontalOptions="Center" VerticalOptions="Start" Margin="18,12,18,0" ZIndex="10"><Label Text="{Binding StatusMessage}" TextColor="White" FontSize="13" /></Border></Grid>
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+        </ScrollView>
+        <Border IsVisible="{Binding HasStatusMessage}" BackgroundColor="#26332D" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14,10" HorizontalOptions="Center" VerticalOptions="Start" Margin="18,12,18,0" ZIndex="10">
+            <Label Text="{Binding StatusMessage}" TextColor="White" FontSize="13" />
+        </Border>
+    </Grid>
 </ContentPage>
