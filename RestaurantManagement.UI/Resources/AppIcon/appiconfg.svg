@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="456" height="456" viewBox="0 0 456 456">
-  <text x="228" y="263" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="126" font-weight="800" letter-spacing="-8" fill="#FFFFFF">SWD</text>
-  <path d="M112 302 H344" stroke="#79E0D2" stroke-width="10" stroke-linecap="round"/>
+  <!-- SWD monogram built entirely from paths for MAUI/SVG renderer compatibility. -->
+  <g fill="#FFFFFF">
+    <path d="M151 132 H305 V168 H183 V197 H282 C300 197 312 210 312 228 V268 C312 286 300 298 282 298 H151 V262 H276 V233 H181 C163 233 151 220 151 202 Z"/>
+    <path d="M143 132 H184 L205 247 L226 132 H267 L288 247 L309 132 H350 L316 298 H270 L246 190 L222 298 H176 Z"/>
+    <path d="M121 132 H212 C264 132 294 164 294 215 C294 266 264 298 212 298 H121 Z M163 170 V260 H208 C237 260 252 244 252 215 C252 186 237 170 208 170 Z"/>
+  </g>
+  <path d="M112 326 H344" fill="none" stroke="#79E0D2" stroke-width="10" stroke-linecap="round"/>
 </svg>
