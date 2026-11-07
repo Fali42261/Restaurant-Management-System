@@ -27,7 +27,7 @@ public partial class DashboardPage : ContentPage
         Sidebar.IsVisible = !compact;
         MobileNavigation.IsVisible = compact;
         RootLayout.ColumnDefinitions[0].Width = compact ? new GridLength(0) : new GridLength(190);
-        SearchPanel.IsVisible = width >= 650;
+        WelcomeLabel.IsVisible = width >= 850;\n        SearchPanel.IsVisible = width >= 1000;\n        ProfilePanel.IsVisible = true;\n        LogoutButton.IsVisible = true;
         StatsGrid.ColumnDefinitions.Clear();
         var count = width < 650 ? 2 : 4;
         for (var i = 0; i < count; i++) StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));

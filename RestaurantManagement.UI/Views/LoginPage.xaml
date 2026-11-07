@@ -74,7 +74,7 @@
                                    FontAttributes="Bold"
                                    TextColor="#344A43" />
                             <Border StrokeThickness="0" Padding="0">
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Button Grid.Column="1" Text="👁 Show" Clicked="TogglePasswordVisibility" FontSize="14" BackgroundColor="Transparent" TextColor="#1F6B57" Padding="8,0" /></Grid>
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><ImageButton x:Name="PasswordEyeButton" Grid.Column="1" Source="eye.svg" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" WidthRequest="42" HeightRequest="42" Padding="9" Aspect="AspectFit" /></Grid>
                             </Border>
                         </VerticalStackLayout>
 
