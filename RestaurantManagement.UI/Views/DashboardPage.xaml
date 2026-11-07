@@ -24,7 +24,6 @@
                 <Setter Property="TextColor" Value="#7C8780" />
                 <Setter Property="CornerRadius" Value="9" />
                 <Setter Property="HorizontalOptions" Value="Fill" />
-                <Setter Property="HorizontalContentAlignment" Value="Start" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Padding" Value="12,8" />
             </Style>
@@ -59,7 +58,7 @@
             <VerticalStackLayout Grid.Row="1" Spacing="5">
                 <Button Text="▦   Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"
                         BackgroundColor="#EFF2F0" TextColor="#26332D" CornerRadius="10"
-                        HorizontalOptions="Fill" HorizontalTextAlignment="Start" FontAttributes="Bold" />
+                        HorizontalOptions="Fill" FontAttributes="Bold" />
                 <Button Text="▤   Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders"
                         Style="{StaticResource NavButtonStyle}" />
                 <Button Text="▦   Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables"
