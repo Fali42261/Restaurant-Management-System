@@ -6,6 +6,15 @@
     Title="Create account"
     Shell.NavBarIsVisible="False"
     BackgroundColor="#F4F7FB">
+    <ContentPage.Resources>
+        <Style TargetType="Entry">
+            <Setter Property="HeightRequest" Value="48" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+    </ContentPage.Resources>
     <Grid>
         <ScrollView>
             <Grid Padding="24" RowDefinitions="*,Auto,*">
@@ -28,7 +37,7 @@
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Mobile number" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Entry BackgroundColor="Transparent" Placeholder="+91 98765 43210" Keyboard="Telephone" Text="{Binding MobileNumber}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <Entry BackgroundColor="Transparent" Placeholder="Enter your mobile number" Keyboard="Telephone" Text="{Binding MobileNumber}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
                                 
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
