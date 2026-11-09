@@ -48,7 +48,7 @@
                                    FontAttributes="Bold"
                                    TextColor="#344A43" />
                             <Border StrokeThickness="0" Padding="0">
-                                <Entry BackgroundColor="Transparent" Placeholder="name@example.com or +91..."
+                                <Entry BackgroundColor="Transparent" Placeholder="Enter your email or Mobile number"
                                        Keyboard="Email"
                                        Text="{Binding EmailOrMobile}"
                                        TextColor="#172B27"
@@ -68,7 +68,7 @@
                         </VerticalStackLayout>
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                            <Label Text="Forgot password?" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="Start">
+                            <Label Text="" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="Start">
                                 <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding GoToResetPasswordCommand}" /></Label.GestureRecognizers>
                             </Label>
                             <Label Grid.Column="1" Text="Change password" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="End">
