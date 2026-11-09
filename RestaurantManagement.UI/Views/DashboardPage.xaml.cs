@@ -48,6 +48,27 @@ public partial class DashboardPage : ContentPage
         }
         ConfigureResponsiveGrid(AnalyticsGrid, width < 720, 1.2);
         ConfigureResponsiveGrid(BottomGrid, width < 720, 1.25);
+        ConfigureTableLayout(width);
+    }
+
+    private void ConfigureTableLayout(double width)
+    {
+        ConfigureCardGrid(TableStatsGrid, width < 650 ? 2 : 4);
+        ConfigureCardGrid(TableCardsGrid, width < 650 ? 1 : width < 1050 ? 2 : 4);
+    }
+
+    private static void ConfigureCardGrid(Grid grid, int columns)
+    {
+        grid.ColumnDefinitions.Clear();
+        grid.RowDefinitions.Clear();
+        for (var i = 0; i < columns; i++) grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        var rows = (int)Math.Ceiling(grid.Children.Count / (double)columns);
+        for (var i = 0; i < rows; i++) grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+        for (var i = 0; i < grid.Children.Count; i++)
+        {
+            Grid.SetColumn((BindableObject)grid.Children[i], i % columns);
+            Grid.SetRow((BindableObject)grid.Children[i], i / columns);
+        }
     }
 
     private static void ConfigureResponsiveGrid(Grid grid, bool stacked, double weight)
