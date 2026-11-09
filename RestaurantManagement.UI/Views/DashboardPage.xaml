@@ -47,7 +47,7 @@
 
     <Grid x:Name="RootLayout" ColumnDefinitions="190,*" RowDefinitions="*">
         <!-- Desktop navigation -->
-        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*,Auto"
+        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*"
               BackgroundColor="White" Padding="14,20,12,14">
             <VerticalStackLayout Spacing="5" Padding="8,0,0,22">
                 <Label Text="SwapDigit" FontSize="27" FontAttributes="Bold" TextColor="#56A83B" />
@@ -57,7 +57,7 @@
                        TextColor="#34433A" Margin="0,7,0,0" />
             </VerticalStackLayout>
 
-            <VerticalStackLayout Grid.Row="1" Spacing="5">
+            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always"><VerticalStackLayout Spacing="5">
                 <Button Text="▦   Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"
                         BackgroundColor="#EFF2F0" TextColor="#26332D" CornerRadius="10"
                         HorizontalOptions="Fill" FontAttributes="Bold" />
@@ -79,21 +79,9 @@
                         Style="{StaticResource NavButtonStyle}" />
                 <Button Text="⚙   Settings" Command="{Binding NavigateCommand}" CommandParameter="Settings"
                         Style="{StaticResource NavButtonStyle}" />
-            </VerticalStackLayout>
+            </VerticalStackLayout></ScrollView>
 
-            <Border Grid.Row="2" BackgroundColor="#67B83C" StrokeThickness="0"
-                    StrokeShape="RoundRectangle 16" Padding="13">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="SUPPORT" FontSize="15" TextColor="#E8F7DF" />
-                    <Label Text="Do you need help?" FontSize="19" FontAttributes="Bold"
-                           TextColor="White" />
-                    <Label Text="Contact support for assistance" FontSize="15"
-                           TextColor="#F2FBEA" />
-                    <Button Text="Get support" Command="{Binding SupportCommand}"
-                            BackgroundColor="White" TextColor="#438E2B" CornerRadius="9"
-                            FontSize="16" HeightRequest="34" />
-                </VerticalStackLayout>
-            </Border>
+Border>
         </Grid>
 
         <!-- Main content -->
@@ -102,7 +90,7 @@
                   ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="5">
                 <Label x:Name="WelcomeLabel" Text="Welcome back, Here's what's happening today."
                        FontSize="15" TextColor="#7A8580" VerticalTextAlignment="Center" />
-                <Border x:Name="SearchPanel" Grid.Column="1" Stroke="#E6EAE8" StrokeThickness="1"
+                <Border x:Name="SearchPanel" Grid.Column="1" StrokeThickness="0"
                         StrokeShape="RoundRectangle 10" Padding="8,0" WidthRequest="170"
                         VerticalOptions="Center">
                     <Entry Placeholder="⌕  Search" Text="{Binding SearchText}"
@@ -148,7 +136,7 @@
 
             <ScrollView Grid.Row="2">
                 <VerticalStackLayout Padding="16" Spacing="13">
-                    <Label Text="{Binding SectionTitle}" FontSize="26" FontAttributes="Bold" TextColor="#222D27" />
+                    <Label Text="{Binding SectionTitle}" IsVisible="{Binding IsOtherSection}" FontSize="26" FontAttributes="Bold" TextColor="#222D27" />
 
                     <Border IsVisible="{Binding IsOtherSection}" BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="22">
                         <VerticalStackLayout Spacing="10">
@@ -396,13 +384,7 @@
                         </Border>
                     </Grid>
 
-                    <Label Text="SwapDigit • Official Website ↗"
-                           FontSize="13" FontAttributes="Bold" TextColor="#1F6B57"
-                           TextDecorations="Underline" HorizontalTextAlignment="Center">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OpenOfficialWebsite" />
-                        </Label.GestureRecognizers>
-                    </Label>
+/Label>
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
