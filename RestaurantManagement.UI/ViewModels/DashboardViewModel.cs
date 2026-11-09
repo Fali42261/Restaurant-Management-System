@@ -26,6 +26,7 @@ public sealed class DashboardViewModel : BaseViewModel
         Title="Dashboard";
         LogoutCommand=new Command(async()=>await Shell.Current.GoToAsync("//LoginPage"));
         NavigateCommand=new Command<string>(Navigate);
+        TableActionCommand=new Command<string>(table=>ShowToast($"{table} selected. Table actions will be connected in the next UI step."));
         AddReservationCommand=new Command(()=>ShowToast("Reservation form will be added in the Reservations UI module."));
         SupportCommand=new Command(()=>ShowToast("Support center UI will be available in the Settings module."));
         NotificationCommand=new Command(()=>ShowToast("You are all caught up. No new notifications."));
@@ -36,14 +37,16 @@ public sealed class DashboardViewModel : BaseViewModel
     public string SelectedSection
     {
         get=>_selectedSection;
-        private set { if(SetProperty(ref _selectedSection,value)) { OnPropertyChanged(nameof(SectionTitle)); OnPropertyChanged(nameof(SectionDescription)); OnPropertyChanged(nameof(IsDashboardSection)); OnPropertyChanged(nameof(IsOtherSection)); } }
+        private set { if(SetProperty(ref _selectedSection,value)) { OnPropertyChanged(nameof(SectionTitle)); OnPropertyChanged(nameof(SectionDescription)); OnPropertyChanged(nameof(IsDashboardSection)); OnPropertyChanged(nameof(IsOtherSection)); OnPropertyChanged(nameof(IsTablesSection)); } }
     }
     public string SectionTitle=>SelectedSection;
     public string SectionDescription=>Descriptions.TryGetValue(SelectedSection,out var value)?value:"Restaurant workspace";
     public bool IsDashboardSection=>SelectedSection.Equals("Dashboard",StringComparison.OrdinalIgnoreCase);
-    public bool IsOtherSection=>!IsDashboardSection;
+    public bool IsTablesSection => SelectedSection.Equals("Tables", StringComparison.OrdinalIgnoreCase);
+    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection;
     public ICommand LogoutCommand{get;}
     public ICommand NavigateCommand{get;}
+    public ICommand TableActionCommand{get;}
     public ICommand AddReservationCommand{get;}
     public ICommand SupportCommand{get;}
     public ICommand NotificationCommand{get;}
