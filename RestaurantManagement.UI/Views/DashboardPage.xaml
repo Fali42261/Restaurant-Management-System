@@ -20,9 +20,10 @@
                 <Setter Property="Padding" Value="13" />
             </Style>
             <Style x:Key="NavButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="Transparent" />
-                <Setter Property="TextColor" Value="#7C8780" />
-                <Setter Property="CornerRadius" Value="9" />
+                <Setter Property="BackgroundColor" Value="#0D6971" />
+                <Setter Property="TextColor" Value="#E8F2F2" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="HeightRequest" Value="48" />
                 <Setter Property="HorizontalOptions" Value="Fill" />
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="HorizontalTextAlignment" Value="Start" />
@@ -30,7 +31,7 @@
             </Style>
             <Style x:Key="NavChipStyle" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="White" />
-                <Setter Property="TextColor" Value="#65716A" />
+                <Setter Property="TextColor" Value="#075B63" />
                 <Setter Property="CornerRadius" Value="8" />
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="Padding" Value="12,8" />
