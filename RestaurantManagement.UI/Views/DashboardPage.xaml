@@ -24,8 +24,9 @@
                 <Setter Property="TextColor" Value="#7C8780" />
                 <Setter Property="CornerRadius" Value="9" />
                 <Setter Property="HorizontalOptions" Value="Fill" />
-                <Setter Property="FontSize" Value="12" />
-                <Setter Property="Padding" Value="12,8" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="HorizontalTextAlignment" Value="Start" />
+                <Setter Property="Padding" Value="5,8" />
             </Style>
             <Style x:Key="NavChipStyle" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="White" />
@@ -77,8 +78,7 @@
                 <Border x:Name="SearchPanel" Grid.Column="1" StrokeThickness="0"
                         StrokeShape="RoundRectangle 10" Padding="8,0" WidthRequest="170"
                         VerticalOptions="Center">
-                    <Entry Placeholder="Search" Text="{Binding SearchText}" BackgroundColor="Transparent"
-                           FontSize="14" HeightRequest="34" />
+                    <Grid RowDefinitions="*,1" VerticalOptions="Center"><Entry Grid.Row="0" Placeholder="Search" Text="{Binding SearchText}" BackgroundColor="Transparent" FontSize="14" HeightRequest="34" /><BoxView Grid.Row="1" BackgroundColor="#AEBBB4" HeightRequest="1" HorizontalOptions="Fill" /></Grid>
                 </Border>
                 <Button Grid.Column="2" Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" Command="{Binding NotificationCommand}"
                         BackgroundColor="Transparent" TextColor="#53635A" FontSize="19"
