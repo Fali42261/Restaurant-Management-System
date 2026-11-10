@@ -120,7 +120,7 @@
                     <Button Text="Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Floors & Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors & Tables" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Floors &amp; Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors &amp; Tables" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavChipStyle}" />
                 </HorizontalStackLayout>
             </ScrollView>
