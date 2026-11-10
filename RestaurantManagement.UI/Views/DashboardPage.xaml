@@ -47,75 +47,60 @@
 
     <Grid x:Name="RootLayout" ColumnDefinitions="190,*" RowDefinitions="*">
         <!-- Desktop navigation -->
-        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*"
-              BackgroundColor="White" Padding="14,20,12,14">
-            <VerticalStackLayout Spacing="5" Padding="8,0,0,22">
-                <Label Text="SwapDigit" FontSize="27" FontAttributes="Bold" TextColor="#56A83B" />
-                <Label Text="RESTAURANT MANAGEMENT" FontSize="16" CharacterSpacing="1.2"
-                       TextColor="#9AA49E" />
-                <Label Text="Ananda Food" FontSize="16" FontAttributes="Bold"
-                       TextColor="#34433A" Margin="0,7,0,0" />
+        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*" BackgroundColor="White" Padding="14,20,12,14">
+            <VerticalStackLayout Spacing="4" Padding="8,0,0,18">
+                <Label Text="SwapDigit" FontSize="25" FontAttributes="Bold" TextColor="#56A83B" />
+                <Label Text="RESTAURANT MANAGEMENT" FontSize="10" CharacterSpacing="1" TextColor="#9AA49E" />
+                <Label Text="Ananda Food" FontSize="14" FontAttributes="Bold" TextColor="#34433A" Margin="0,7,0,0" />
             </VerticalStackLayout>
-
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always"><VerticalStackLayout Spacing="5">
-                <Button Text="⌂   Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"
-                        BackgroundColor="#EFF2F0" TextColor="#26332D" CornerRadius="10"
-                        HorizontalOptions="Fill" FontAttributes="Bold" />
-                <Button Text="▣   Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders"
-                        Style="{StaticResource NavButtonStyle}" />
-                <Button Text="▦   Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables"
-                        Style="{StaticResource NavButtonStyle}" />
-                <Button Text="☰   Menu" Command="{Binding NavigateCommand}" CommandParameter="Menu"
-                        Style="{StaticResource NavButtonStyle}" />
-                <Button Text="▤   Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory"
-                        Style="{StaticResource NavButtonStyle}" />
-                <Button Text="▦   Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations"
-                        Style="{StaticResource NavButtonStyle}" />
-                <Button Text="♙   Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers"
-                        Style="{StaticResource NavButtonStyle}" />
-                <Button Text="♟   Staff" Command="{Binding NavigateCommand}" CommandParameter="Staff"
-                        Style="{StaticResource NavButtonStyle}" />
-                <Button Text="▥   Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports"
-                        Style="{StaticResource NavButtonStyle}" />
-                <Button Text="⚙   Settings" Command="{Binding NavigateCommand}" CommandParameter="Settings"
-                        Style="{StaticResource NavButtonStyle}" />
-            </VerticalStackLayout></ScrollView>
-
+            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always">
+                <VerticalStackLayout Spacing="5">
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE1D3;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Menu" Command="{Binding NavigateCommand}" CommandParameter="Menu" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE7B8;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE787;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Staff" Command="{Binding NavigateCommand}" CommandParameter="Staff" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavButtonStyle}"/></Grid>
+                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Settings" Command="{Binding NavigateCommand}" CommandParameter="Settings" Style="{StaticResource NavButtonStyle}"/></Grid>
+                </VerticalStackLayout>
+            </ScrollView>
         </Grid>
-
         <!-- Main content -->
         <Grid Grid.Column="1" RowDefinitions="58,52,*" RowSpacing="0">
             <Grid Grid.Row="0" BackgroundColor="White" Padding="12,6"
-                  ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="5">
+                  ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="5">
                 <Label x:Name="WelcomeLabel" Text="Welcome back, Here's what's happening today."
                        FontSize="15" TextColor="#7A8580" VerticalTextAlignment="Center" />
                 <Border x:Name="SearchPanel" Grid.Column="1" StrokeThickness="0"
                         StrokeShape="RoundRectangle 10" Padding="8,0" WidthRequest="170"
                         VerticalOptions="Center">
-                    <Entry Placeholder="⌕  Search" Text="{Binding SearchText}"
+                    <Entry Placeholder="Search" Text="{Binding SearchText}" BackgroundColor="Transparent"
                            FontSize="14" HeightRequest="34" />
                 </Border>
-                <Button Grid.Column="2" Text="♧" Command="{Binding NotificationCommand}"
+                <Button Grid.Column="2" Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" Command="{Binding NotificationCommand}"
                         BackgroundColor="Transparent" TextColor="#53635A" FontSize="19"
                         Padding="4,0" VerticalOptions="Center" />
-                <Border x:Name="ProfilePanel" Grid.Column="3" StrokeThickness="0" BackgroundColor="#F1F5F1"
-                        StrokeShape="RoundRectangle 11" Padding="6,4" HorizontalOptions="End" VerticalOptions="Center">
-                    <HorizontalStackLayout Spacing="7" VerticalOptions="Center">
-                        <Border BackgroundColor="#DDEBD6" StrokeThickness="0"
-                                StrokeShape="RoundRectangle 9" WidthRequest="32" HeightRequest="32">
-                            <Label Text="A" TextColor="#397D2A" FontAttributes="Bold" FontSize="16"
-                                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        </Border>
-                        <VerticalStackLayout Spacing="0" VerticalOptions="Center">
-                            <Label Text="Arthur" FontSize="13" FontAttributes="Bold"
-                                   TextColor="#34433A" />
-                            <Label Text="Owner" FontSize="10" TextColor="#718078" />
-                        </VerticalStackLayout>
-                    </HorizontalStackLayout>
-                </Border>
-                <Button x:Name="LogoutButton" Grid.Column="4" Text="⎋" Command="{Binding LogoutCommand}"
-                        BackgroundColor="Transparent" TextColor="#53635A" FontSize="21"
-                        Padding="5,0" VerticalOptions="Center" />
+                <VerticalStackLayout x:Name="UserMenuHost" Grid.Column="3" Spacing="3" HorizontalOptions="End" VerticalOptions="Center">
+                    <Border x:Name="ProfilePanel" StrokeThickness="0" BackgroundColor="#F1F5F1" StrokeShape="RoundRectangle 11" Padding="6,4">
+                        <HorizontalStackLayout Spacing="7" VerticalOptions="Center">
+                            <Border BackgroundColor="#DDEBD6" StrokeThickness="0" StrokeShape="RoundRectangle 9" WidthRequest="32" HeightRequest="32">
+                                <Label Text="A" TextColor="#397D2A" FontAttributes="Bold" FontSize="16" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            </Border>
+                            <VerticalStackLayout Spacing="0"><Label Text="Arthur" FontSize="13" FontAttributes="Bold" TextColor="#34433A" /><Label Text="Owner" FontSize="10" TextColor="#718078" /></VerticalStackLayout>
+                            <Label Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="11" TextColor="#65716A" VerticalTextAlignment="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+                    <Border x:Name="UserMenu" IsVisible="False" BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 9" Padding="3" HorizontalOptions="End">
+                        <Button Text="Logout" Command="{Binding LogoutCommand}" BackgroundColor="Transparent" TextColor="#53635A" FontSize="13" HorizontalOptions="Fill" />
+                    </Border>
+                    <VerticalStackLayout.GestureRecognizers>
+                        <PointerGestureRecognizer PointerEntered="ShowUserMenu" PointerExited="HideUserMenu" />
+                        <TapGestureRecognizer Tapped="ToggleUserMenu" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
             </Grid>
 
                                 <ScrollView x:Name="MobileNavigation" Grid.Row="1" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" BackgroundColor="White">
