@@ -18,12 +18,12 @@
     <Grid>
         <ScrollView>
             <Grid Padding="24" RowDefinitions="*,Auto,*">
-                <VerticalStackLayout Grid.Row="1" Spacing="18" HorizontalOptions="Center" MaximumWidthRequest="560" VerticalOptions="Center">
+                <VerticalStackLayout Grid.Row="1" Spacing="18" HorizontalOptions="Center" MaximumWidthRequest="520" VerticalOptions="Center">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                         <Label Text="Create owner account" FontSize="26" FontAttributes="Bold" TextColor="#172B27" HorizontalTextAlignment="Center" />
                         <Label Text="Register your restaurant as the owner." FontSize="14" TextColor="#718078" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
-                    <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 24" Padding="26">
+                    <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 24" Padding="24">
                         <VerticalStackLayout Spacing="14">
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Full name" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
