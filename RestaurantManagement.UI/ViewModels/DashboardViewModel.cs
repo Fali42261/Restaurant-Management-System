@@ -14,6 +14,8 @@ public sealed class DashboardViewModel : BaseViewModel
     {
         ["Dashboard"] = "Business performance and restaurant overview.",
         ["Orders"] = "Create, view, edit and delete restaurant orders.",
+        ["Settings"] = "Manage your restaurant application preferences.",
+        ["Help Support"] = "Get help with using swapDigit and contact support.",
         ["Tables"] = "Live table availability, order and dining status.",
         ["POS Billing"] = "Point of sale billing workspace.",
         ["Self Service"] = "Self-service ordering workspace.",
@@ -32,7 +34,7 @@ public sealed class DashboardViewModel : BaseViewModel
         NavigateCommand = new Command<string>(Navigate);
         TableActionCommand = new Command<string>(table => ShowToast($"{table} selected."));
         AddReservationCommand = new Command(() => ShowToast("Reservation form will be available in Reservations."));
-        SupportCommand = new Command(() => ShowToast("Support center will be available in Settings."));
+        SupportCommand = new Command(() => Navigate("Help Support"));
         NotificationCommand = new Command(() => ShowToast("You are all caught up. No new notifications."));
 
         Tables = new ObservableCollection<TableRecord>
@@ -86,6 +88,8 @@ public sealed class DashboardViewModel : BaseViewModel
                 OnPropertyChanged(nameof(IsOtherSection));
                 OnPropertyChanged(nameof(IsTablesSection));
                 OnPropertyChanged(nameof(IsOrdersSection));
+                OnPropertyChanged(nameof(IsSettingsSection));
+                OnPropertyChanged(nameof(IsHelpSupportSection));
             }
         }
     }
@@ -95,7 +99,9 @@ public sealed class DashboardViewModel : BaseViewModel
     public bool IsDashboardSection => SelectedSection.Equals("Dashboard", StringComparison.OrdinalIgnoreCase);
     public bool IsTablesSection => SelectedSection.Equals("Tables", StringComparison.OrdinalIgnoreCase) || SelectedSection.Equals("Floors & Tables", StringComparison.OrdinalIgnoreCase);
     public bool IsOrdersSection => SelectedSection.Equals("Orders", StringComparison.OrdinalIgnoreCase);
-    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection;
+    public bool IsSettingsSection => SelectedSection.Equals("Settings", StringComparison.OrdinalIgnoreCase);
+    public bool IsHelpSupportSection => SelectedSection.Equals("Help Support", StringComparison.OrdinalIgnoreCase);
+    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsHelpSupportSection;
 
     public int AvailableTableCount => Tables.Count(t => t.Status == "Available");
     public int ReservedTableCount => Tables.Count(t => t.Status == "Reserved");
