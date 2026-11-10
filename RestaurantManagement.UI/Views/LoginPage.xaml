@@ -30,7 +30,7 @@
                         Stroke="#E5EBE8"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 24"
-                        Padding="26">
+                        Padding="24">
                     <VerticalStackLayout Spacing="17">
                         <VerticalStackLayout Spacing="4">
                             <Label Text="Sign in"
