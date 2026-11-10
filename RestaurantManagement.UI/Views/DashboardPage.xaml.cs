@@ -162,8 +162,8 @@ public partial class DashboardPage : ContentPage
         if (root is Button button && button.CommandParameter is string section)
         {
             var active = section.Equals(selected, StringComparison.OrdinalIgnoreCase);
-            button.BackgroundColor = Color.FromArgb(active ? "#EAF3E6" : "#FFFFFF");
-            button.TextColor = Color.FromArgb(active ? "#397D2A" : "#65716A");
+            button.BackgroundColor = Color.FromArgb(active ? "#FFFFFF" : "#0D6971");
+            button.TextColor = Color.FromArgb(active ? "#075B63" : "#E8F2F2");
             button.FontAttributes = active ? FontAttributes.Bold : FontAttributes.None;
             button.CornerRadius = 9;
         }
