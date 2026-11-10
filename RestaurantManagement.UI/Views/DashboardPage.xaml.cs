@@ -17,7 +17,7 @@ public partial class DashboardPage : ContentPage
             if (e.PropertyName == nameof(DashboardViewModel.SelectedSection))
             {
                 UpdateNavigationSelection(vm.SelectedSection);
-                UserMenu.IsVisible = false;
+                FindByName<Border>("UserMenu").IsVisible = false;
             }
         };
         Loaded += (_, _) =>
@@ -44,31 +44,31 @@ public partial class DashboardPage : ContentPage
     private void ConfigureResponsiveLayout(double width)
     {
         var compact = width < 850;
-        Sidebar.IsVisible = !compact;
-        MobileNavigation.IsVisible = compact;
-        RootLayout.ColumnDefinitions[0].Width = compact ? new GridLength(0) : new GridLength(190);
-        WelcomeLabel.IsVisible = width >= 850;
-        SearchPanel.IsVisible = width >= 1000;
-        UserMenu.IsVisible = false;
+        FindByName<Grid>("Sidebar").IsVisible = !compact;
+        FindByName<ScrollView>("MobileNavigation").IsVisible = compact;
+        FindByName<Grid>("RootLayout").ColumnDefinitions[0].Width = compact ? new GridLength(0) : new GridLength(190);
+        FindByName<Label>("WelcomeLabel").IsVisible = width >= 850;
+        FindByName<Border>("SearchPanel").IsVisible = width >= 1000;
+        FindByName<Border>("UserMenu").IsVisible = false;
 
-        StatsGrid.ColumnDefinitions.Clear();
+        FindByName<Grid>("StatsGrid").ColumnDefinitions.Clear();
         var statsColumns = width < 650 ? 2 : 4;
         for (var i = 0; i < statsColumns; i++)
-            StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-        for (var i = 0; i < StatsGrid.Children.Count; i++)
+            FindByName<Grid>("StatsGrid").ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        for (var i = 0; i < FindByName<Grid>("StatsGrid").Children.Count; i++)
         {
-            Grid.SetColumn((BindableObject)StatsGrid.Children[i], i % statsColumns);
-            Grid.SetRow((BindableObject)StatsGrid.Children[i], i / statsColumns);
+            Grid.SetColumn((BindableObject)FindByName<Grid>("StatsGrid").Children[i], i % statsColumns);
+            Grid.SetRow((BindableObject)FindByName<Grid>("StatsGrid").Children[i], i / statsColumns);
         }
 
-        ConfigureResponsiveGrid(AnalyticsGrid, width < 720, 1.2);
-        ConfigureResponsiveGrid(BottomGrid, width < 720, 1.25);
+        ConfigureResponsiveGrid(FindByName<Grid>("AnalyticsGrid"), width < 720, 1.2);
+        ConfigureResponsiveGrid(FindByName<Grid>("BottomGrid"), width < 720, 1.25);
 
         var contentWidth = width < 850 ? width - 48 : width - 238;
         var cardWidth = width < 650 ? Math.Max(220, contentWidth) :
             width < 1050 ? Math.Max(220, (contentWidth - 16) / 2) :
             Math.Max(220, (contentWidth - 32) / 3);
-        foreach (var child in TableCardsFlex.Children)
+        foreach (var child in FindByName<FlexLayout>("TableCardsFlex").Children)
             if (child is Border card) card.WidthRequest = cardWidth;
     }
 
@@ -150,14 +150,14 @@ public partial class DashboardPage : ContentPage
         if (confirm) vm.DeleteOrder(order);
     }
 
-    private void ShowUserMenu(object sender, PointerEventArgs e) => UserMenu.IsVisible = true;
-    private void HideUserMenu(object sender, PointerEventArgs e) => UserMenu.IsVisible = false;
-    private void ToggleUserMenu(object sender, TappedEventArgs e) => UserMenu.IsVisible = !UserMenu.IsVisible;
+    private void ShowUserMenu(object sender, PointerEventArgs e) => FindByName<Border>("UserMenu").IsVisible = true;
+    private void HideUserMenu(object sender, PointerEventArgs e) => FindByName<Border>("UserMenu").IsVisible = false;
+    private void ToggleUserMenu(object sender, TappedEventArgs e) => FindByName<Border>("UserMenu").IsVisible = !FindByName<Border>("UserMenu").IsVisible;
 
     private void UpdateNavigationSelection(string selected)
     {
-        UpdateButtons(Sidebar, selected);
-        UpdateButtons(MobileNavigation, selected);
+        UpdateButtons(FindByName<Grid>("Sidebar"), selected);
+        UpdateButtons(FindByName<ScrollView>("MobileNavigation"), selected);
     }
 
     private static void UpdateButtons(Element root, string selected)
