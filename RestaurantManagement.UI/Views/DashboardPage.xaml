@@ -151,7 +151,7 @@
                         <FlexLayout x:Name="TableCardsFlex" BindableLayout.ItemsSource="{Binding Tables}" Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border WidthRequest="235" Margin="0,0,10,10" BackgroundColor="{Binding CardColor}" Stroke="{Binding BorderColor}" StrokeThickness="2" StrokeShape="RoundRectangle 13" Padding="12">
+                                    <Border WidthRequest="235" Margin="0,0,10,10" BackgroundColor="{Binding CardColor}" Stroke="{Binding BorderBrush}" StrokeThickness="2" StrokeShape="RoundRectangle 13" Padding="12">
                                         <VerticalStackLayout Spacing="5">
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <Label Text="{Binding Name}" FontSize="21" FontAttributes="Bold" TextColor="#26332D" />
