@@ -65,7 +65,7 @@
                     <Button Text="₹  Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavButtonStyle}" />
                     <Button Text="▣  Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavButtonStyle}" />
                     <Button Text="▤  Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavButtonStyle}" />
-                    <Button Text="▦  Floors & Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors & Tables" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="▦  Floors &amp; Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors &amp; Tables" Style="{StaticResource NavButtonStyle}" />
                     <Button Text="☷  Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavButtonStyle}" />
                 </VerticalStackLayout>
             </ScrollView>
