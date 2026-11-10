@@ -48,24 +48,24 @@
 
     <Grid x:Name="RootLayout" ColumnDefinitions="190,*" RowDefinitions="*">
         <!-- Desktop navigation -->
-        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*" BackgroundColor="White" Padding="14,20,12,14">
-            <VerticalStackLayout Spacing="4" Padding="8,0,0,18">
-                <Label Text="SwapDigit" FontSize="25" FontAttributes="Bold" TextColor="#56A83B" />
-                <Label Text="RESTAURANT MANAGEMENT" FontSize="10" CharacterSpacing="1" TextColor="#9AA49E" />
-                <Label Text="Ananda Food" FontSize="14" FontAttributes="Bold" TextColor="#34433A" Margin="0,7,0,0" />
+        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*" BackgroundColor="#075B63" Padding="10,16,9,10">
+            <VerticalStackLayout Spacing="3" Padding="8,4,4,18">
+                <Label Text="swapDigit" FontSize="23" FontAttributes="Bold" TextColor="White" />
+                <Label Text="RESTAURANT MANAGEMENT" FontSize="9" CharacterSpacing="1" TextColor="#B9D7D8" />
             </VerticalStackLayout>
             <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always">
-                <VerticalStackLayout Spacing="5">
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE1D3;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Menu" Command="{Binding NavigateCommand}" CommandParameter="Menu" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE7B8;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE787;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Staff" Command="{Binding NavigateCommand}" CommandParameter="Staff" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavButtonStyle}"/></Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="42"><Label Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="17" TextColor="#65716A" VerticalTextAlignment="Center" HorizontalTextAlignment="Center"/><Button Grid.Column="1" Text="Settings" Command="{Binding NavigateCommand}" CommandParameter="Settings" Style="{StaticResource NavButtonStyle}"/></Grid>
+                <VerticalStackLayout Spacing="6">
+                    <Button Text="▦  Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="▥  Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="☷  POS Billing (F3)" Command="{Binding NavigateCommand}" CommandParameter="POS Billing" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="★  Self Service (F4)" Command="{Binding NavigateCommand}" CommandParameter="Self Service" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="♨  KOT (Kitchen)" Command="{Binding NavigateCommand}" CommandParameter="KOT" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="◷  Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="₹  Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="▣  Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="▤  Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="▦  Floors & Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors & Tables" Style="{StaticResource NavButtonStyle}" />
+                    <Button Text="☷  Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavButtonStyle}" />
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
@@ -103,20 +103,21 @@
                 </VerticalStackLayout>
             </Grid>
 
-                                <ScrollView x:Name="MobileNavigation" Grid.Row="1" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" BackgroundColor="White">
-                        <HorizontalStackLayout Spacing="6" Padding="10,4">
-                            <Button Text="Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Menu" Command="{Binding NavigateCommand}" CommandParameter="Menu" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Staff" Command="{Binding NavigateCommand}" CommandParameter="Staff" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavChipStyle}" />
-                            <Button Text="Settings" Command="{Binding NavigateCommand}" CommandParameter="Settings" Style="{StaticResource NavChipStyle}" />
-                        </HorizontalStackLayout>
-                    </ScrollView>
+            <ScrollView x:Name="MobileNavigation" Grid.Row="1" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" BackgroundColor="#075B63">
+                <HorizontalStackLayout Spacing="6" Padding="10,4">
+                    <Button Text="Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="POS Billing (F3)" Command="{Binding NavigateCommand}" CommandParameter="POS Billing" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Self Service (F4)" Command="{Binding NavigateCommand}" CommandParameter="Self Service" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="KOT (Kitchen)" Command="{Binding NavigateCommand}" CommandParameter="KOT" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Floors & Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors & Tables" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavChipStyle}" />
+                </HorizontalStackLayout>
+            </ScrollView>
 
             <ScrollView Grid.Row="2">
                 <VerticalStackLayout Padding="16" Spacing="13">
@@ -132,27 +133,76 @@
 
 
                     <VerticalStackLayout x:Name="TableDashboard" IsVisible="{Binding IsTablesSection}" Spacing="13">
-                        <Grid x:Name="TableStatsGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="9">
-                            <Border Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout><Label Text="TOTAL TABLES" FontSize="13" TextColor="#7C8780"/><Label Text="12" FontSize="26" FontAttributes="Bold" TextColor="#26332D"/></VerticalStackLayout></Border>
-                            <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout><Label Text="AVAILABLE" FontSize="13" TextColor="#7C8780"/><Label Text="6" FontSize="26" FontAttributes="Bold" TextColor="#368C55"/></VerticalStackLayout></Border>
-                            <Border Grid.Column="2" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout><Label Text="OCCUPIED" FontSize="13" TextColor="#7C8780"/><Label Text="4" FontSize="26" FontAttributes="Bold" TextColor="#C6534D"/></VerticalStackLayout></Border>
-                            <Border Grid.Column="3" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout><Label Text="RESERVED" FontSize="13" TextColor="#7C8780"/><Label Text="2" FontSize="26" FontAttributes="Bold" TextColor="#D48B28"/></VerticalStackLayout></Border>
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Label Text="Ground Floor" FontSize="21" FontAttributes="Bold" TextColor="#075B63" />
+                            <Label Grid.Column="1" Text="12 tables  •  Live status" FontSize="12" TextColor="#718078" VerticalTextAlignment="Center" />
+                            <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8" Margin="0,10,0,0">
+                                <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding AvailableTableCount, StringFormat='Available {0}'}" TextColor="#536159" FontAttributes="Bold" /></Border>
+                                <Border Grid.Column="1" BackgroundColor="#FFF3C0" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding ReservedTableCount, StringFormat='Reserved {0}'}" TextColor="#8B6A13" FontAttributes="Bold" /></Border>
+                                <Border Grid.Column="2" BackgroundColor="#DDEEFF" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding ActiveTableCount, StringFormat='Running {0}'}" TextColor="#23658A" FontAttributes="Bold" /></Border>
+                                <Border Grid.Column="3" BackgroundColor="#FCE6E4" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding ReadyTableCount, StringFormat='Ready {0}'}" TextColor="#A7443D" FontAttributes="Bold" /></Border>
+                            </Grid>
                         </Grid>
-                        <Grid ColumnDefinitions="*,Auto"><Label Text="All Tables" FontSize="19" FontAttributes="Bold" TextColor="#26332D"/><HorizontalStackLayout Grid.Column="1" Spacing="8"><Label Text="● Available" FontSize="12" TextColor="#368C55"/><Label Text="● Occupied" FontSize="12" TextColor="#C6534D"/><Label Text="● Reserved" FontSize="12" TextColor="#D48B28"/></HorizontalStackLayout></Grid>
-                        <Grid x:Name="TableCardsGrid" ColumnDefinitions="*,*,*,*" ColumnSpacing="9" RowSpacing="9">
-                            <Border Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 01  •  Available" FontSize="15" FontAttributes="Bold" TextColor="#368C55"/><Label Text="4 seats • Ready" FontSize="12" TextColor="#7C8780"/><Button Text="Open Table" Command="{Binding TableActionCommand}" CommandParameter="Table 01" BackgroundColor="#EAF3E6" TextColor="#397D2A" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 02  •  Occupied" FontSize="15" FontAttributes="Bold" TextColor="#C6534D"/><Label Text="2 guests • 18 min" FontSize="12" TextColor="#7C8780"/><Button Text="View Order" Command="{Binding TableActionCommand}" CommandParameter="Table 02" BackgroundColor="#FCEDEC" TextColor="#B94B45" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Column="2" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 03  •  Reserved" FontSize="15" FontAttributes="Bold" TextColor="#D48B28"/><Label Text="4 guests • 7:30 PM" FontSize="12" TextColor="#7C8780"/><Button Text="View Booking" Command="{Binding TableActionCommand}" CommandParameter="Table 03" BackgroundColor="#FFF4E3" TextColor="#A86B16" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Column="3" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 04  •  Available" FontSize="15" FontAttributes="Bold" TextColor="#368C55"/><Label Text="2 seats • Ready" FontSize="12" TextColor="#7C8780"/><Button Text="Open Table" Command="{Binding TableActionCommand}" CommandParameter="Table 04" BackgroundColor="#EAF3E6" TextColor="#397D2A" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Row="1" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 05  •  Occupied" FontSize="15" FontAttributes="Bold" TextColor="#C6534D"/><Label Text="3 guests • 32 min" FontSize="12" TextColor="#7C8780"/><Button Text="View Order" Command="{Binding TableActionCommand}" CommandParameter="Table 05" BackgroundColor="#FCEDEC" TextColor="#B94B45" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 06  •  Available" FontSize="15" FontAttributes="Bold" TextColor="#368C55"/><Label Text="4 seats • Ready" FontSize="12" TextColor="#7C8780"/><Button Text="Open Table" Command="{Binding TableActionCommand}" CommandParameter="Table 06" BackgroundColor="#EAF3E6" TextColor="#397D2A" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 07  •  Reserved" FontSize="15" FontAttributes="Bold" TextColor="#D48B28"/><Label Text="2 guests • 8:00 PM" FontSize="12" TextColor="#7C8780"/><Button Text="View Booking" Command="{Binding TableActionCommand}" CommandParameter="Table 07" BackgroundColor="#FFF4E3" TextColor="#A86B16" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Row="1" Grid.Column="3" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 08  •  Occupied" FontSize="15" FontAttributes="Bold" TextColor="#C6534D"/><Label Text="2 guests • 11 min" FontSize="12" TextColor="#7C8780"/><Button Text="View Order" Command="{Binding TableActionCommand}" CommandParameter="Table 08" BackgroundColor="#FCEDEC" TextColor="#B94B45" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Row="2" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 09  •  Available" FontSize="15" FontAttributes="Bold" TextColor="#368C55"/><Label Text="6 seats • Ready" FontSize="12" TextColor="#7C8780"/><Button Text="Open Table" Command="{Binding TableActionCommand}" CommandParameter="Table 09" BackgroundColor="#EAF3E6" TextColor="#397D2A" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 10  •  Available" FontSize="15" FontAttributes="Bold" TextColor="#368C55"/><Label Text="2 seats • Ready" FontSize="12" TextColor="#7C8780"/><Button Text="Open Table" Command="{Binding TableActionCommand}" CommandParameter="Table 10" BackgroundColor="#EAF3E6" TextColor="#397D2A" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 11  •  Occupied" FontSize="15" FontAttributes="Bold" TextColor="#C6534D"/><Label Text="4 guests • 25 min" FontSize="12" TextColor="#7C8780"/><Button Text="View Order" Command="{Binding TableActionCommand}" CommandParameter="Table 11" BackgroundColor="#FCEDEC" TextColor="#B94B45" FontSize="12"/></VerticalStackLayout></Border>
-                            <Border Grid.Row="2" Grid.Column="3" Style="{StaticResource DashboardCardStyle}"><VerticalStackLayout Spacing="7"><Label Text="Table 12  •  Available" FontSize="15" FontAttributes="Bold" TextColor="#368C55"/><Label Text="4 seats • Ready" FontSize="12" TextColor="#7C8780"/><Button Text="Open Table" Command="{Binding TableActionCommand}" CommandParameter="Table 12" BackgroundColor="#EAF3E6" TextColor="#397D2A" FontSize="12"/></VerticalStackLayout></Border>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Tables" FontSize="19" FontAttributes="Bold" TextColor="#26332D" />
+                            <Button Grid.Column="1" Text="+ Reservation" Command="{Binding AddReservationCommand}" BackgroundColor="#075B63" TextColor="White" FontSize="12" Padding="12,6" />
                         </Grid>
+                        <FlexLayout x:Name="TableCardsFlex" BindableLayout.ItemsSource="{Binding Tables}" Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border WidthRequest="235" Margin="0,0,10,10" BackgroundColor="{Binding CardColor}" Stroke="{Binding BorderColor}" StrokeThickness="2" StrokeShape="RoundRectangle 13" Padding="12">
+                                        <VerticalStackLayout Spacing="5">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Label Text="{Binding Name}" FontSize="21" FontAttributes="Bold" TextColor="#26332D" />
+                                                <Label Grid.Column="1" Text="{Binding Status}" FontSize="11" FontAttributes="Bold" TextColor="{Binding StatusColor}" VerticalTextAlignment="Center" />
+                                            </Grid>
+                                            <Label Text="{Binding AmountText}" FontSize="15" FontAttributes="Bold" TextColor="#26332D" />
+                                            <Label Text="{Binding TimerText}" FontSize="12" TextColor="#536159" />
+                                            <Label Text="{Binding DetailText}" FontSize="12" TextColor="#718078" />
+                                            <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                                                <Label Text="{Binding SeatsText}" FontSize="12" TextColor="#536159" VerticalTextAlignment="Center" />
+                                                <Button Grid.Column="1" Text="{Binding ActionText}" Clicked="TableActionClicked" BackgroundColor="#075B63" TextColor="White" FontSize="11" Padding="10,5" CornerRadius="7" />
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout x:Name="OrdersDashboard" IsVisible="{Binding IsOrdersSection}" Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="Orders Management" FontSize="23" FontAttributes="Bold" TextColor="#26332D" />
+                                <Label Text="Create, view, update and remove restaurant orders." FontSize="13" TextColor="#718078" />
+                            </VerticalStackLayout>
+                            <Button Grid.Column="1" Text="+ Add Order" Clicked="AddOrderClicked" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" Padding="15,8" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="9">
+                            <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="TOTAL ORDERS" FontSize="11" TextColor="#718078"/><Label Text="{Binding Orders.Count}" FontSize="22" FontAttributes="Bold" TextColor="#26332D"/></VerticalStackLayout></Border>
+                            <Border Grid.Column="1" BackgroundColor="#FFF3C0" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="IN PROGRESS" FontSize="11" TextColor="#8B6A13"/><Label Text="{Binding ActiveOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="#8B6A13"/></VerticalStackLayout></Border>
+                            <Border Grid.Column="2" BackgroundColor="#E1F3E6" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="COMPLETED" FontSize="11" TextColor="#368C55"/><Label Text="{Binding CompletedOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="#368C55"/></VerticalStackLayout></Border>
+                        </Grid>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Orders}" Spacing="8">
+                            <BindableLayout.EmptyView><Label Text="No orders yet. Select Add Order to create one." TextColor="#718078" Padding="12"/></BindableLayout.EmptyView>
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 11" Padding="12">
+                                        <Grid ColumnDefinitions="1.1*,1.2*,0.7*,0.9*,Auto" ColumnSpacing="8">
+                                            <VerticalStackLayout Spacing="2"><Label Text="{Binding OrderNumber}" FontAttributes="Bold" TextColor="#26332D"/><Label Text="{Binding ItemSummary}" FontSize="11" TextColor="#718078"/></VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="1" Spacing="2"><Label Text="{Binding TableName}" TextColor="#45534A"/><Label Text="{Binding CreatedText}" FontSize="11" TextColor="#718078"/></VerticalStackLayout>
+                                            <Label Grid.Column="2" Text="{Binding QuantityText}" VerticalTextAlignment="Center" TextColor="#45534A"/>
+                                            <Label Grid.Column="3" Text="{Binding Status}" VerticalTextAlignment="Center" FontAttributes="Bold" FontSize="12" TextColor="#075B63"/>
+                                            <HorizontalStackLayout Grid.Column="4" Spacing="3" VerticalOptions="Center">
+                                                <Button Text="View" Clicked="ViewOrderClicked" FontSize="11" Padding="8,5" BackgroundColor="#EAF0F1" TextColor="#075B63"/>
+                                                <Button Text="Edit" Clicked="EditOrderClicked" FontSize="11" Padding="8,5" BackgroundColor="#FFF3C0" TextColor="#805F0D"/>
+                                                <Button Text="Delete" Clicked="DeleteOrderClicked" FontSize="11" Padding="8,5" BackgroundColor="#FCE6E4" TextColor="#A7443D"/>
+                                            </HorizontalStackLayout>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
                     </VerticalStackLayout>
 
                     <!-- KPI cards -->
