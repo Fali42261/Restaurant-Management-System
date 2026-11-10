@@ -15,7 +15,10 @@ public partial class DashboardPage : ContentPage
         vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(DashboardViewModel.SelectedSection))
+            {
                 UpdateNavigationSelection(vm.SelectedSection);
+                UserMenu.IsVisible = false;
+            }
         };
         Loaded += (_, _) =>
         {
