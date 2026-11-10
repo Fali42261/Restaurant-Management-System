@@ -81,7 +81,6 @@
                         Style="{StaticResource NavButtonStyle}" />
             </VerticalStackLayout></ScrollView>
 
-Border>
         </Grid>
 
         <!-- Main content -->
@@ -384,7 +383,6 @@ Border>
                         </Border>
                     </Grid>
 
-/Label>
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
