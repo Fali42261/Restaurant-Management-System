@@ -1,5 +1,3 @@
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.ApplicationModel;
 using RestaurantManagement.UI.ViewModels;
 
 namespace RestaurantManagement.UI.Views;
@@ -8,10 +6,6 @@ public partial class DashboardPage : ContentPage
 {
     private double _lastWidth = -1;
 
-    private async void OpenOfficialWebsite(object sender, TappedEventArgs e)
-    {
-        await Browser.OpenAsync("https://swapdigit.com", BrowserLaunchMode.SystemPreferred);
-    }
     public DashboardPage()
     {
         InitializeComponent();
@@ -37,7 +31,7 @@ public partial class DashboardPage : ContentPage
         WelcomeLabel.IsVisible = width >= 850;
         SearchPanel.IsVisible = width >= 1000;
         ProfilePanel.IsVisible = true;
-        LogoutButton.IsVisible = true;
+        UserMenu.IsVisible = false;
         StatsGrid.ColumnDefinitions.Clear();
         var count = width < 650 ? 2 : 4;
         for (var i = 0; i < count; i++) StatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
@@ -96,6 +90,21 @@ public partial class DashboardPage : ContentPage
                 Grid.SetRow((BindableObject)grid.Children[i], 0);
             }
         }
+    }
+
+    private void ShowUserMenu(object sender, PointerEventArgs e)
+    {
+        UserMenu.IsVisible = true;
+    }
+
+    private void HideUserMenu(object sender, PointerEventArgs e)
+    {
+        UserMenu.IsVisible = false;
+    }
+
+    private void ToggleUserMenu(object sender, TappedEventArgs e)
+    {
+        UserMenu.IsVisible = !UserMenu.IsVisible;
     }
 
     private void UpdateNavigationSelection(string selected)
