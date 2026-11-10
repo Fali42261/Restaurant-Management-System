@@ -58,24 +58,24 @@
             </VerticalStackLayout>
 
             <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always"><VerticalStackLayout Spacing="5">
-                <Button Text="▦   Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"
+                <Button Text="⌂   Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"
                         BackgroundColor="#EFF2F0" TextColor="#26332D" CornerRadius="10"
                         HorizontalOptions="Fill" FontAttributes="Bold" />
-                <Button Text="▤   Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders"
+                <Button Text="▣   Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders"
                         Style="{StaticResource NavButtonStyle}" />
                 <Button Text="▦   Tables" Command="{Binding NavigateCommand}" CommandParameter="Tables"
                         Style="{StaticResource NavButtonStyle}" />
-                <Button Text="▤   Menu" Command="{Binding NavigateCommand}" CommandParameter="Menu"
+                <Button Text="☰   Menu" Command="{Binding NavigateCommand}" CommandParameter="Menu"
                         Style="{StaticResource NavButtonStyle}" />
-                <Button Text="☷   Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory"
+                <Button Text="▤   Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory"
                         Style="{StaticResource NavButtonStyle}" />
-                <Button Text="▣   Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations"
+                <Button Text="▦   Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations"
                         Style="{StaticResource NavButtonStyle}" />
-                <Button Text="♧   Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers"
+                <Button Text="♙   Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers"
                         Style="{StaticResource NavButtonStyle}" />
-                <Button Text="♙   Staff" Command="{Binding NavigateCommand}" CommandParameter="Staff"
+                <Button Text="♟   Staff" Command="{Binding NavigateCommand}" CommandParameter="Staff"
                         Style="{StaticResource NavButtonStyle}" />
-                <Button Text="⌁   Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports"
+                <Button Text="▥   Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports"
                         Style="{StaticResource NavButtonStyle}" />
                 <Button Text="⚙   Settings" Command="{Binding NavigateCommand}" CommandParameter="Settings"
                         Style="{StaticResource NavButtonStyle}" />
