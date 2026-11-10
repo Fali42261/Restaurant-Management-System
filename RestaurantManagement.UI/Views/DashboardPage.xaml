@@ -179,16 +179,16 @@
                             <Button Grid.Column="1" Text="+ Add Order" Clicked="AddOrderClicked" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" Padding="15,8" />
                         </Grid>
                         <Grid ColumnDefinitions="*,*,*" ColumnSpacing="9">
-                            <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="TOTAL ORDERS" FontSize="11" TextColor="#718078"/><Label Text="{Binding Orders.Count}" FontSize="22" FontAttributes="Bold" TextColor="#26332D"/></VerticalStackLayout></Border>
+                            <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="TOTAL ORDERS" FontSize="11" TextColor="#718078"/><Label Text="{Binding TotalOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="#26332D"/></VerticalStackLayout></Border>
                             <Border Grid.Column="1" BackgroundColor="#FFF3C0" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="IN PROGRESS" FontSize="11" TextColor="#8B6A13"/><Label Text="{Binding ActiveOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="#8B6A13"/></VerticalStackLayout></Border>
                             <Border Grid.Column="2" BackgroundColor="#E1F3E6" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="COMPLETED" FontSize="11" TextColor="#368C55"/><Label Text="{Binding CompletedOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="#368C55"/></VerticalStackLayout></Border>
                         </Grid>
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Orders}" Spacing="8">
+                        <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Auto"><VerticalStackLayout BindableLayout.ItemsSource="{Binding Orders}" Spacing="8">
                             <BindableLayout.EmptyView><Label Text="No orders yet. Select Add Order to create one." TextColor="#718078" Padding="12"/></BindableLayout.EmptyView>
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
                                     <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 11" Padding="12">
-                                        <Grid ColumnDefinitions="1.1*,1.2*,0.7*,0.9*,Auto" ColumnSpacing="8">
+                                        <Grid WidthRequest="850" ColumnDefinitions="1.1*,1.2*,0.7*,0.9*,Auto" ColumnSpacing="8">
                                             <VerticalStackLayout Spacing="2"><Label Text="{Binding OrderNumber}" FontAttributes="Bold" TextColor="#26332D"/><Label Text="{Binding ItemSummary}" FontSize="11" TextColor="#718078"/></VerticalStackLayout>
                                             <VerticalStackLayout Grid.Column="1" Spacing="2"><Label Text="{Binding TableName}" TextColor="#45534A"/><Label Text="{Binding CreatedText}" FontSize="11" TextColor="#718078"/></VerticalStackLayout>
                                             <Label Grid.Column="2" Text="{Binding QuantityText}" VerticalTextAlignment="Center" TextColor="#45534A"/>
@@ -202,7 +202,7 @@
                                     </Border>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
+                        </VerticalStackLayout></ScrollView>
                     </VerticalStackLayout>
 
                     <!-- KPI cards -->
