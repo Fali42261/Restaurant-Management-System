@@ -7,6 +7,7 @@
     Shell.NavBarIsVisible="False"
     BackgroundColor="#F4F7FB">
 
+    <ContentPage.Resources><Style TargetType="Entry"><Setter Property="HeightRequest" Value="48" /><Setter Property="FontSize" Value="15" /><Setter Property="HorizontalOptions" Value="Fill" /><Setter Property="VerticalOptions" Value="Center" /><Setter Property="Margin" Value="0" /><Setter Property="BackgroundColor" Value="Transparent" /></Style></ContentPage.Resources>
     <Grid><ScrollView>
         <Grid Padding="24" RowDefinitions="*,Auto,*">
             <VerticalStackLayout Grid.Row="1"
