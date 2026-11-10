@@ -238,7 +238,7 @@ public sealed class TableRecord : BaseViewModel
     public int Seats { get; }
     public string AmountText { get; }
     public string SeatsText => $"{Seats} seats";
-    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(StatusColor)); OnPropertyChanged(nameof(CardColor)); OnPropertyChanged(nameof(BorderColor)); OnPropertyChanged(nameof(ActionText)); } } }
+    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(StatusColor)); OnPropertyChanged(nameof(CardColor)); OnPropertyChanged(nameof(BorderBrush)); OnPropertyChanged(nameof(ActionText)); } } }
     public string TimerText { get => _timerText; private set => SetProperty(ref _timerText, value); }
     public string DetailText { get => _detailText; private set => SetProperty(ref _detailText, value); }
     public string ActionText => Status switch { "Available" => "Start Order", "Reserved" => "Seat Guest", "Order Placed" => "Send to KOT", "Preparing" => "Mark Ready", "Ready" => "Serve", "Served" => "Start Dining", "Dining" => "Request Bill", "Bill Pending" => "Checkout", _ => "Next" };
