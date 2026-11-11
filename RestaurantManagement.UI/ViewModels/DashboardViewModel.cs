@@ -37,6 +37,7 @@ public sealed class DashboardViewModel : BaseViewModel
         SupportCommand = new Command(() => Navigate("Help Support"));
         NotificationCommand = new Command(() => ShowToast("You are all caught up. No new notifications."));
 
+        Floors = new ObservableCollection<FloorRecord> { new("Ground Floor") };
         Tables = new ObservableCollection<TableRecord>
         {
             new("T1", 4, "Dining", 18, "₹ 0.00", "1 KOT • 1 item"),
@@ -64,6 +65,14 @@ public sealed class DashboardViewModel : BaseViewModel
     }
 
     public ObservableCollection<TableRecord> Tables { get; }
+    public ObservableCollection<FloorRecord> Floors { get; }
+
+    public void AddFloor(string name) { if (!string.IsNullOrWhiteSpace(name) && !Floors.Any(f => f.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) { Floors.Add(new FloorRecord(name.Trim())); ShowToast("Floor added."); } }
+    public void UpdateFloor(FloorRecord floor, string name) { if (string.IsNullOrWhiteSpace(name) || Floors.Any(f => !ReferenceEquals(f, floor) && f.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; var old = floor.Name; floor.Name = name.Trim(); foreach (var table in Tables.Where(t => t.FloorName == old)) table.FloorName = floor.Name; ShowToast("Floor updated."); }
+    public void DeleteFloor(FloorRecord floor) { if (Floors.Count <= 1) { ShowToast("At least one floor is required."); return; } if (Tables.Any(t => t.FloorName == floor.Name)) { ShowToast("Move or delete this floor’s tables first."); return; } Floors.Remove(floor); ShowToast("Floor deleted."); }
+    public void AddTable(string name, int seats, string floor) { if (string.IsNullOrWhiteSpace(name) || seats < 1 || Tables.Any(t => t.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; Tables.Add(new TableRecord(name.Trim(), seats, "Available", 0, "₹ 0.00", "Ready for guests", floor)); NotifyTableCounts(); ShowToast("Table added."); }
+    public void UpdateTable(TableRecord table, string name, int seats, string floor) { if (string.IsNullOrWhiteSpace(name) || seats < 1 || Tables.Any(t => !ReferenceEquals(t, table) && t.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; table.UpdateDetails(name.Trim(), seats, floor); ShowToast("Table updated."); }
+    public void DeleteTable(TableRecord table) { Tables.Remove(table); NotifyTableCounts(); ShowToast("Table deleted."); }
     public ObservableCollection<OrderRecord> Orders { get; }
 
     public string FeedbackMessage
@@ -223,7 +232,7 @@ public sealed class TableRecord : BaseViewModel
     private string _detailText;
     private DateTime _startedAt;
 
-    public TableRecord(string name, int seats, string status, int elapsedMinutes, string amount, string detail)
+    public TableRecord(string name, int seats, string status, int elapsedMinutes, string amount, string detail, string floorName = "Ground Floor")
     {
         Name = name;
         Seats = seats;
@@ -237,7 +246,7 @@ public sealed class TableRecord : BaseViewModel
     public string Name { get; }
     public int Seats { get; }
     public string AmountText { get; }
-    public string SeatsText => $"{Seats} seats";
+    public string SeatsText => $"{Seats} seats";\n    public void UpdateDetails(string name, int seats, string floor) { Name = name; Seats = seats; FloorName = floor; OnPropertyChanged(nameof(SeatsText)); }
     public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(StatusColor)); OnPropertyChanged(nameof(CardColor)); OnPropertyChanged(nameof(BorderBrush)); OnPropertyChanged(nameof(ActionText)); } } }
     public string TimerText { get => _timerText; private set => SetProperty(ref _timerText, value); }
     public string DetailText { get => _detailText; private set => SetProperty(ref _detailText, value); }
@@ -303,4 +312,11 @@ public sealed class OrderRecord : BaseViewModel
         Quantity = quantity;
         OnPropertyChanged(nameof(QuantityText));
     }
+}
+
+public sealed class FloorRecord : BaseViewModel
+{
+    private string _name;
+    public FloorRecord(string name) => _name = name;
+    public string Name { get => _name; set => SetProperty(ref _name, value); }
 }
