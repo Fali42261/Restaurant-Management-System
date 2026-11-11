@@ -20,13 +20,16 @@
                 <Setter Property="Padding" Value="13" />
             </Style>
             <Style x:Key="NavButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="#0D6971" />
-                <Setter Property="TextColor" Value="#E8F2F2" />
+                <Setter Property="BackgroundColor" Value="#173C43" />
+                <Setter Property="TextColor" Value="#DCE9E8" />
                 <Setter Property="CornerRadius" Value="10" />
                 <Setter Property="HeightRequest" Value="48" />
                 <Setter Property="HorizontalOptions" Value="Fill" />
                 <Setter Property="FontSize" Value="13" />
-                <Setter Property="Padding" Value="5,8" />
+                <Setter Property="Padding" Value="12,8" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList><VisualStateGroup x:Name="CommonStates"><VisualState x:Name="Normal" /><VisualState x:Name="PointerOver"><VisualState.Setters><Setter Property="BackgroundColor" Value="#24616A" /><Setter Property="TextColor" Value="White" /></VisualState.Setters></VisualState></VisualStateGroup></VisualStateGroupList>
+                </Setter>
             </Style>
             <Style x:Key="NavChipStyle" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="White" />
@@ -48,12 +51,13 @@
 
     <Grid x:Name="RootLayout" ColumnDefinitions="190,*" RowDefinitions="*">
         <!-- Desktop navigation -->
-        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*" BackgroundColor="#075B63" Padding="10,16,9,10">
+        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*" BackgroundColor="#102F36" Padding="10,16,16,10">
             <VerticalStackLayout Spacing="3" Padding="8,4,4,18">
                 <Label Text="swapDigit" FontSize="23" FontAttributes="Bold" TextColor="White" />
-                <Label Text="RESTAURANT MANAGEMENT" FontSize="9" CharacterSpacing="1" TextColor="#B9D7D8" />
+                <Label Text="RESTAURANT MANAGEMENT" FontSize="9" CharacterSpacing="1" TextColor="#A9C9C8" />
+                <Label Text="My Restaurant" FontSize="12" FontAttributes="Bold" TextColor="#FFFFFF" Margin="0,5,0,0" />
             </VerticalStackLayout>
-            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Always">
+            <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never" Margin="0,0,0,0">
                 <VerticalStackLayout Spacing="6">
                     <Button Text="▦  Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavButtonStyle}" />
                     <Button Text="▥  Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavButtonStyle}" />
@@ -72,18 +76,13 @@
         <!-- Main content -->
         <Grid Grid.Column="1" RowDefinitions="58,52,*" RowSpacing="0">
             <Grid Grid.Row="0" BackgroundColor="White" Padding="12,6"
-                  ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="5">
+                  ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                 <Label x:Name="WelcomeLabel" Text="Welcome back, Here's what's happening today."
                        FontSize="15" TextColor="#7A8580" VerticalTextAlignment="Center" />
-                <Border x:Name="SearchPanel" Grid.Column="1" StrokeThickness="0"
-                        StrokeShape="RoundRectangle 10" Padding="8,0" WidthRequest="170"
-                        VerticalOptions="Center">
-                    <Grid RowDefinitions="*,1" VerticalOptions="Center"><Entry Grid.Row="0" Placeholder="Search" Text="{Binding SearchText}" BackgroundColor="Transparent" FontSize="14" HeightRequest="34" /><BoxView Grid.Row="1" BackgroundColor="#AEBBB4" HeightRequest="1" HorizontalOptions="Fill" /></Grid>
-                </Border>
-                <Button x:Name="NotificationButton" Grid.Column="2" Text="🔔" Clicked="ToggleNotificationPopup"
+                <Button x:Name="NotificationButton" Grid.Column="1" Text="🔔" Clicked="ToggleNotificationPopup"
                         BackgroundColor="Transparent" TextColor="#53635A" FontSize="19"
                         Padding="7,0" VerticalOptions="Center" />
-                <Border x:Name="ProfilePanel" Grid.Column="3" StrokeThickness="0" BackgroundColor="#F1F5F1" StrokeShape="RoundRectangle 11" Padding="6,4" VerticalOptions="Center">
+                <Border x:Name="ProfilePanel" Grid.Column="2" StrokeThickness="0" BackgroundColor="#F1F5F1" StrokeShape="RoundRectangle 11" Padding="6,4" VerticalOptions="Center">
                     <Border.GestureRecognizers><TapGestureRecognizer Tapped="ToggleUserMenu" /></Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="7" VerticalOptions="Center">
                         <Border BackgroundColor="#DDEBD6" StrokeThickness="0" StrokeShape="RoundRectangle 16" WidthRequest="32" HeightRequest="32">
@@ -95,7 +94,7 @@
                 </Border>
             </Grid>
 
-            <ScrollView x:Name="MobileNavigation" Grid.Row="1" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" BackgroundColor="#075B63">
+            <ScrollView x:Name="MobileNavigation" Grid.Row="1" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" BackgroundColor="#102F36">
                 <HorizontalStackLayout Spacing="6" Padding="10,4">
                     <Button Text="Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavChipStyle}" />
@@ -481,7 +480,7 @@
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
-    <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="8" WidthRequest="220" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,12,0" ZIndex="100">
+    <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="10" WidthRequest="230" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="100">
         <VerticalStackLayout Spacing="3">
             <Label Text="ACCOUNT" FontSize="10" CharacterSpacing="1" TextColor="#87938B" Margin="8,4,0,3"/>
             <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="#34433A" FontSize="14" HorizontalOptions="Fill" />
@@ -490,7 +489,7 @@
             <Button Text="↪   Logout" Clicked="LogoutMenuClicked" BackgroundColor="Transparent" TextColor="#B94B45" FontSize="14" HorizontalOptions="Fill" />
         </VerticalStackLayout>
     </Border>
-    <Border x:Name="NotificationPopup" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12" WidthRequest="270" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,12,0" ZIndex="101">
+    <Border x:Name="NotificationPopup" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12" WidthRequest="270" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="101">
         <VerticalStackLayout Spacing="8">
             <Grid ColumnDefinitions="*,Auto">
                 <Label Text="Notifications" FontSize="16" FontAttributes="Bold" TextColor="#26332D"/>
