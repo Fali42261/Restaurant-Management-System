@@ -9,8 +9,6 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     private string _currentPassword = "";
     private string _newPassword = "";
     private string _confirmPassword = "";
-    private string _statusMessage = "";
-    private CancellationTokenSource? _toastCts;
 
     public PasswordFlowViewModel()
     {
@@ -25,8 +23,6 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     public string CurrentPassword { get => _currentPassword; set => SetProperty(ref _currentPassword, value); }
     public string NewPassword { get => _newPassword; set => SetProperty(ref _newPassword, value); }
     public string ConfirmPassword { get => _confirmPassword; set => SetProperty(ref _confirmPassword, value); }
-    public string StatusMessage { get => _statusMessage; private set { if (SetProperty(ref _statusMessage, value)) OnPropertyChanged(nameof(HasStatusMessage)); } }
-    public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
     public ICommand ResetPasswordCommand { get; }
     public ICommand ChangePasswordCommand { get; }
     public ICommand GoToLoginCommand { get; }
@@ -34,35 +30,26 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     private void ResetPassword()
     {
         if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
-        { ShowToast("Enter a valid email address."); return; }
+        return;
         if (string.IsNullOrWhiteSpace(VerificationCode) || VerificationCode.Trim().Length < 4)
-        { ShowToast("Enter the verification code."); return; }
+        return;
         ValidateNewPassword("Password reset");
     }
 
     private void ChangePassword()
     {
         if (string.IsNullOrWhiteSpace(CurrentPassword))
-        { ShowToast("Enter your current password."); return; }
+        return;
         ValidateNewPassword("Password change");
     }
 
     private void ValidateNewPassword(string action)
     {
         if (string.IsNullOrWhiteSpace(NewPassword) || NewPassword.Length < 8)
-        { ShowToast("New password must contain at least 8 characters."); return; }
+        return;
         if (!string.Equals(NewPassword, ConfirmPassword, StringComparison.Ordinal))
-        { ShowToast("New password and confirmation do not match."); return; }
-        ShowToast($"{action} details validated. Connect the authentication API to complete this action.");
+        return;
+        // Validation only; feedback notifications are temporarily disabled.
     }
 
-    private async void ShowToast(string message)
-    {
-        _toastCts?.Cancel();
-        _toastCts?.Dispose();
-        _toastCts = new CancellationTokenSource();
-        StatusMessage = message;
-        try { await Task.Delay(3500, _toastCts.Token); StatusMessage = ""; }
-        catch (OperationCanceledException) { }
-    }
 }
