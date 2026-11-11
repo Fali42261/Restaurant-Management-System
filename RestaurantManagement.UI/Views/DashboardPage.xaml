@@ -490,7 +490,7 @@
             <Button Text="↪   Logout" Clicked="LogoutMenuClicked" BackgroundColor="Transparent" TextColor="#B94B45" FontSize="14" HorizontalOptions="Fill" />
         </VerticalStackLayout>
     </Border>
-    <Border x:Name="NotificationPopup" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12" WidthRequest="270" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,225,0" ZIndex="101">
+    <Border x:Name="NotificationPopup" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12" WidthRequest="270" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,12,0" ZIndex="101">
         <VerticalStackLayout Spacing="8">
             <Grid ColumnDefinitions="*,Auto">
                 <Label Text="Notifications" FontSize="16" FontAttributes="Bold" TextColor="#26332D"/>
