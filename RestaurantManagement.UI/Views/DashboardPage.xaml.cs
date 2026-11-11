@@ -17,7 +17,7 @@ public partial class DashboardPage : ContentPage
             if (e.PropertyName == nameof(DashboardViewModel.SelectedSection))
             {
                 UpdateNavigationSelection(vm.SelectedSection);
-                ((Border)FindByName("UserMenu")).IsVisible = false;
+                ((Border)FindByName("UserMenu")).IsVisible = false;\n        ((Border)FindByName("NotificationPopup")).IsVisible = false;\n                ((Border)FindByName("NotificationPopup")).IsVisible = false;
             }
         };
         Loaded += (_, _) =>
