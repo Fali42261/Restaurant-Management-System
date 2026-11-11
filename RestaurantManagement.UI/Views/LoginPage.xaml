@@ -12,11 +12,11 @@
         <Grid Padding="24" RowDefinitions="*,Auto,*">
             <VerticalStackLayout Grid.Row="1"
                                  Spacing="22"
-                                 HorizontalOptions="Center"
+                                 HorizontalOptions="Fill"
                                  MaximumWidthRequest="520"
                                  VerticalOptions="Center">
                 <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
-                    <Label Text="SwapDigit"
+                    <Label Text="swapDigit"
                            FontSize="29"
                            FontAttributes="Bold"
                            TextColor="#172B27"
@@ -48,14 +48,10 @@
                                    FontSize="13"
                                    FontAttributes="Bold"
                                    TextColor="#344A43" />
-                            <Border StrokeThickness="0" Padding="0">
-                                <Entry BackgroundColor="Transparent" Placeholder="Enter your email or Mobile number"
-                                       Keyboard="Email"
-                                       Text="{Binding EmailOrMobile}"
-                                       TextColor="#172B27"
-                                       PlaceholderColor="#9AA9A2"
-                                       ClearButtonVisibility="WhileEditing" />
-                            </Border>
+                            <Grid RowDefinitions="48,1" ColumnDefinitions="*" ColumnSpacing="0">
+                                <Entry Grid.Row="0" BackgroundColor="Transparent" Placeholder="Enter your email or mobile number" Keyboard="Email" Text="{Binding EmailOrMobile}" TextColor="#172B27" PlaceholderColor="#9AA9A2" ClearButtonVisibility="WhileEditing" />
+                                <BoxView Grid.Row="1" BackgroundColor="#B9C9C2" HeightRequest="1" HorizontalOptions="Fill" />
+                            </Grid>
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="7">
@@ -63,9 +59,11 @@
                                    FontSize="13"
                                    FontAttributes="Bold"
                                    TextColor="#344A43" />
-                            <Border StrokeThickness="0" Padding="0">
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><ImageButton x:Name="PasswordEyeButton" Grid.Column="1" Source="eye.svg" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" WidthRequest="42" HeightRequest="42" Padding="9" Aspect="AspectFit" /></Grid>
-                            </Border>
+                            <Grid RowDefinitions="48,1" ColumnDefinitions="*,44" ColumnSpacing="4">
+                                <Entry x:Name="PasswordEntry" Grid.Row="0" Grid.Column="0" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <ImageButton x:Name="PasswordEyeButton" Grid.Row="0" Grid.Column="1" Source="eye.svg" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" WidthRequest="40" HeightRequest="40" MinimumWidthRequest="40" MinimumHeightRequest="40" Padding="8" Aspect="AspectFit" />
+                                <BoxView Grid.Row="1" Grid.ColumnSpan="2" BackgroundColor="#1F9AA5" HeightRequest="1.5" HorizontalOptions="Fill" />
+                            </Grid>
                         </VerticalStackLayout>
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
