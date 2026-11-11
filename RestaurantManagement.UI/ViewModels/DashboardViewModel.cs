@@ -206,7 +206,6 @@ public sealed class DashboardViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(section) || !Descriptions.ContainsKey(section)) return;
         SelectedSection = section;
-        ShowToast($"{section} selected.");
     }
 
     private void ShowToast(string message)
