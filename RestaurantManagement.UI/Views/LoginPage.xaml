@@ -105,5 +105,5 @@
                        HorizontalTextAlignment="Center" />
             </VerticalStackLayout>
         </Grid>
-    </ScrollView><Border IsVisible="{Binding HasStatusMessage}" BackgroundColor="#26332D" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14,10" HorizontalOptions="Center" VerticalOptions="Start" Margin="18,12,18,0" ZIndex="10"><Label Text="{Binding StatusMessage}" TextColor="White" FontSize="13" /></Border></Grid>
+    </ScrollView></Grid>
 </ContentPage>
