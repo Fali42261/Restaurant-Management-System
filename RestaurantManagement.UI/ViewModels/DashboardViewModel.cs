@@ -5,10 +5,8 @@ namespace RestaurantManagement.UI.ViewModels;
 
 public sealed class DashboardViewModel : BaseViewModel
 {
-    private string _feedbackMessage = "";
     private string _searchText = "";
     private string _selectedSection = "Dashboard";
-    private CancellationTokenSource? _toastCts;
 
     private static readonly Dictionary<string, string> Descriptions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -32,10 +30,10 @@ public sealed class DashboardViewModel : BaseViewModel
         Title = "Business Dashboard";
         LogoutCommand = new Command(async () => await Shell.Current.GoToAsync("//LoginPage"));
         NavigateCommand = new Command<string>(Navigate);
-        TableActionCommand = new Command<string>(table => ShowToast($"{table} selected."));
-        AddReservationCommand = new Command(() => ShowToast("Reservation form will be available in Reservations."));
+        TableActionCommand = new Command<string>(_ => { });
+        AddReservationCommand = new Command(() => { });
         SupportCommand = new Command(() => Navigate("Help Support"));
-        NotificationCommand = new Command(() => ShowToast("You are all caught up. No new notifications."));
+        NotificationCommand = new Command(() => { });
 
         Floors = new ObservableCollection<FloorRecord> { new("Ground Floor") };
         Tables = new ObservableCollection<TableRecord>
@@ -67,21 +65,14 @@ public sealed class DashboardViewModel : BaseViewModel
     public ObservableCollection<TableRecord> Tables { get; }
     public ObservableCollection<FloorRecord> Floors { get; }
 
-    public void AddFloor(string name) { if (!string.IsNullOrWhiteSpace(name) && !Floors.Any(f => f.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) { Floors.Add(new FloorRecord(name.Trim())); ShowToast("Floor added."); } }
-    public void UpdateFloor(FloorRecord floor, string name) { if (string.IsNullOrWhiteSpace(name) || Floors.Any(f => !ReferenceEquals(f, floor) && f.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; var old = floor.Name; floor.Name = name.Trim(); foreach (var table in Tables.Where(t => t.FloorName == old)) table.FloorName = floor.Name; ShowToast("Floor updated."); }
-    public void DeleteFloor(FloorRecord floor) { if (Floors.Count <= 1) { ShowToast("At least one floor is required."); return; } if (Tables.Any(t => t.FloorName == floor.Name)) { ShowToast("Move or delete this floor’s tables first."); return; } Floors.Remove(floor); ShowToast("Floor deleted."); }
-    public void AddTable(string name, int seats, string floor) { if (string.IsNullOrWhiteSpace(name) || seats < 1 || Tables.Any(t => t.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; Tables.Add(new TableRecord(name.Trim(), seats, "Available", 0, "₹ 0.00", "Ready for guests", floor)); NotifyTableCounts(); ShowToast("Table added."); }
-    public void UpdateTable(TableRecord table, string name, int seats, string floor) { if (string.IsNullOrWhiteSpace(name) || seats < 1 || Tables.Any(t => !ReferenceEquals(t, table) && t.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; table.UpdateDetails(name.Trim(), seats, floor); ShowToast("Table updated."); }
-    public void DeleteTable(TableRecord table) { Tables.Remove(table); NotifyTableCounts(); ShowToast("Table deleted."); }
+    public void AddFloor(string name) { if (!string.IsNullOrWhiteSpace(name) && !Floors.Any(f => f.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) { Floors.Add(new FloorRecord(name.Trim())); } }
+    public void UpdateFloor(FloorRecord floor, string name) { if (string.IsNullOrWhiteSpace(name) || Floors.Any(f => !ReferenceEquals(f, floor) && f.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; var old = floor.Name; floor.Name = name.Trim(); foreach (var table in Tables.Where(t => t.FloorName == old)) table.FloorName = floor.Name; }
+    public void DeleteFloor(FloorRecord floor) { if (Floors.Count <= 1) { return; } if (Tables.Any(t => t.FloorName == floor.Name)) { return; } Floors.Remove(floor); }
+    public void AddTable(string name, int seats, string floor) { if (string.IsNullOrWhiteSpace(name) || seats < 1 || Tables.Any(t => t.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; Tables.Add(new TableRecord(name.Trim(), seats, "Available", 0, "₹ 0.00", "Ready for guests", floor)); NotifyTableCounts(); }
+    public void UpdateTable(TableRecord table, string name, int seats, string floor) { if (string.IsNullOrWhiteSpace(name) || seats < 1 || Tables.Any(t => !ReferenceEquals(t, table) && t.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; table.UpdateDetails(name.Trim(), seats, floor); }
+    public void DeleteTable(TableRecord table) { Tables.Remove(table); NotifyTableCounts(); }
     public ObservableCollection<OrderRecord> Orders { get; }
 
-    public string FeedbackMessage
-    {
-        get => _feedbackMessage;
-        private set { if (SetProperty(ref _feedbackMessage, value)) OnPropertyChanged(nameof(HasFeedback)); }
-    }
-
-    public bool HasFeedback => !string.IsNullOrWhiteSpace(FeedbackMessage);
     public string SearchText { get => _searchText; set => SetProperty(ref _searchText, value); }
 
     public string SelectedSection
@@ -163,7 +154,6 @@ public sealed class DashboardViewModel : BaseViewModel
                 break;
         }
         NotifyTableCounts();
-        ShowToast($"{table.Name}: {table.Status}");
     }
 
     public void AddOrder(string item, string table, int quantity)
@@ -171,20 +161,17 @@ public sealed class DashboardViewModel : BaseViewModel
         var number = $"ORD-{1001 + Orders.Count + DateTime.Now.Second}";
         Orders.Insert(0, new OrderRecord(number, item, table, quantity, "Order Placed", DateTime.Now));
         NotifyOrderCounts();
-        ShowToast("Order added successfully.");
     }
 
     public void UpdateOrder(OrderRecord order, string item, string table, int quantity)
     {
         order.Update(item, table, quantity);
-        ShowToast($"{order.OrderNumber} updated.");
     }
 
     public void DeleteOrder(OrderRecord order)
     {
         Orders.Remove(order);
         NotifyOrderCounts();
-        ShowToast($"{order.OrderNumber} deleted.");
     }
 
     private void NotifyTableCounts()
@@ -208,20 +195,7 @@ public sealed class DashboardViewModel : BaseViewModel
         SelectedSection = section;
     }
 
-    private void ShowToast(string message)
-    {
-        _toastCts?.Cancel();
-        _toastCts?.Dispose();
-        _toastCts = new CancellationTokenSource();
-        StatusToast(message, _toastCts.Token);
-    }
 
-    private async void StatusToast(string message, CancellationToken token)
-    {
-        FeedbackMessage = message;
-        try { await Task.Delay(2800, token); if (!token.IsCancellationRequested) FeedbackMessage = ""; }
-        catch (OperationCanceledException) { }
-    }
 }
 
 public sealed class TableRecord : BaseViewModel
