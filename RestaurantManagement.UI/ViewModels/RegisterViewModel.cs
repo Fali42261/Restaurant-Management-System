@@ -5,8 +5,7 @@ namespace RestaurantManagement.UI.ViewModels;
 
 public sealed class RegisterViewModel : BaseViewModel
 {
-    private string _fullName="",_email="",_mobileNumber="",_password="",_confirmPassword="",_statusMessage="";
-    private CancellationTokenSource? _toastCts;
+    private string _fullName="",_email="",_mobileNumber="",_password="",_confirmPassword="";
     public RegisterViewModel()
     {
         Title="Create owner account";
@@ -18,24 +17,16 @@ public sealed class RegisterViewModel : BaseViewModel
     public string MobileNumber { get=>_mobileNumber; set=>SetProperty(ref _mobileNumber,value); }
     public string Password { get=>_password; set=>SetProperty(ref _password,value); }
     public string ConfirmPassword { get=>_confirmPassword; set=>SetProperty(ref _confirmPassword,value); }
-    public string StatusMessage { get=>_statusMessage; private set { if(SetProperty(ref _statusMessage,value)) OnPropertyChanged(nameof(HasStatusMessage)); } }
-    public bool HasStatusMessage=>!string.IsNullOrWhiteSpace(StatusMessage);
     public ICommand RegisterCommand{get;}
     public ICommand GoToLoginCommand{get;}
     private void Register()
     {
-        if(string.IsNullOrWhiteSpace(FullName)) { ShowToast("Enter your full name."); return; }
-        if(!IsValidEmail(Email)) { ShowToast("Enter a valid email address."); return; }
-        if(string.IsNullOrWhiteSpace(MobileNumber)||MobileNumber.Count(char.IsDigit)<10) { ShowToast("Mobile number is required. Enter at least 10 digits."); return; }
-        if(Password.Length<8) { ShowToast("Password must contain at least 8 characters."); return; }
-        if(!string.Equals(Password,ConfirmPassword,StringComparison.Ordinal)) { ShowToast("Passwords do not match."); return; }
-        ShowToast("Owner details validated. Owner registration will be connected in the API/database phase.");
-    }
-    private async void ShowToast(string message)
-    {
-        _toastCts?.Cancel(); _toastCts?.Dispose(); _toastCts=new CancellationTokenSource();
-        StatusMessage=message;
-        try { await Task.Delay(3500,_toastCts.Token); StatusMessage=""; } catch(OperationCanceledException) { }
+        if(string.IsNullOrWhiteSpace(FullName)) return;
+        if(!IsValidEmail(Email)) return;
+        if(string.IsNullOrWhiteSpace(MobileNumber)||MobileNumber.Count(char.IsDigit)<10) return;
+        if(Password.Length<8) return;
+        if(!string.Equals(Password,ConfirmPassword,StringComparison.Ordinal)) return;
+        // Validation only; feedback notifications are temporarily disabled.
     }
     private static bool IsValidEmail(string value)
     {
