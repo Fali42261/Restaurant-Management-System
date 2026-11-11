@@ -150,9 +150,97 @@ public partial class DashboardPage : ContentPage
         if (confirm) vm.DeleteOrder(order);
     }
 
-    private void ShowUserMenu(object sender, PointerEventArgs e) => ((Border)FindByName("UserMenu")).IsVisible = true;
-    private void HideUserMenu(object sender, PointerEventArgs e) => ((Border)FindByName("UserMenu")).IsVisible = false;
-    private void ToggleUserMenu(object sender, TappedEventArgs e) => ((Border)FindByName("UserMenu")).IsVisible = !((Border)FindByName("UserMenu")).IsVisible;
+    private FloorRecord? _editingFloor;
+    private TableRecord? _editingTable;
+    private bool _editingFloorMode;
+
+    private void ToggleUserMenu(object sender, TappedEventArgs e)
+    {
+        var menu = (Border)FindByName("UserMenu");
+        menu.IsVisible = !menu.IsVisible;
+        ((Border)FindByName("NotificationPopup")).IsVisible = false;
+    }
+
+    private void ToggleNotificationPopup(object sender, EventArgs e)
+    {
+        var popup = (Border)FindByName("NotificationPopup");
+        popup.IsVisible = !popup.IsVisible;
+        ((Border)FindByName("UserMenu")).IsVisible = false;
+    }
+
+    private void CloseNotificationPopup(object sender, EventArgs e) => ((Border)FindByName("NotificationPopup")).IsVisible = false;
+    private void SettingsMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Settings"); ((Border)FindByName("UserMenu")).IsVisible = false; }
+    private void HelpMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Help Support"); ((Border)FindByName("UserMenu")).IsVisible = false; }
+    private void LogoutMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).LogoutCommand.Execute(null); ((Border)FindByName("UserMenu")).IsVisible = false; }
+
+    private void AddFloorClicked(object sender, EventArgs e)
+    {
+        _editingFloor = null; _editingTable = null; _editingFloorMode = true;
+        ManagementPopupTitle.Text = "Add Floor"; FloorFields.IsVisible = true; TableFields.IsVisible = false;
+        FloorNameEntry.Text = ""; ManagementSaveButton.Text = "Add Floor"; ManagementPopup.IsVisible = true;
+    }
+
+    private void EditFloorClicked(object sender, EventArgs e)
+    {
+        if (sender is not Button { BindingContext: FloorRecord floor }) return;
+        _editingFloor = floor; _editingTable = null; _editingFloorMode = true;
+        ManagementPopupTitle.Text = "Edit Floor"; FloorFields.IsVisible = true; TableFields.IsVisible = false;
+        FloorNameEntry.Text = floor.Name; ManagementSaveButton.Text = "Save Changes"; ManagementPopup.IsVisible = true;
+    }
+
+    private async void DeleteFloorClicked(object sender, EventArgs e)
+    {
+        if (sender is not Button { BindingContext: FloorRecord floor }) return;
+        if (await DisplayAlert("Delete floor", $"Delete {floor.Name}?", "Delete", "Cancel"))
+            ((DashboardViewModel)BindingContext).DeleteFloor(floor);
+    }
+
+    private void AddTableClicked(object sender, EventArgs e)
+    {
+        _editingTable = null; _editingFloor = null; _editingFloorMode = false;
+        ManagementPopupTitle.Text = "Add Table"; FloorFields.IsVisible = false; TableFields.IsVisible = true;
+        TableNameEntry.Text = ""; TableSeatsEntry.Text = "4";
+        TableFloorPicker.ItemsSource = ((DashboardViewModel)BindingContext).Floors.Select(f => f.Name).ToList();
+        TableFloorPicker.SelectedIndex = 0; ManagementSaveButton.Text = "Add Table"; ManagementPopup.IsVisible = true;
+    }
+
+    private void EditTableClicked(object sender, EventArgs e)
+    {
+        if (sender is not Button { BindingContext: TableRecord table }) return;
+        _editingTable = table; _editingFloor = null; _editingFloorMode = false;
+        ManagementPopupTitle.Text = "Edit Table"; FloorFields.IsVisible = false; TableFields.IsVisible = true;
+        TableNameEntry.Text = table.Name; TableSeatsEntry.Text = table.Seats.ToString();
+        TableFloorPicker.ItemsSource = ((DashboardViewModel)BindingContext).Floors.Select(f => f.Name).ToList();
+        TableFloorPicker.SelectedItem = table.FloorName; ManagementSaveButton.Text = "Save Changes"; ManagementPopup.IsVisible = true;
+    }
+
+    private async void DeleteTableClicked(object sender, EventArgs e)
+    {
+        if (sender is not Button { BindingContext: TableRecord table }) return;
+        if (await DisplayAlert("Delete table", $"Delete {table.Name}?", "Delete", "Cancel"))
+            ((DashboardViewModel)BindingContext).DeleteTable(table);
+    }
+
+    private void CancelManagementPopup(object sender, EventArgs e) => ManagementPopup.IsVisible = false;
+
+    private async void SaveManagementPopup(object sender, EventArgs e)
+    {
+        var vm = (DashboardViewModel)BindingContext;
+        if (_editingFloorMode)
+        {
+            var name = FloorNameEntry.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(name)) { await DisplayAlert("Required", "Enter a floor name.", "OK"); return; }
+            if (_editingFloor is null) vm.AddFloor(name); else vm.UpdateFloor(_editingFloor, name);
+        }
+        else
+        {
+            var name = TableNameEntry.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(name) || !int.TryParse(TableSeatsEntry.Text, out var seats) || seats < 1 || TableFloorPicker.SelectedItem is not string floor)
+            { await DisplayAlert("Check details", "Enter a table name, valid seat count and floor.", "OK"); return; }
+            if (_editingTable is null) vm.AddTable(name, seats, floor); else vm.UpdateTable(_editingTable, name, seats, floor);
+        }
+        ManagementPopup.IsVisible = false;
+    }
 
     private void UpdateNavigationSelection(string selected)
     {
