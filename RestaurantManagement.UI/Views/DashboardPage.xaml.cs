@@ -49,7 +49,6 @@ public partial class DashboardPage : ContentPage
         ((ScrollView)FindByName("MobileNavigation")).IsVisible = compact;
         ((Grid)FindByName("RootLayout")).ColumnDefinitions[0].Width = compact ? new GridLength(0) : new GridLength(190);
         ((Label)FindByName("WelcomeLabel")).IsVisible = width >= 850;
-        ((Border)FindByName("SearchPanel")).IsVisible = width >= 1000;
         ((Border)FindByName("UserMenu")).IsVisible = false;
 
         ((Grid)FindByName("StatsGrid")).ColumnDefinitions.Clear();
@@ -254,8 +253,8 @@ public partial class DashboardPage : ContentPage
         if (root is Button button && button.CommandParameter is string section)
         {
             var active = section.Equals(selected, StringComparison.OrdinalIgnoreCase);
-            button.BackgroundColor = Color.FromArgb(active ? "#FFFFFF" : "#0D6971");
-            button.TextColor = Color.FromArgb(active ? "#075B63" : "#E8F2F2");
+            button.BackgroundColor = Color.FromArgb(active ? "#E4F4F2" : "#173C43");
+            button.TextColor = Color.FromArgb(active ? "#123F45" : "#DCE9E8");
             button.FontAttributes = active ? FontAttributes.Bold : FontAttributes.None;
             button.CornerRadius = 9;
         }
