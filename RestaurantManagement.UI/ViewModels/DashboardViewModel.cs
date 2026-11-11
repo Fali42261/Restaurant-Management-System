@@ -230,12 +230,16 @@ public sealed class TableRecord : BaseViewModel
     private string _status;
     private string _timerText = "";
     private string _detailText;
+    private string _floorName;
+    private string _name;
+    private int _seats;
     private DateTime _startedAt;
 
     public TableRecord(string name, int seats, string status, int elapsedMinutes, string amount, string detail, string floorName = "Ground Floor")
     {
-        Name = name;
-        Seats = seats;
+        _name = name;
+        _seats = seats;
+        _floorName = floorName;
         AmountText = amount;
         _status = status;
         _detailText = detail;
@@ -243,10 +247,12 @@ public sealed class TableRecord : BaseViewModel
         RefreshElapsed();
     }
 
-    public string Name { get; }
-    public int Seats { get; }
+    public string Name { get => _name; private set => SetProperty(ref _name, value); }
+    public int Seats { get => _seats; private set => SetProperty(ref _seats, value); }
+    public string FloorName { get => _floorName; set => SetProperty(ref _floorName, value); }
     public string AmountText { get; }
-    public string SeatsText => $"{Seats} seats";\n    public void UpdateDetails(string name, int seats, string floor) { Name = name; Seats = seats; FloorName = floor; OnPropertyChanged(nameof(SeatsText)); }
+    public string SeatsText => $"{Seats} seats";
+    public void UpdateDetails(string name, int seats, string floor) { Name = name; Seats = seats; FloorName = floor; OnPropertyChanged(nameof(SeatsText)); }
     public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(StatusColor)); OnPropertyChanged(nameof(CardColor)); OnPropertyChanged(nameof(BorderBrush)); OnPropertyChanged(nameof(ActionText)); } } }
     public string TimerText { get => _timerText; private set => SetProperty(ref _timerText, value); }
     public string DetailText { get => _detailText; private set => SetProperty(ref _detailText, value); }
