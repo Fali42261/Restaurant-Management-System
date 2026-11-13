@@ -75,20 +75,20 @@
         </Grid>
         <!-- Main content -->
         <Grid Grid.Column="1" RowDefinitions="58,52,*" RowSpacing="0">
-            <Grid Grid.Row="0" BackgroundColor="White" Padding="12,6"
+            <Grid Grid.Row="0" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Padding="12,6"
                   ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                 <Label x:Name="WelcomeLabel" Text="Welcome back, Here's what's happening today."
                        FontSize="15" TextColor="#7A8580" VerticalTextAlignment="Center" />
                 <Button x:Name="NotificationButton" Grid.Column="1" Text="🔔" Clicked="ToggleNotificationPopup"
                         BackgroundColor="Transparent" TextColor="#53635A" FontSize="19"
                         Padding="7,0" VerticalOptions="Center" />
-                <Border x:Name="ProfilePanel" Grid.Column="2" StrokeThickness="0" BackgroundColor="#F1F5F1" StrokeShape="RoundRectangle 11" Padding="6,4" VerticalOptions="Center">
+                <Border x:Name="ProfilePanel" Grid.Column="2" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#F1F5F1, Dark=#26383D}" StrokeShape="RoundRectangle 11" Padding="6,4" VerticalOptions="Center">
                     <Border.GestureRecognizers><TapGestureRecognizer Tapped="ToggleUserMenu" /></Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="7" VerticalOptions="Center">
                         <Border BackgroundColor="#DDEBD6" StrokeThickness="0" StrokeShape="RoundRectangle 16" WidthRequest="32" HeightRequest="32">
                             <Label Text="👤" FontSize="17" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
                         </Border>
-                        <VerticalStackLayout Spacing="0"><Label Text="Arthur" FontSize="13" FontAttributes="Bold" TextColor="#34433A" /><Label Text="Owner" FontSize="10" TextColor="#718078" /></VerticalStackLayout>
+                        <VerticalStackLayout Spacing="0"><Label Text="Arthur" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" /><Label Text="Owner" FontSize="10" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" /></VerticalStackLayout>
                         <Label Text="⌄" FontSize="15" TextColor="#65716A" VerticalTextAlignment="Center" />
                     </HorizontalStackLayout>
                 </Border>
@@ -112,41 +112,41 @@
 
             <ScrollView Grid.Row="2">
                 <VerticalStackLayout Padding="16" Spacing="13">
-                    <Label Text="{Binding SectionTitle}" IsVisible="{Binding IsOtherSection}" FontSize="26" FontAttributes="Bold" TextColor="#222D27" />
+                    <Label Text="{Binding SectionTitle}" IsVisible="{Binding IsOtherSection}" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
                     <VerticalStackLayout IsVisible="{Binding IsSettingsSection}" Spacing="14">
                         <VerticalStackLayout Spacing="3">
-                            <Label Text="Settings" FontSize="26" FontAttributes="Bold" TextColor="#222D27" />
-                            <Label Text="Manage your swapDigit restaurant workspace." FontSize="13" TextColor="#718078" />
+                            <Label Text="Settings" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                            <Label Text="Manage your swapDigit restaurant workspace." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                         </VerticalStackLayout>
-                        <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Restaurant Profile" FontSize="17" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="Restaurant name, contact details, address and business information." FontSize="13" TextColor="#718078" />
+                                <Label Text="Restaurant Profile" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="Restaurant name, contact details, address and business information." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Order &amp; Table Preferences" FontSize="17" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="Table setup, order workflow, service preferences and kitchen settings." FontSize="13" TextColor="#718078" />
+                                <Label Text="Order &amp; Table Preferences" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="Table setup, order workflow, service preferences and kitchen settings." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Notifications" FontSize="17" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="Alerts for new orders, reservations, kitchen updates and billing." FontSize="13" TextColor="#718078" />
+                                <Label Text="Notifications" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="Alerts for new orders, reservations, kitchen updates and billing." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Account &amp; Security" FontSize="17" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="Account information, password and staff access settings." FontSize="13" TextColor="#718078" />
+                                <Label Text="Account &amp; Security" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="Account information, password and staff access settings." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border BackgroundColor="#EAF4F2" Stroke="#CFE2DC" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=#EAF4F2, Dark=#203A3E}" Stroke="{AppThemeBinding Light=#CFE2DC, Dark=#35575A}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                 <VerticalStackLayout Spacing="5">
-                                    <Label Text="Subscription &amp; Plans" FontSize="17" FontAttributes="Bold" TextColor="#075B63" />
-                                    <Label Text="View your 3-day free trial, compare plans and choose a subscription." FontSize="13" TextColor="#536159" />
+                                    <Label Text="Subscription &amp; Plans" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                    <Label Text="View your 3-day free trial, compare plans and choose a subscription." FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1" Text="View Plans" Clicked="SubscriptionMenuClicked" BackgroundColor="#075B63" TextColor="White" FontSize="12" Padding="13,8" VerticalOptions="Center" />
                             </Grid>
@@ -155,43 +155,43 @@
 
                     <VerticalStackLayout IsVisible="{Binding IsSubscriptionSection}" Spacing="14">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="Subscription Plans" FontSize="26" FontAttributes="Bold" TextColor="#222D27" />
-                            <Label Text="Choose a plan for your restaurant and keep your business running smoothly." FontSize="13" TextColor="#718078" />
+                            <Label Text="Subscription Plans" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                            <Label Text="Choose a plan for your restaurant and keep your business running smoothly." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                         </VerticalStackLayout>
-                        <Border BackgroundColor="#EAF4F2" Stroke="#CFE2DC" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=#EAF4F2, Dark=#203A3E}" Stroke="{AppThemeBinding Light=#CFE2DC, Dark=#35575A}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
                             <VerticalStackLayout Spacing="7">
-                                <Label Text="3 DAYS FREE TRIAL" FontSize="12" FontAttributes="Bold" CharacterSpacing="1" TextColor="#075B63" />
-                                <Label Text="Try swapDigit free for 3 days" FontSize="20" FontAttributes="Bold" TextColor="#173C43" />
-                                <Label Text="Explore restaurant management features during your trial. Select a paid plan before the trial ends to continue without interruption." FontSize="13" TextColor="#536159" />
-                                <Label Text="Trial activation and expiry will be connected to your account after backend setup." FontSize="11" TextColor="#718078" />
+                                <Label Text="3 DAYS FREE TRIAL" FontSize="12" FontAttributes="Bold" CharacterSpacing="1" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="Try swapDigit free for 3 days" FontSize="20" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#173C43, Dark=#D9EFEC}" />
+                                <Label Text="Explore restaurant management features during your trial. Select a paid plan before the trial ends to continue without interruption." FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                <Label Text="Trial activation and expiry will be connected to your account after backend setup." FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
                             <VerticalStackLayout Spacing="7">
-                                <Label Text="MONTHLY" FontSize="12" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="₹399" FontSize="30" FontAttributes="Bold" TextColor="#173C43" />
-                                <Label Text="per month • Flexible billing" FontSize="12" TextColor="#718078" />
-                                <Label Text="Ideal for trying the full restaurant workflow with a low monthly commitment." FontSize="13" TextColor="#536159" />
-                                <Button Text="Choose Monthly" Clicked="SubscriptionPlanClicked" CommandParameter="Monthly — ₹399/month" BackgroundColor="#EDF4F1" TextColor="#075B63" FontAttributes="Bold" />
+                                <Label Text="MONTHLY" FontSize="12" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="₹399" FontSize="30" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#173C43, Dark=#D9EFEC}" />
+                                <Label Text="per month • Flexible billing" FontSize="12" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                <Label Text="Ideal for trying the full restaurant workflow with a low monthly commitment." FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                <Button Text="Choose Monthly" Clicked="SubscriptionPlanClicked" CommandParameter="Monthly — ₹399/month" BackgroundColor="{AppThemeBinding Light=#EDF4F1, Dark=#26383D}" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" FontAttributes="Bold" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border BackgroundColor="White" Stroke="#075B63" StrokeThickness="2" StrokeShape="RoundRectangle 14" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="#075B63" StrokeThickness="2" StrokeShape="RoundRectangle 14" Padding="16">
                             <VerticalStackLayout Spacing="7">
-                                <Label Text="MOST POPULAR" FontSize="11" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="QUARTERLY" FontSize="12" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="₹1,099" FontSize="30" FontAttributes="Bold" TextColor="#173C43" />
-                                <Label Text="every 3 months • About ₹366/month" FontSize="12" TextColor="#718078" />
-                                <Label Text="Save about 8% compared with paying monthly." FontSize="13" TextColor="#536159" />
+                                <Label Text="MOST POPULAR" FontSize="11" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="QUARTERLY" FontSize="12" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="₹1,099" FontSize="30" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#173C43, Dark=#D9EFEC}" />
+                                <Label Text="every 3 months • About ₹366/month" FontSize="12" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                <Label Text="Save about 8% compared with paying monthly." FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
                                 <Button Text="Choose Quarterly" Clicked="SubscriptionPlanClicked" CommandParameter="Quarterly — ₹1,099 every 3 months" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
                             <VerticalStackLayout Spacing="7">
-                                <Label Text="YEARLY" FontSize="12" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="₹3,999" FontSize="30" FontAttributes="Bold" TextColor="#173C43" />
-                                <Label Text="per year • About ₹333/month" FontSize="12" TextColor="#718078" />
-                                <Label Text="Best value for restaurants planning to use swapDigit long term. Save about 16% compared with monthly billing." FontSize="13" TextColor="#536159" />
-                                <Button Text="Choose Yearly" Clicked="SubscriptionPlanClicked" CommandParameter="Yearly — ₹3,999/year" BackgroundColor="#EDF4F1" TextColor="#075B63" FontAttributes="Bold" />
+                                <Label Text="YEARLY" FontSize="12" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="₹3,999" FontSize="30" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#173C43, Dark=#D9EFEC}" />
+                                <Label Text="per year • About ₹333/month" FontSize="12" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                <Label Text="Best value for restaurants planning to use swapDigit long term. Save about 16% compared with monthly billing." FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                <Button Text="Choose Yearly" Clicked="SubscriptionPlanClicked" CommandParameter="Yearly — ₹3,999/year" BackgroundColor="{AppThemeBinding Light=#EDF4F1, Dark=#26383D}" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" FontAttributes="Bold" />
                             </VerticalStackLayout>
                         </Border>
                         <Label Text="Plan selection is a preview only. Online payment, automatic renewal, trial tracking and subscription-based access control are not active yet." FontSize="11" TextColor="#87938B" />
@@ -199,28 +199,28 @@
 
                     <VerticalStackLayout IsVisible="{Binding IsHelpSupportSection}" Spacing="14">
                         <VerticalStackLayout Spacing="3">
-                            <Label Text="Help &amp; Support" FontSize="26" FontAttributes="Bold" TextColor="#222D27" />
-                            <Label Text="Find help for using swapDigit." FontSize="13" TextColor="#718078" />
+                            <Label Text="Help &amp; Support" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                            <Label Text="Find help for using swapDigit." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                         </VerticalStackLayout>
-                        <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
                             <VerticalStackLayout Spacing="6">
-                                <Label Text="How can we help?" FontSize="18" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="For assistance with tables, orders, kitchen tickets, reservations, billing and reports, contact your system administrator or swapDigit support team." FontSize="14" TextColor="#536159" />
+                                <Label Text="How can we help?" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="For assistance with tables, orders, kitchen tickets, reservations, billing and reports, contact your system administrator or swapDigit support team." FontSize="14" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="App information" FontSize="16" FontAttributes="Bold" TextColor="#075B63" />
-                                <Label Text="swapDigit Restaurant Management" FontSize="13" TextColor="#536159" />
-                                <Label Text="Help content and support contact details can be configured here." FontSize="12" TextColor="#718078" />
+                                <Label Text="App information" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                <Label Text="swapDigit Restaurant Management" FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                <Label Text="Help content and support contact details can be configured here." FontSize="12" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                             </VerticalStackLayout>
                         </Border>
                     </VerticalStackLayout>
 
 
-                    <Border IsVisible="{Binding IsOtherSection}" BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="22">
+                    <Border IsVisible="{Binding IsOtherSection}" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="22">
                         <VerticalStackLayout Spacing="10">
-                            <Label Text="{Binding SectionTitle}" FontSize="22" FontAttributes="Bold" TextColor="#26332D" />
+                            <Label Text="{Binding SectionTitle}" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
                             <Label Text="{Binding SectionDescription}" FontSize="15" TextColor="#7C8780" />
                             <Label Text="This section is ready for its UI module. Sample navigation is active; API and database integration will follow in the next phase." FontSize="16" TextColor="#7C8780" />
                         </VerticalStackLayout>
@@ -229,25 +229,25 @@
 
                     <VerticalStackLayout x:Name="TableDashboard" IsVisible="{Binding IsTablesSection}" Spacing="13">
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                            <Label Text="Floors &amp; Tables" FontSize="21" FontAttributes="Bold" TextColor="#075B63" />
+                            <Label Text="Floors &amp; Tables" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
                             <Button Grid.Column="1" Text="+ Add Floor" Clicked="AddFloorClicked" BackgroundColor="#075B63" TextColor="White" FontSize="12" Padding="12,6" />
                             <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8" Margin="0,10,0,0">
-                                <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding AvailableTableCount, StringFormat='Available {0}'}" TextColor="#536159" FontAttributes="Bold" /></Border>
+                                <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding AvailableTableCount, StringFormat='Available {0}'}" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" FontAttributes="Bold" /></Border>
                                 <Border Grid.Column="1" BackgroundColor="#FFF3C0" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding ReservedTableCount, StringFormat='Reserved {0}'}" TextColor="#8B6A13" FontAttributes="Bold" /></Border>
                                 <Border Grid.Column="2" BackgroundColor="#DDEEFF" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding ActiveTableCount, StringFormat='Running {0}'}" TextColor="#23658A" FontAttributes="Bold" /></Border>
                                 <Border Grid.Column="3" BackgroundColor="#FCE6E4" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding ReadyTableCount, StringFormat='Ready {0}'}" TextColor="#A7443D" FontAttributes="Bold" /></Border>
                             </Grid>
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Text="Manage Floors" FontSize="17" FontAttributes="Bold" TextColor="#26332D" />
+                            <Label Text="Manage Floors" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
                             <Button Grid.Column="1" Text="+ Add Table" Clicked="AddTableClicked" BackgroundColor="#075B63" TextColor="White" FontSize="12" Padding="12,6" />
                         </Grid>
                         <FlexLayout BindableLayout.ItemsSource="{Binding Floors}" Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Center">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BackgroundColor="#EDF4F1" Stroke="#D8E5DE" StrokeThickness="1" StrokeShape="RoundRectangle 10" Padding="8,5" Margin="0,0,7,7">
+                                    <Border BackgroundColor="{AppThemeBinding Light=#EDF4F1, Dark=#26383D}" Stroke="#D8E5DE" StrokeThickness="1" StrokeShape="RoundRectangle 10" Padding="8,5" Margin="0,0,7,7">
                                         <HorizontalStackLayout Spacing="5">
-                                            <Label Text="{Binding Name}" FontSize="12" FontAttributes="Bold" TextColor="#075B63" VerticalTextAlignment="Center"/>
+                                            <Label Text="{Binding Name}" FontSize="12" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" VerticalTextAlignment="Center"/>
                                             <Button Text="✎" Clicked="EditFloorClicked" BackgroundColor="Transparent" TextColor="#8B6A13" FontSize="12" Padding="4,2"/>
                                             <Button Text="✕" Clicked="DeleteFloorClicked" BackgroundColor="Transparent" TextColor="#B94B45" FontSize="12" Padding="4,2"/>
                                         </HorizontalStackLayout>
@@ -255,22 +255,22 @@
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </FlexLayout>
-                        <Label Text="Tables" FontSize="17" FontAttributes="Bold" TextColor="#26332D"/>
+                        <Label Text="Tables" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
                         <FlexLayout x:Name="TableCardsFlex" BindableLayout.ItemsSource="{Binding Tables}" Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
                                     <Border WidthRequest="235" Margin="0,0,10,10" BackgroundColor="{Binding CardColor}" Stroke="{Binding BorderBrush}" StrokeThickness="2" StrokeShape="RoundRectangle 13" Padding="12">
                                         <VerticalStackLayout Spacing="5">
                                             <Grid ColumnDefinitions="*,Auto">
-                                                <Label Text="{Binding Name}" FontSize="21" FontAttributes="Bold" TextColor="#26332D" />
+                                                <Label Text="{Binding Name}" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
                                                 <Label Grid.Column="1" Text="{Binding Status}" FontSize="11" FontAttributes="Bold" TextColor="{Binding StatusColor}" VerticalTextAlignment="Center" />
                                             </Grid>
-                                            <Label Text="{Binding AmountText}" FontSize="15" FontAttributes="Bold" TextColor="#26332D" />
-                                            <Label Text="{Binding TimerText}" FontSize="12" TextColor="#536159" />
-                                            <Label Text="{Binding FloorName}" FontSize="11" FontAttributes="Bold" TextColor="#075B63"/>
-                                            <Label Text="{Binding DetailText}" FontSize="12" TextColor="#718078" />
+                                            <Label Text="{Binding AmountText}" FontSize="15" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                            <Label Text="{Binding TimerText}" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                            <Label Text="{Binding FloorName}" FontSize="11" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}"/>
+                                            <Label Text="{Binding DetailText}" FontSize="12" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                                             <Grid ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,4,0,0" ColumnSpacing="4">
-                                                <Label Text="{Binding SeatsText}" FontSize="12" TextColor="#536159" VerticalTextAlignment="Center" />
+                                                <Label Text="{Binding SeatsText}" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" VerticalTextAlignment="Center" />
                                                 <Button Grid.Column="1" Text="Edit" Clicked="EditTableClicked" BackgroundColor="#FFF3C0" TextColor="#805F0D" FontSize="10" Padding="7,4"/>
                                                 <Button Grid.Column="2" Text="Delete" Clicked="DeleteTableClicked" BackgroundColor="#FCE6E4" TextColor="#A7443D" FontSize="10" Padding="7,4"/>
                                                 <Button Grid.Column="3" Text="{Binding ActionText}" Clicked="TableActionClicked" BackgroundColor="#075B63" TextColor="White" FontSize="10" Padding="8,4" CornerRadius="7" />
@@ -285,28 +285,28 @@
                     <VerticalStackLayout x:Name="OrdersDashboard" IsVisible="{Binding IsOrdersSection}" Spacing="12">
                         <Grid ColumnDefinitions="*,Auto">
                             <VerticalStackLayout Spacing="2">
-                                <Label Text="Orders Management" FontSize="23" FontAttributes="Bold" TextColor="#26332D" />
-                                <Label Text="Create, view, update and remove restaurant orders." FontSize="13" TextColor="#718078" />
+                                <Label Text="Orders Management" FontSize="23" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                <Label Text="Create, view, update and remove restaurant orders." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                             </VerticalStackLayout>
                             <Button Grid.Column="1" Text="+ Add Order" Clicked="AddOrderClicked" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" Padding="15,8" />
                         </Grid>
                         <Grid ColumnDefinitions="*,*,*" ColumnSpacing="9">
-                            <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="TOTAL ORDERS" FontSize="11" TextColor="#718078"/><Label Text="{Binding TotalOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="#26332D"/></VerticalStackLayout></Border>
+                            <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="TOTAL ORDERS" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"/><Label Text="{Binding TotalOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/></VerticalStackLayout></Border>
                             <Border Grid.Column="1" BackgroundColor="#FFF3C0" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="IN PROGRESS" FontSize="11" TextColor="#8B6A13"/><Label Text="{Binding ActiveOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="#8B6A13"/></VerticalStackLayout></Border>
                             <Border Grid.Column="2" BackgroundColor="#E1F3E6" StrokeThickness="0" Padding="12" StrokeShape="RoundRectangle 10"><VerticalStackLayout><Label Text="COMPLETED" FontSize="11" TextColor="#368C55"/><Label Text="{Binding CompletedOrderCount}" FontSize="22" FontAttributes="Bold" TextColor="#368C55"/></VerticalStackLayout></Border>
                         </Grid>
                         <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never"><VerticalStackLayout BindableLayout.ItemsSource="{Binding Orders}" Spacing="8">
-                            <BindableLayout.EmptyView><Label Text="No orders yet. Select Add Order to create one." TextColor="#718078" Padding="12"/></BindableLayout.EmptyView>
+                            <BindableLayout.EmptyView><Label Text="No orders yet. Select Add Order to create one." TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" Padding="12"/></BindableLayout.EmptyView>
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BackgroundColor="White" Stroke="#E7EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 11" Padding="12">
+                                    <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 11" Padding="12">
                                         <Grid WidthRequest="850" ColumnDefinitions="1.1*,1.2*,0.7*,0.9*,Auto" ColumnSpacing="8">
-                                            <VerticalStackLayout Spacing="2"><Label Text="{Binding OrderNumber}" FontAttributes="Bold" TextColor="#26332D"/><Label Text="{Binding ItemSummary}" FontSize="11" TextColor="#718078"/></VerticalStackLayout>
-                                            <VerticalStackLayout Grid.Column="1" Spacing="2"><Label Text="{Binding TableName}" TextColor="#45534A"/><Label Text="{Binding CreatedText}" FontSize="11" TextColor="#718078"/></VerticalStackLayout>
+                                            <VerticalStackLayout Spacing="2"><Label Text="{Binding OrderNumber}" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/><Label Text="{Binding ItemSummary}" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"/></VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="1" Spacing="2"><Label Text="{Binding TableName}" TextColor="#45534A"/><Label Text="{Binding CreatedText}" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"/></VerticalStackLayout>
                                             <Label Grid.Column="2" Text="{Binding QuantityText}" VerticalTextAlignment="Center" TextColor="#45534A"/>
-                                            <Label Grid.Column="3" Text="{Binding Status}" VerticalTextAlignment="Center" FontAttributes="Bold" FontSize="12" TextColor="#075B63"/>
+                                            <Label Grid.Column="3" Text="{Binding Status}" VerticalTextAlignment="Center" FontAttributes="Bold" FontSize="12" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}"/>
                                             <HorizontalStackLayout Grid.Column="4" Spacing="3" VerticalOptions="Center">
-                                                <Button Text="View" Clicked="ViewOrderClicked" FontSize="11" Padding="8,5" BackgroundColor="#EAF0F1" TextColor="#075B63"/>
+                                                <Button Text="View" Clicked="ViewOrderClicked" FontSize="11" Padding="8,5" BackgroundColor="#EAF0F1" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}"/>
                                                 <Button Text="Edit" Clicked="EditOrderClicked" FontSize="11" Padding="8,5" BackgroundColor="#FFF3C0" TextColor="#805F0D"/>
                                                 <Button Text="Delete" Clicked="DeleteOrderClicked" FontSize="11" Padding="8,5" BackgroundColor="#FCE6E4" TextColor="#A7443D"/>
                                             </HorizontalStackLayout>
@@ -358,7 +358,7 @@
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="TODAY'S REVENUE" FontSize="16" CharacterSpacing="0.8" TextColor="#536159" FontAttributes="Bold" />
+                                    <Label Text="TODAY'S REVENUE" FontSize="16" CharacterSpacing="0.8" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" FontAttributes="Bold" />
                                 </Grid>
                                 <Grid ColumnDefinitions="42,*" ColumnSpacing="10" HeightRequest="200">
                                     <Grid Grid.Column="0" RowDefinitions="*,*,*,*,*" RowSpacing="0">
@@ -401,7 +401,7 @@
                             <VerticalStackLayout Spacing="10">
                                 <Grid ColumnDefinitions="*">
                                     <Label Text="ORDERS" FontSize="16" CharacterSpacing="0.8"
-                                           TextColor="#536159" FontAttributes="Bold" />
+                                           TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" FontAttributes="Bold" />
                                 </Grid>
                                 <Label Text="24" FontSize="29" TextColor="#202923" />
                                 <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
@@ -423,7 +423,7 @@
                                 </Grid>
                                 <BoxView HeightRequest="1" Color="#EDF0EE" />
                                 <Label Text="RECENT ORDERS" FontSize="15" CharacterSpacing="0.7"
-                                       TextColor="#536159" FontAttributes="Bold" />
+                                       TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" FontAttributes="Bold" />
                                 <Grid ColumnDefinitions="1.3*,0.9*,1*,0.85*" ColumnSpacing="6">
                                     <Label Text="Order ID" FontSize="11" TextColor="#9AA39E" />
                                     <Label Grid.Column="1" Text="Qty" FontSize="11" TextColor="#9AA39E" />
@@ -458,7 +458,7 @@
                             <VerticalStackLayout Spacing="11">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <Label Text="TODAY'S RESERVATIONS" FontSize="16" CharacterSpacing="0.7"
-                                           TextColor="#536159" FontAttributes="Bold" />
+                                           TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" FontAttributes="Bold" />
                                     <Button Grid.Column="1" Text="+ Add Reservation"
                                             Command="{Binding AddReservationCommand}"
                                             BackgroundColor="#202923" TextColor="White"
@@ -495,7 +495,7 @@
                             <VerticalStackLayout Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <Label Text="POPULAR ITEMS" FontSize="16" CharacterSpacing="0.7"
-                                           TextColor="#536159" FontAttributes="Bold" />
+                                           TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" FontAttributes="Bold" />
                                     <Label Grid.Column="1" Text="1D   1W" FontSize="16" TextColor="#929C96" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,Auto">
@@ -533,60 +533,60 @@
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
-    <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="10" WidthRequest="230" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="100">
+    <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="10" WidthRequest="230" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="100">
         <VerticalStackLayout Spacing="3">
             <Label Text="ACCOUNT" FontSize="10" CharacterSpacing="1" TextColor="#87938B" Margin="8,4,0,3"/>
             <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" FontSize="14" HorizontalOptions="Fill" />
-            <Label Text="THEME" FontSize="10" CharacterSpacing="1" TextColor="#87938B" Margin="8,8,0,0"/>
+            <Label Text="THEMES" FontSize="10" CharacterSpacing="1" TextColor="#87938B" Margin="8,8,0,0"/>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="6" Margin="2,0,2,4">
                 <Button Text="☾  Dark" Clicked="DarkThemeClicked" BackgroundColor="#173C43" TextColor="White" FontSize="12" Padding="5,7" />
-                <Button Grid.Column="1" Text="◐  System" Clicked="SystemThemeClicked" BackgroundColor="#EAF1ED" TextColor="#173C43" FontSize="12" Padding="5,7" />
+                <Button Grid.Column="1" Text="◐  System" Clicked="SystemThemeClicked" BackgroundColor="{AppThemeBinding Light=#EAF1ED, Dark=#26383D}" TextColor="{AppThemeBinding Light=#173C43, Dark=#D9EFEC}" FontSize="12" Padding="5,7" />
             </Grid>
             <Button Text="❔   Help &amp; Support" Clicked="HelpMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" FontSize="14" HorizontalOptions="Fill" />
             <BoxView HeightRequest="1" BackgroundColor="#E7EBE8" Margin="4,4" />
             <Button Text="↪   Logout" Clicked="LogoutMenuClicked" BackgroundColor="Transparent" TextColor="#B94B45" FontSize="14" HorizontalOptions="Fill" />
         </VerticalStackLayout>
     </Border>
-    <Border x:Name="NotificationPopup" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12" WidthRequest="270" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="101">
+    <Border x:Name="NotificationPopup" Grid.Column="1" IsVisible="False" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12" WidthRequest="270" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="101">
         <VerticalStackLayout Spacing="8">
             <Grid ColumnDefinitions="*,Auto">
-                <Label Text="Notifications" FontSize="16" FontAttributes="Bold" TextColor="#26332D"/>
-                <Button Grid.Column="1" Text="✕" Clicked="CloseNotificationPopup" BackgroundColor="#F2F5F2" TextColor="#536159" FontSize="13" Padding="7,3"/>
+                <Label Text="Notifications" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                <Button Grid.Column="1" Text="✕" Clicked="CloseNotificationPopup" BackgroundColor="{AppThemeBinding Light=#F2F5F2, Dark=#26383D}" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" FontSize="13" Padding="7,3"/>
             </Grid>
             <BoxView HeightRequest="1" BackgroundColor="#E7EBE8"/>
-            <Label Text="You're all caught up." FontSize="14" FontAttributes="Bold" TextColor="#34433A"/>
-            <Label Text="New orders, reservations and kitchen alerts will appear here." FontSize="12" TextColor="#718078"/>
+            <Label Text="You're all caught up." FontSize="14" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}"/>
+            <Label Text="New orders, reservations and kitchen alerts will appear here." FontSize="12" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"/>
         </VerticalStackLayout>
     </Border>
     <Grid x:Name="ManagementPopup" IsVisible="False" BackgroundColor="#66000000" ZIndex="120" Grid.ColumnSpan="2">
-        <Border BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 18" Padding="18" WidthRequest="320" MaximumWidthRequest="360" HorizontalOptions="Center" VerticalOptions="Center">
+        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 18" Padding="18" WidthRequest="320" MaximumWidthRequest="360" HorizontalOptions="Center" VerticalOptions="Center">
             <VerticalStackLayout Spacing="12">
-                <Label x:Name="ManagementPopupTitle" Text="Add Table" FontSize="19" FontAttributes="Bold" TextColor="#075B63"/>
+                <Label x:Name="ManagementPopupTitle" Text="Add Table" FontSize="19" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}"/>
                 <VerticalStackLayout x:Name="FloorFields" Spacing="8">
-                    <Label Text="Floor name" FontSize="12" TextColor="#536159"/>
-                    <Entry x:Name="FloorNameEntry" Placeholder="e.g. First Floor" BackgroundColor="#F5F7F5"/>
+                    <Label Text="Floor name" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
+                    <Entry x:Name="FloorNameEntry" Placeholder="e.g. First Floor" BackgroundColor="{AppThemeBinding Light=#F5F7F5, Dark=#26383D}"/>
                 </VerticalStackLayout>
                 <VerticalStackLayout x:Name="TableFields" Spacing="8">
-                    <Label Text="Table name / number" FontSize="12" TextColor="#536159"/>
-                    <Entry x:Name="TableNameEntry" Placeholder="e.g. T13" BackgroundColor="#F5F7F5"/>
-                    <Label Text="Seats" FontSize="12" TextColor="#536159"/>
-                    <Entry x:Name="TableSeatsEntry" Placeholder="4" Keyboard="Numeric" BackgroundColor="#F5F7F5"/>
-                    <Label Text="Floor" FontSize="12" TextColor="#536159"/>
+                    <Label Text="Table name / number" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
+                    <Entry x:Name="TableNameEntry" Placeholder="e.g. T13" BackgroundColor="{AppThemeBinding Light=#F5F7F5, Dark=#26383D}"/>
+                    <Label Text="Seats" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
+                    <Entry x:Name="TableSeatsEntry" Placeholder="4" Keyboard="Numeric" BackgroundColor="{AppThemeBinding Light=#F5F7F5, Dark=#26383D}"/>
+                    <Label Text="Floor" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
                     <Picker x:Name="TableFloorPicker" Title="Select floor" />
                 </VerticalStackLayout>
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Text="Cancel" Clicked="CancelManagementPopup" BackgroundColor="#EEF2EF" TextColor="#536159"/>
+                    <Button Text="Cancel" Clicked="CancelManagementPopup" BackgroundColor="#EEF2EF" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
                     <Button Grid.Column="1" x:Name="ManagementSaveButton" Text="Save" Clicked="SaveManagementPopup" BackgroundColor="#075B63" TextColor="White"/>
                 </Grid>
             </VerticalStackLayout>
         </Border>
     </Grid>
     <Grid x:Name="TrialLockOverlay" Grid.ColumnSpan="2" IsVisible="False" BackgroundColor="#F2F4F3" ZIndex="200" Padding="20">
-        <Border BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 20" Padding="22" MaximumWidthRequest="520" HorizontalOptions="Center" VerticalOptions="Center">
+        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 20" Padding="22" MaximumWidthRequest="520" HorizontalOptions="Center" VerticalOptions="Center">
             <VerticalStackLayout Spacing="14">
-                <Label Text="swapDigit" FontSize="22" FontAttributes="Bold" TextColor="#075B63" HorizontalOptions="Center" />
-                <Label Text="Your free trial has ended" FontSize="23" FontAttributes="Bold" TextColor="#173C43" HorizontalTextAlignment="Center" />
-                <Label Text="Your 3-day free trial is complete. Choose a subscription plan to continue using restaurant management, billing, orders, tables and all other features." FontSize="14" TextColor="#536159" HorizontalTextAlignment="Center" />
+                <Label Text="swapDigit" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" HorizontalOptions="Center" />
+                <Label Text="Your free trial has ended" FontSize="23" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#173C43, Dark=#D9EFEC}" HorizontalTextAlignment="Center" />
+                <Label Text="Your 3-day free trial is complete. Choose a subscription plan to continue using restaurant management, billing, orders, tables and all other features." FontSize="14" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" HorizontalTextAlignment="Center" />
                 <Label Text="Subscription is required to unlock the app." FontSize="13" FontAttributes="Bold" TextColor="#B94B45" HorizontalTextAlignment="Center" />
                 <Button Text="View Subscription Plans" Clicked="OpenSubscriptionFromTrial" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" HeightRequest="48" />
             </VerticalStackLayout>
