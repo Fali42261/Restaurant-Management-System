@@ -128,7 +128,11 @@ public partial class DashboardPage : ContentPage
     private async void ViewOrderClicked(object sender, EventArgs e)
     {
         if (sender is not Button { BindingContext: OrderRecord order }) return;
-        await DisplayAlert(order.OrderNumber, $"Items: {order.ItemSummary}\nTable: {order.TableName}\nQuantity: {order.Quantity}\nStatus: {order.Status}\nCreated: {order.CreatedText}", "Close");
+        await DisplayAlert(order.OrderNumber, $"Items: {order.ItemSummary}
+Table: {order.TableName}
+Quantity: {order.Quantity}
+Status: {order.Status}
+Created: {order.CreatedText}", "Close");
     }
 
     private async void EditOrderClicked(object sender, EventArgs e)
@@ -170,7 +174,19 @@ public partial class DashboardPage : ContentPage
         UpdateTrialLock((DashboardViewModel)BindingContext);
     }
 
-    private void DarkThemeClicked(object sender, EventArgs e)\n    {\n        ThemeService.SetTheme(AppTheme.Dark);\n        ((Border)FindByName("UserMenu")).IsVisible = false;\n    }\n\n    private void SystemThemeClicked(object sender, EventArgs e)\n    {\n        ThemeService.SetTheme(AppTheme.Unspecified);\n        ((Border)FindByName("UserMenu")).IsVisible = false;\n    }\n\n    private void ToggleUserMenu(object sender, TappedEventArgs e)
+    private void DarkThemeClicked(object sender, EventArgs e)
+    {
+        ThemeService.SetTheme(AppTheme.Dark);
+        ((Border)FindByName("UserMenu")).IsVisible = false;
+    }
+
+    private void SystemThemeClicked(object sender, EventArgs e)
+    {
+        ThemeService.SetTheme(AppTheme.Unspecified);
+        ((Border)FindByName("UserMenu")).IsVisible = false;
+    }
+
+    private void ToggleUserMenu(object sender, TappedEventArgs e)
     {
         var menu = (Border)FindByName("UserMenu");
         menu.IsVisible = !menu.IsVisible;
@@ -190,7 +206,9 @@ public partial class DashboardPage : ContentPage
     private async void SubscriptionPlanClicked(object sender, EventArgs e)
     {
         if (sender is Button button && button.CommandParameter is string plan)
-            await DisplayAlert("Plan selected", $"{plan}\n\nOnline payment and subscription activation will be enabled after payment gateway integration.", "OK");
+            await DisplayAlert("Plan selected", $"{plan}
+
+Online payment and subscription activation will be enabled after payment gateway integration.", "OK");
     }
     private void HelpMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Help Support"); ((Border)FindByName("UserMenu")).IsVisible = false; }
     private void LogoutMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).LogoutCommand.Execute(null); ((Border)FindByName("UserMenu")).IsVisible = false; }
