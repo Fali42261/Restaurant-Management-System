@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using RestaurantManagement.UI.Services;
 
 namespace RestaurantManagement.UI
 {
@@ -6,7 +7,8 @@ namespace RestaurantManagement.UI
     {
         public App()
         {
-            InitializeComponent();\n            ThemeService.ApplySavedTheme();
+            InitializeComponent();
+            ThemeService.ApplySavedTheme();
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
