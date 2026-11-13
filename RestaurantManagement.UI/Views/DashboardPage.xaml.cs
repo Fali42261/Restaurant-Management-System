@@ -170,7 +170,7 @@ public partial class DashboardPage : ContentPage
         UpdateTrialLock((DashboardViewModel)BindingContext);
     }
 
-    private void ToggleUserMenu(object sender, TappedEventArgs e)
+    private void DarkThemeClicked(object sender, EventArgs e)\n    {\n        ThemeService.SetTheme(AppTheme.Dark);\n        ((Border)FindByName("UserMenu")).IsVisible = false;\n    }\n\n    private void SystemThemeClicked(object sender, EventArgs e)\n    {\n        ThemeService.SetTheme(AppTheme.Unspecified);\n        ((Border)FindByName("UserMenu")).IsVisible = false;\n    }\n\n    private void ToggleUserMenu(object sender, TappedEventArgs e)
     {
         var menu = (Border)FindByName("UserMenu");
         menu.IsVisible = !menu.IsVisible;
