@@ -142,6 +142,59 @@
                                 <Label Text="Account information, password and staff access settings." FontSize="13" TextColor="#718078" />
                             </VerticalStackLayout>
                         </Border>
+                        <Border BackgroundColor="#EAF4F2" Stroke="#CFE2DC" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="16">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout Spacing="5">
+                                    <Label Text="Subscription &amp; Plans" FontSize="17" FontAttributes="Bold" TextColor="#075B63" />
+                                    <Label Text="View your 3-day free trial, compare plans and choose a subscription." FontSize="13" TextColor="#536159" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Text="View Plans" Clicked="SubscriptionMenuClicked" BackgroundColor="#075B63" TextColor="White" FontSize="12" Padding="13,8" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout IsVisible="{Binding IsSubscriptionSection}" Spacing="14">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Subscription Plans" FontSize="26" FontAttributes="Bold" TextColor="#222D27" />
+                            <Label Text="Choose a plan for your restaurant and keep your business running smoothly." FontSize="13" TextColor="#718078" />
+                        </VerticalStackLayout>
+                        <Border BackgroundColor="#EAF4F2" Stroke="#CFE2DC" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
+                            <VerticalStackLayout Spacing="7">
+                                <Label Text="3 DAYS FREE TRIAL" FontSize="12" FontAttributes="Bold" CharacterSpacing="1" TextColor="#075B63" />
+                                <Label Text="Try swapDigit free for 3 days" FontSize="20" FontAttributes="Bold" TextColor="#173C43" />
+                                <Label Text="Explore restaurant management features during your trial. Select a paid plan before the trial ends to continue without interruption." FontSize="13" TextColor="#536159" />
+                                <Label Text="Trial activation and expiry will be connected to your account after backend setup." FontSize="11" TextColor="#718078" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
+                            <VerticalStackLayout Spacing="7">
+                                <Label Text="MONTHLY" FontSize="12" FontAttributes="Bold" TextColor="#075B63" />
+                                <Label Text="₹399" FontSize="30" FontAttributes="Bold" TextColor="#173C43" />
+                                <Label Text="per month • Flexible billing" FontSize="12" TextColor="#718078" />
+                                <Label Text="Ideal for trying the full restaurant workflow with a low monthly commitment." FontSize="13" TextColor="#536159" />
+                                <Button Text="Choose Monthly" Clicked="SubscriptionPlanClicked" CommandParameter="Monthly — ₹399/month" BackgroundColor="#EDF4F1" TextColor="#075B63" FontAttributes="Bold" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border BackgroundColor="White" Stroke="#075B63" StrokeThickness="2" StrokeShape="RoundRectangle 14" Padding="16">
+                            <VerticalStackLayout Spacing="7">
+                                <Label Text="MOST POPULAR" FontSize="11" FontAttributes="Bold" TextColor="#075B63" />
+                                <Label Text="QUARTERLY" FontSize="12" FontAttributes="Bold" TextColor="#075B63" />
+                                <Label Text="₹1,099" FontSize="30" FontAttributes="Bold" TextColor="#173C43" />
+                                <Label Text="every 3 months • About ₹366/month" FontSize="12" TextColor="#718078" />
+                                <Label Text="Save about 8% compared with paying monthly." FontSize="13" TextColor="#536159" />
+                                <Button Text="Choose Quarterly" Clicked="SubscriptionPlanClicked" CommandParameter="Quarterly — ₹1,099 every 3 months" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
+                            <VerticalStackLayout Spacing="7">
+                                <Label Text="YEARLY" FontSize="12" FontAttributes="Bold" TextColor="#075B63" />
+                                <Label Text="₹3,999" FontSize="30" FontAttributes="Bold" TextColor="#173C43" />
+                                <Label Text="per year • About ₹333/month" FontSize="12" TextColor="#718078" />
+                                <Label Text="Best value for restaurants planning to use swapDigit long term. Save about 16% compared with monthly billing." FontSize="13" TextColor="#536159" />
+                                <Button Text="Choose Yearly" Clicked="SubscriptionPlanClicked" CommandParameter="Yearly — ₹3,999/year" BackgroundColor="#EDF4F1" TextColor="#075B63" FontAttributes="Bold" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Label Text="Plan selection is a preview only. Online payment, automatic renewal, trial tracking and subscription-based access control are not active yet." FontSize="11" TextColor="#87938B" />
                     </VerticalStackLayout>
 
                     <VerticalStackLayout IsVisible="{Binding IsHelpSupportSection}" Spacing="14">
