@@ -6,7 +6,7 @@ namespace RestaurantManagement.UI
     {
         public App()
         {
-            InitializeComponent();
+            InitializeComponent();\n            ThemeService.ApplySavedTheme();
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
