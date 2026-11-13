@@ -576,6 +576,17 @@
             </VerticalStackLayout>
         </Border>
     </Grid>
+    <Grid x:Name="TrialLockOverlay" Grid.ColumnSpan="2" IsVisible="False" BackgroundColor="#F2F4F3" ZIndex="200" Padding="20">
+        <Border BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 20" Padding="22" MaximumWidthRequest="520" HorizontalOptions="Center" VerticalOptions="Center">
+            <VerticalStackLayout Spacing="14">
+                <Label Text="swapDigit" FontSize="22" FontAttributes="Bold" TextColor="#075B63" HorizontalOptions="Center" />
+                <Label Text="Your free trial has ended" FontSize="23" FontAttributes="Bold" TextColor="#173C43" HorizontalTextAlignment="Center" />
+                <Label Text="Your 3-day free trial is complete. Choose a subscription plan to continue using restaurant management, billing, orders, tables and all other features." FontSize="14" TextColor="#536159" HorizontalTextAlignment="Center" />
+                <Label Text="Subscription is required to unlock the app." FontSize="13" FontAttributes="Bold" TextColor="#B94B45" HorizontalTextAlignment="Center" />
+                <Button Text="View Subscription Plans" Clicked="OpenSubscriptionFromTrial" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" HeightRequest="48" />
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
     </Grid>
 
 
