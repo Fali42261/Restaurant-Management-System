@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Dashboard"
-    BackgroundColor="#F3F5F4">
+    BackgroundColor="{AppThemeBinding Light=#F3F5F4, Dark=#10191D}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -536,8 +536,13 @@
     <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="White" Stroke="#DDE5DF" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="10" WidthRequest="230" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="100">
         <VerticalStackLayout Spacing="3">
             <Label Text="ACCOUNT" FontSize="10" CharacterSpacing="1" TextColor="#87938B" Margin="8,4,0,3"/>
-            <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="#34433A" FontSize="14" HorizontalOptions="Fill" />
-            <Button Text="❔   Help &amp; Support" Clicked="HelpMenuClicked" BackgroundColor="Transparent" TextColor="#34433A" FontSize="14" HorizontalOptions="Fill" />
+            <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" FontSize="14" HorizontalOptions="Fill" />
+            <Label Text="THEME" FontSize="10" CharacterSpacing="1" TextColor="#87938B" Margin="8,8,0,0"/>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="6" Margin="2,0,2,4">
+                <Button Text="☾  Dark" Clicked="DarkThemeClicked" BackgroundColor="#173C43" TextColor="White" FontSize="12" Padding="5,7" />
+                <Button Grid.Column="1" Text="◐  System" Clicked="SystemThemeClicked" BackgroundColor="#EAF1ED" TextColor="#173C43" FontSize="12" Padding="5,7" />
+            </Grid>
+            <Button Text="❔   Help &amp; Support" Clicked="HelpMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" FontSize="14" HorizontalOptions="Fill" />
             <BoxView HeightRequest="1" BackgroundColor="#E7EBE8" Margin="4,4" />
             <Button Text="↪   Logout" Clicked="LogoutMenuClicked" BackgroundColor="Transparent" TextColor="#B94B45" FontSize="14" HorizontalOptions="Fill" />
         </VerticalStackLayout>
