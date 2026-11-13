@@ -13,6 +13,7 @@ public sealed class DashboardViewModel : BaseViewModel
         ["Dashboard"] = "Business performance and restaurant overview.",
         ["Orders"] = "Create, view, edit and delete restaurant orders.",
         ["Settings"] = "Manage your restaurant application preferences.",
+        ["Subscription"] = "View the free trial and compare monthly, quarterly and yearly plans.",
         ["Help Support"] = "Get help with using swapDigit and contact support.",
         ["Tables"] = "Live table availability, order and dining status.",
         ["POS Billing"] = "Point of sale billing workspace.",
@@ -89,6 +90,7 @@ public sealed class DashboardViewModel : BaseViewModel
                 OnPropertyChanged(nameof(IsTablesSection));
                 OnPropertyChanged(nameof(IsOrdersSection));
                 OnPropertyChanged(nameof(IsSettingsSection));
+                OnPropertyChanged(nameof(IsSubscriptionSection));
                 OnPropertyChanged(nameof(IsHelpSupportSection));
             }
         }
@@ -100,8 +102,9 @@ public sealed class DashboardViewModel : BaseViewModel
     public bool IsTablesSection => SelectedSection.Equals("Tables", StringComparison.OrdinalIgnoreCase) || SelectedSection.Equals("Floors & Tables", StringComparison.OrdinalIgnoreCase);
     public bool IsOrdersSection => SelectedSection.Equals("Orders", StringComparison.OrdinalIgnoreCase);
     public bool IsSettingsSection => SelectedSection.Equals("Settings", StringComparison.OrdinalIgnoreCase);
+    public bool IsSubscriptionSection => SelectedSection.Equals("Subscription", StringComparison.OrdinalIgnoreCase);
     public bool IsHelpSupportSection => SelectedSection.Equals("Help Support", StringComparison.OrdinalIgnoreCase);
-    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsHelpSupportSection;
+    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection;
 
     public int AvailableTableCount => Tables.Count(t => t.Status == "Available");
     public int ReservedTableCount => Tables.Count(t => t.Status == "Reserved");
