@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using RestaurantManagement.UI.Views;
+using RestaurantManagement.UI.Services;
 
 namespace RestaurantManagement.UI.ViewModels;
 
@@ -26,7 +27,8 @@ public sealed class LoginViewModel : BaseViewModel
         if(string.IsNullOrWhiteSpace(EmailOrMobile)) return;
         if(string.IsNullOrWhiteSpace(Password)) return;
         if(Password.Length<8) return;
-        // UI preview only: authentication will be connected in the API/database phase.
+        // Start the one-time 3-day trial when the owner first signs in.
+        TrialAccessService.StartTrialIfNeeded();
         await Shell.Current.GoToAsync(nameof(DashboardPage));
     }
 }
