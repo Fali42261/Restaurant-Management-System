@@ -1,3 +1,4 @@
+using RestaurantManagement.UI.Services;
 using RestaurantManagement.UI.ViewModels;
 
 namespace RestaurantManagement.UI.Views;
@@ -16,6 +17,7 @@ public partial class DashboardPage : ContentPage
         {
             if (e.PropertyName == nameof(DashboardViewModel.SelectedSection))
             {
+                UpdateTrialLock(vm);
                 UpdateNavigationSelection(vm.SelectedSection);
                 ((Border)FindByName("UserMenu")).IsVisible = false;
                 ((Border)FindByName("NotificationPopup")).IsVisible = false;
@@ -25,6 +27,8 @@ public partial class DashboardPage : ContentPage
         {
             UpdateNavigationSelection(vm.SelectedSection);
             ConfigureResponsiveLayout(Width);
+            TrialAccessService.StartTrialIfNeeded();
+            UpdateTrialLock(vm);
             vm.RefreshTableTimers();
             _tableTimer.Start();
         };
@@ -153,6 +157,18 @@ public partial class DashboardPage : ContentPage
     private FloorRecord? _editingFloor;
     private TableRecord? _editingTable;
     private bool _editingFloorMode;
+
+    private void UpdateTrialLock(DashboardViewModel vm)
+    {
+        var expired = !TrialAccessService.HasAccess;
+        ((Grid)FindByName("TrialLockOverlay")).IsVisible = expired && !vm.IsSubscriptionSection;
+    }
+
+    private void OpenSubscriptionFromTrial(object sender, EventArgs e)
+    {
+        ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Subscription");
+        UpdateTrialLock((DashboardViewModel)BindingContext);
+    }
 
     private void ToggleUserMenu(object sender, TappedEventArgs e)
     {
