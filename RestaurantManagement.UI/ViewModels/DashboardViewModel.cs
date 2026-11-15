@@ -7,6 +7,7 @@ public sealed class DashboardViewModel : BaseViewModel
 {
     private string _searchText = "";
     private string _selectedSection = "Dashboard";
+    private int _orderSequence = 2000;
 
     private static readonly Dictionary<string, string> Descriptions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -60,6 +61,27 @@ public sealed class DashboardViewModel : BaseViewModel
             new("ORD-1003", "Masala Dosa, Coffee", "Takeaway", 2, "Completed", DateTime.Now.AddMinutes(-38))
         };
         Orders.CollectionChanged += (_, _) => NotifyOrderCounts();
+        SelfServiceProducts = new ObservableCollection<MenuProduct>
+        {
+            new("Paneer Butter Masala", "Main Course", 240, "Rich tomato gravy with paneer"),
+            new("Veg Biryani", "Rice", 190, "Fragrant basmati rice"),
+            new("Masala Dosa", "South Indian", 130, "Crispy dosa with chutney"),
+            new("Butter Naan", "Breads", 55, "Freshly baked naan"),
+            new("Cold Coffee", "Beverages", 110, "Chilled coffee"),
+            new("Gulab Jamun", "Dessert", 80, "Two pieces")
+        };
+        SelfServiceCart = new ObservableCollection<CartLine>();
+        SelfServiceCart.CollectionChanged += (_, _) => OnPropertyChanged(nameof(CartTotalText));
+        KitchenTickets = new ObservableCollection<KotTicket>
+        {
+            new("KOT-1001", "Table 05", "Paneer Butter Masala × 1, Butter Naan × 2", "New", DateTime.Now.AddMinutes(-8)),
+            new("KOT-1002", "Table 02", "Veg Biryani × 2, Cold Coffee × 1", "Preparing", DateTime.Now.AddMinutes(-14)),
+            new("KOT-1003", "Takeaway", "Masala Dosa × 1", "Ready", DateTime.Now.AddMinutes(-19))
+        };
+        AddToCartCommand = new Command<string>(AddToCart);
+        RemoveCartLineCommand = new Command<CartLine>(line => { if (line != null) SelfServiceCart.Remove(line); });
+        PlaceSelfServiceOrderCommand = new Command(PlaceSelfServiceOrder);
+        AdvanceKotCommand = new Command<KotTicket>(AdvanceKot);
         NotifyOrderCounts();
     }
 
@@ -92,6 +114,8 @@ public sealed class DashboardViewModel : BaseViewModel
                 OnPropertyChanged(nameof(IsSettingsSection));
                 OnPropertyChanged(nameof(IsSubscriptionSection));
                 OnPropertyChanged(nameof(IsHelpSupportSection));
+                OnPropertyChanged(nameof(IsSelfServiceSection));
+                OnPropertyChanged(nameof(IsKotSection));
             }
         }
     }
@@ -104,7 +128,9 @@ public sealed class DashboardViewModel : BaseViewModel
     public bool IsSettingsSection => SelectedSection.Equals("Settings", StringComparison.OrdinalIgnoreCase);
     public bool IsSubscriptionSection => SelectedSection.Equals("Subscription", StringComparison.OrdinalIgnoreCase);
     public bool IsHelpSupportSection => SelectedSection.Equals("Help Support", StringComparison.OrdinalIgnoreCase);
-    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection;
+    public bool IsSelfServiceSection => SelectedSection.Equals("Self Service", StringComparison.OrdinalIgnoreCase);
+    public bool IsKotSection => SelectedSection.Equals("KOT", StringComparison.OrdinalIgnoreCase);
+    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection;
 
     public int AvailableTableCount => Tables.Count(t => t.Status == "Available");
     public int ReservedTableCount => Tables.Count(t => t.Status == "Reserved");
@@ -120,6 +146,49 @@ public sealed class DashboardViewModel : BaseViewModel
     public ICommand AddReservationCommand { get; }
     public ICommand SupportCommand { get; }
     public ICommand NotificationCommand { get; }
+    public ICommand AddToCartCommand { get; }
+    public ICommand RemoveCartLineCommand { get; }
+    public ICommand PlaceSelfServiceOrderCommand { get; }
+    public ICommand AdvanceKotCommand { get; }
+    public ObservableCollection<MenuProduct> SelfServiceProducts { get; }
+    public ObservableCollection<CartLine> SelfServiceCart { get; }
+    public ObservableCollection<KotTicket> KitchenTickets { get; }
+    public string CartTotalText => $"Cart total: ₹{SelfServiceCart.Sum(x => x.LineTotal):N0}";
+    public int NewKotCount => KitchenTickets.Count(x => x.Status == "New");
+    public int PreparingKotCount => KitchenTickets.Count(x => x.Status == "Preparing");
+    public int ReadyKotCount => KitchenTickets.Count(x => x.Status == "Ready");
+
+    private void AddToCart(string? productName)
+    {
+        var product = SelfServiceProducts.FirstOrDefault(x => x.Name == productName);
+        if (product == null) return;
+        var line = SelfServiceCart.FirstOrDefault(x => x.ProductName == product.Name);
+        if (line == null) SelfServiceCart.Add(new CartLine(product.Name, product.Price));
+        else line.Quantity++;
+    }
+
+    private void PlaceSelfServiceOrder()
+    {
+        if (SelfServiceCart.Count == 0) return;
+        var orderId = $"ORD-{++_orderSequence}";
+        var summary = string.Join(", ", SelfServiceCart.Select(x => $"{x.ProductName} × {x.Quantity}"));
+        var quantity = SelfServiceCart.Sum(x => x.Quantity);
+        var ticket = new KotTicket($"KOT-{_orderSequence}", "Self Service", summary, "New", DateTime.Now);
+        KitchenTickets.Insert(0, ticket);
+        Orders.Insert(0, new OrderRecord(orderId, summary, "Self Service", quantity, "Order Placed", DateTime.Now));
+        SelfServiceCart.Clear();
+        OnPropertyChanged(nameof(CartTotalText));
+        OnPropertyChanged(nameof(NewKotCount));
+    }
+
+    private void AdvanceKot(KotTicket? ticket)
+    {
+        if (ticket == null) return;
+        ticket.Advance();
+        OnPropertyChanged(nameof(NewKotCount));
+        OnPropertyChanged(nameof(PreparingKotCount));
+        OnPropertyChanged(nameof(ReadyKotCount));
+    }
 
     public void RefreshTableTimers()
     {
@@ -301,4 +370,43 @@ public sealed class FloorRecord : BaseViewModel
     private string _name;
     public FloorRecord(string name) => _name = name;
     public string Name { get => _name; set => SetProperty(ref _name, value); }
+}
+
+
+public sealed class MenuProduct
+{
+    public MenuProduct(string name, string category, decimal price, string description)
+    { Name = name; Category = category; Price = price; Description = description; }
+    public string Name { get; }
+    public string Category { get; }
+    public decimal Price { get; }
+    public string PriceText => $"₹{Price:N0}";
+    public string Description { get; }
+}
+
+public sealed class CartLine : BaseViewModel
+{
+    private int _quantity = 1;
+    public CartLine(string productName, decimal unitPrice) { ProductName = productName; UnitPrice = unitPrice; }
+    public string ProductName { get; }
+    public decimal UnitPrice { get; }
+    public int Quantity { get => _quantity; set { if (SetProperty(ref _quantity, Math.Max(1, value))) OnPropertyChanged(nameof(LineTotalText)); } }
+    public decimal LineTotal => UnitPrice * Quantity;
+    public string LineTotalText => $"₹{LineTotal:N0}";
+}
+
+public sealed class KotTicket : BaseViewModel
+{
+    private string _status;
+    public KotTicket(string ticketNumber, string orderType, string items, string status, DateTime createdAt)
+    { TicketNumber = ticketNumber; OrderType = orderType; Items = items; _status = status; CreatedAt = createdAt; }
+    public string TicketNumber { get; }
+    public string OrderType { get; }
+    public string Items { get; }
+    public DateTime CreatedAt { get; }
+    public string AgeText => $"{Math.Max(0, (int)(DateTime.Now - CreatedAt).TotalMinutes)} min ago";
+    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(ActionText)); OnPropertyChanged(nameof(StatusColor)); } } }
+    public string ActionText => Status switch { "New" => "Start Preparing", "Preparing" => "Mark Ready", "Ready" => "Mark Served", _ => "Completed" };
+    public string StatusColor => Status switch { "New" => "#B7791F", "Preparing" => "#2563A6", "Ready" => "#17804A", _ => "#64748B" };
+    public void Advance() { Status = Status switch { "New" => "Preparing", "Preparing" => "Ready", "Ready" => "Served", _ => "Served" }; }
 }
