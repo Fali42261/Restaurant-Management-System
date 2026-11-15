@@ -42,7 +42,7 @@ app.MapPost("/api/v1/payments/orders", async (CreateOrderRequest request, IConfi
     }, ct);
     var body = await response.Content.ReadAsStringAsync(ct);
     if (!response.IsSuccessStatusCode)
-        return Results.Problem("Razorpay could not create the order.", statusCode: 502, detail: body);
+        return Results.Problem(statusCode: 502, title: "Razorpay could not create the order.", detail: body);
 
     using var json = JsonDocument.Parse(body);
     var orderId = json.RootElement.GetProperty("id").GetString()!;
