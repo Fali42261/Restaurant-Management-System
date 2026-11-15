@@ -203,7 +203,7 @@
                                 </Picker>
                                 <Entry x:Name="PosCashReceivedEntry" Placeholder="Cash received (₹)" Keyboard="Numeric" TextChanged="PosTotalsChanged"/>
                                 <Button Text="Complete Payment &amp; Create Invoice" Clicked="PosCheckoutClicked" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" HeightRequest="48"/>
-                                <Label Text="UPI / Card selections are recorded locally in this demo; no payment gateway is connected." FontSize="10" TextColor="{AppThemeBinding Light=#8A5A12, Dark=#F5C46B}"/>
+                                <Label Text="Razorpay API foundation is added. Online checkout remains disabled until the API URL is configured and the app is connected." FontSize="10" TextColor="{AppThemeBinding Light=#8A5A12, Dark=#F5C46B}"/>
                             </VerticalStackLayout>
                         </Border>
                     </VerticalStackLayout>
