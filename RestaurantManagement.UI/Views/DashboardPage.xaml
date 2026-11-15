@@ -113,6 +113,85 @@
             <ScrollView Grid.Row="2">
                 <VerticalStackLayout Padding="16" Spacing="13">
                     <Label Text="{Binding SectionTitle}" IsVisible="{Binding IsOtherSection}" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                    <VerticalStackLayout IsVisible="{Binding IsSelfServiceSection}" Spacing="14">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="Self Service Ordering" FontSize="25" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                            <Label Text="Customer menu • Add items to cart • Place an order" FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                        </VerticalStackLayout>
+                        <Border BackgroundColor="{AppThemeBinding Light=#EAF4F2, Dark=#203A3E}" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="13">
+                            <Label Text="Choose menu items below. Orders placed here are sent to the kitchen ticket queue." FontSize="13" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                        </Border>
+                        <Label Text="Popular Menu" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                        <CollectionView ItemsSource="{Binding SelfServiceProducts}" SelectionMode="None">
+                            <CollectionView.ItemsLayout><GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="9" VerticalItemSpacing="9" /></CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E1E8E3, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="11">
+                                        <VerticalStackLayout Spacing="5">
+                                            <Label Text="{Binding Category}" FontSize="10" TextColor="#078078" />
+                                            <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                            <Label Text="{Binding Description}" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Label Text="{Binding PriceText}" FontSize="14" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" VerticalOptions="Center" />
+                                                <Button Grid.Column="1" Text="Add +" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddToCartCommand}" CommandParameter="{Binding Name}" BackgroundColor="#075B63" TextColor="White" FontSize="11" Padding="10,5" />
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="13">
+                            <VerticalStackLayout Spacing="9">
+                                <Label Text="Your Cart" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                <CollectionView ItemsSource="{Binding SelfServiceCart}" SelectionMode="None" HeightRequest="150">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnDefinitions="*,Auto,Auto" Padding="3" ColumnSpacing="8">
+                                                <Label Text="{Binding ProductName}" FontSize="12" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" VerticalOptions="Center" />
+                                                <Label Grid.Column="1" Text="{Binding LineTotalText}" FontSize="12" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" VerticalOptions="Center" />
+                                                <Button Grid.Column="2" Text="Remove" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveCartLineCommand}" CommandParameter="{Binding .}" FontSize="10" Padding="7,3" BackgroundColor="#FCE9E7" TextColor="#A33B32" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                                <Label Text="{Binding CartTotalText}" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" HorizontalOptions="End" />
+                                <Button Text="Place Order • Send to Kitchen" Command="{Binding PlaceSelfServiceOrderCommand}" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" HeightRequest="46" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout IsVisible="{Binding IsKotSection}" Spacing="14">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="Kitchen Order Tickets" FontSize="25" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                            <Label Text="Track incoming orders and move each ticket through kitchen preparation." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                            <Border BackgroundColor="{AppThemeBinding Light=#FFF5E5, Dark=#3A3020}" StrokeThickness="0" StrokeShape="RoundRectangle 10" Padding="10"><VerticalStackLayout><Label Text="NEW" FontSize="10" TextColor="#A56A12"/><Label Text="{Binding NewKotCount}" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#8A5A12, Dark=#F5C46B}"/></VerticalStackLayout></Border>
+                            <Border Grid.Column="1" BackgroundColor="{AppThemeBinding Light=#EAF2FC, Dark=#202F43}" StrokeThickness="0" StrokeShape="RoundRectangle 10" Padding="10"><VerticalStackLayout><Label Text="PREPARING" FontSize="10" TextColor="#2563A6"/><Label Text="{Binding PreparingKotCount}" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#2563A6, Dark=#8AB8F0}"/></VerticalStackLayout></Border>
+                            <Border Grid.Column="2" BackgroundColor="{AppThemeBinding Light=#E8F5EC, Dark=#20382A}" StrokeThickness="0" StrokeShape="RoundRectangle 10" Padding="10"><VerticalStackLayout><Label Text="READY" FontSize="10" TextColor="#17804A"/><Label Text="{Binding ReadyKotCount}" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#17804A, Dark=#8AD5A7}"/></VerticalStackLayout></Border>
+                        </Grid>
+                        <CollectionView ItemsSource="{Binding KitchenTickets}" SelectionMode="None">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E1E8E3, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="14" Margin="0,0,0,10">
+                                        <VerticalStackLayout Spacing="8">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Label Text="{Binding TicketNumber}" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                                <Label Grid.Column="1" Text="{Binding Status}" FontSize="12" FontAttributes="Bold" TextColor="{Binding StatusColor}" VerticalOptions="Center" />
+                                            </Grid>
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Label Text="{Binding OrderType}" FontSize="12" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                                <Label Grid.Column="1" Text="{Binding AgeText}" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                            </Grid>
+                                            <Label Text="{Binding Items}" FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                            <Button Text="{Binding ActionText}" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AdvanceKotCommand}" CommandParameter="{Binding .}" BackgroundColor="#075B63" TextColor="White" FontSize="12" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+
                     <VerticalStackLayout IsVisible="{Binding IsSettingsSection}" Spacing="14">
                         <VerticalStackLayout Spacing="3">
                             <Label Text="Settings" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
