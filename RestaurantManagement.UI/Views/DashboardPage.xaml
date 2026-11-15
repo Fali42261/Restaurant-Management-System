@@ -405,6 +405,80 @@
                     </VerticalStackLayout>
 
 
+                    <VerticalStackLayout IsVisible="{Binding IsReportsSection}" Spacing="14">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <VerticalStackLayout Spacing="3">
+                                <Label Text="Business Reports" FontSize="25" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                                <Label Text="Sales, orders, payments and restaurant activity summary." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                            </VerticalStackLayout>
+                            <Picker Grid.Column="1" Title="Period" WidthRequest="145" ItemsSource="{Binding ReportPeriodOptions}" SelectedItem="{Binding ReportPeriod}" />
+                        </Grid>
+                        <Border BackgroundColor="{AppThemeBinding Light=#EAF4F2, Dark=#203A3E}" StrokeThickness="0" StrokeShape="RoundRectangle 13" Padding="15">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <VerticalStackLayout Spacing="3">
+                                    <Label Text="PAID SALES" FontSize="11" TextColor="#08766F" />
+                                    <Label Text="{Binding ReportRevenueText}" FontSize="29" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}" />
+                                    <Label Text="Revenue from paid bills" FontSize="11" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center" HorizontalOptions="End">
+                                    <Label Text="{Binding ReportPaidBills, StringFormat='Paid bills: {0}'}" FontSize="12" TextColor="{AppThemeBinding Light=#17804A, Dark=#8AD5A7}" />
+                                    <Label Text="{Binding ReportAverageBillText, StringFormat='Avg. bill: {0}'}" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="9" RowDefinitions="Auto,Auto" RowSpacing="9">
+                            <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E1E8E3, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 11" Padding="13">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="OUTSTANDING" FontSize="10" TextColor="#A56A12" />
+                                    <Label Text="{Binding ReportOutstandingText}" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#8A5A12, Dark=#F5C46B}" />
+                                    <Label Text="{Binding ReportUnpaidBills, StringFormat='Unpaid bills: {0}'}" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Column="1" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E1E8E3, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 11" Padding="13">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="TOTAL ORDERS" FontSize="10" TextColor="#23658A" />
+                                    <Label Text="{Binding ReportOrderCount}" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#23658A, Dark=#8AB8F0}" />
+                                    <Label Text="{Binding ReportOpenOrders, StringFormat='Open: {0}'}" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Row="1" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E1E8E3, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 11" Padding="13">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="COMPLETED ORDERS" FontSize="10" TextColor="#17804A" />
+                                    <Label Text="{Binding ReportCompletedOrders}" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#17804A, Dark=#8AD5A7}" />
+                                    <Label Text="In selected period" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="1" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E1E8E3, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 11" Padding="13">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="RESERVATIONS" FontSize="10" TextColor="#8A5BB5" />
+                                    <Label Text="{Binding ReportReservations}" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#8A5BB5, Dark=#C4A1E5}" />
+                                    <Label Text="Active bookings" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E1E8E3, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="14">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="ORDER CHANNELS" FontSize="14" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="Dine-in" FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                    <Label Grid.Column="1" Text="{Binding ReportDineInOrders}" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                </Grid>
+                                <ProgressBar Progress="{Binding ReportDineInProgress}" ProgressColor="#075B63" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="Takeaway" FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                    <Label Grid.Column="1" Text="{Binding ReportTakeawayOrders}" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                </Grid>
+                                <ProgressBar Progress="{Binding ReportTakeawayProgress}" ProgressColor="#B7791F" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="Self Service" FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
+                                    <Label Grid.Column="1" Text="{Binding ReportSelfServiceOrders}" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
+                                </Grid>
+                                <ProgressBar Progress="{Binding ReportSelfServiceProgress}" ProgressColor="#2563A6" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Label Text="Report figures use the app's current sample records. Connect the live database/API to report real restaurant transactions." FontSize="11" TextColor="{AppThemeBinding Light=#87938B, Dark=#AAB8B0}" />
+                    </VerticalStackLayout>
+
                     <Border IsVisible="{Binding IsOtherSection}" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E7EBE8, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="22">
                         <VerticalStackLayout Spacing="10">
                             <Label Text="{Binding SectionTitle}" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
@@ -429,6 +503,7 @@
                             <Label Text="Manage Floors" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}" />
                             <Button Grid.Column="1" Text="+ Add Table" Clicked="AddTableClicked" BackgroundColor="#075B63" TextColor="White" FontSize="12" Padding="12,6" />
                         </Grid>
+                        <Picker Title="Filter tables by floor" ItemsSource="{Binding FloorFilterOptions}" SelectedItem="{Binding SelectedFloorFilter}" />
                         <FlexLayout BindableLayout.ItemsSource="{Binding Floors}" Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Center">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
@@ -443,7 +518,7 @@
                             </BindableLayout.ItemTemplate>
                         </FlexLayout>
                         <Label Text="Tables" FontSize="17" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
-                        <FlexLayout x:Name="TableCardsFlex" BindableLayout.ItemsSource="{Binding Tables}" Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
+                        <FlexLayout x:Name="TableCardsFlex" BindableLayout.ItemsSource="{Binding VisibleTables}" Wrap="Wrap" Direction="Row" JustifyContent="Start" AlignItems="Start">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
                                     <Border WidthRequest="235" Margin="0,0,10,10" BackgroundColor="{Binding CardColor}" Stroke="{Binding BorderBrush}" StrokeThickness="2" StrokeShape="RoundRectangle 13" Padding="12">
