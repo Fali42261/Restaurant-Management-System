@@ -128,11 +128,7 @@ public partial class DashboardPage : ContentPage
     private async void ViewOrderClicked(object sender, EventArgs e)
     {
         if (sender is not Button { BindingContext: OrderRecord order }) return;
-        await DisplayAlert(order.OrderNumber, $"Items: {order.ItemSummary}
-Table: {order.TableName}
-Quantity: {order.Quantity}
-Status: {order.Status}
-Created: {order.CreatedText}", "Close");
+        await DisplayAlert(order.OrderNumber, $"Items: {order.ItemSummary}\nTable: {order.TableName}\nQuantity: {order.Quantity}\nStatus: {order.Status}\nCreated: {order.CreatedText}", "Close");
     }
 
     private async void EditOrderClicked(object sender, EventArgs e)
