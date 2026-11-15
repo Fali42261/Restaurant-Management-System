@@ -341,7 +341,10 @@ public partial class DashboardPage : ContentPage
             PosCashReceivedEntry.Text = "";
             PosDiscountEntry.Text = "0";
             PosTaxEntry.Text = "5";
-            PosTotalsChanged(this, new TextChangedEventArgs("", ""));
+            vm.RefreshPosTotals();
+            PosDiscountAmountLabel.Text = vm.PosDiscountAmountText;
+            PosTaxAmountLabel.Text = vm.PosTaxAmountText;
+            PosGrandTotalLabel.Text = vm.PosGrandTotalText;
             ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Sales / Bills");
         }
     }
