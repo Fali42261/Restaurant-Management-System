@@ -113,6 +113,101 @@
             <ScrollView Grid.Row="2">
                 <VerticalStackLayout Padding="16" Spacing="13">
                     <Label Text="{Binding SectionTitle}" IsVisible="{Binding IsOtherSection}" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                    <VerticalStackLayout IsVisible="{Binding IsPosBillingSection}" Spacing="14">
+                        <VerticalStackLayout Spacing="3">
+                            <Label Text="POS Billing" FontSize="25" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                            <Label Text="Build an itemised bill, apply discount and tax, collect payment and create an invoice." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Border BackgroundColor="{AppThemeBinding Light=#EAF4F2, Dark=#203A3E}" StrokeThickness="0" StrokeShape="RoundRectangle 11" Padding="12">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="CART SUBTOTAL" FontSize="10" TextColor="#08766F"/>
+                                    <Label Text="{Binding PosSubtotalText}" FontSize="23" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}"/>
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Column="1" BackgroundColor="{AppThemeBinding Light=#F1F5F1, Dark=#26383D}" StrokeThickness="0" StrokeShape="RoundRectangle 11" Padding="12" VerticalOptions="Fill">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="ITEMS" FontSize="10" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"/>
+                                    <Label Text="{Binding PosCartCountText}" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                        <Label Text="Menu Items" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                        <CollectionView ItemsSource="{Binding SelfServiceProducts}" SelectionMode="None">
+                            <CollectionView.ItemsLayout><GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="9" VerticalItemSpacing="9"/></CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#E1E8E3, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="11">
+                                        <VerticalStackLayout Spacing="5">
+                                            <Label Text="{Binding Category}" FontSize="10" TextColor="#078078"/>
+                                            <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                                            <Label Text="{Binding PriceText}" FontSize="14" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}"/>
+                                            <Button Text="Add to Bill +" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AddPosToCartCommand}" CommandParameter="{Binding Name}" BackgroundColor="#075B63" TextColor="White" FontSize="11" Padding="9,5"/>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                        <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 13" Padding="13">
+                            <VerticalStackLayout Spacing="9">
+                                <Label Text="Current Bill" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                                <CollectionView ItemsSource="{Binding PosCart}" SelectionMode="None" HeightRequest="180">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="7" Padding="3">
+                                                <VerticalStackLayout Spacing="1">
+                                                    <Label Text="{Binding ProductName}" FontSize="12" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}"/>
+                                                    <Label Text="{Binding UnitPrice, StringFormat='₹{0:N2} each'}" FontSize="10" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"/>
+                                                </VerticalStackLayout>
+                                                <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='× {0}'}" FontSize="12" VerticalOptions="Center" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}"/>
+                                                <Grid Grid.Column="2" ColumnDefinitions="Auto,Auto">
+                                                    <Label Text="{Binding LineTotalText}" FontSize="12" FontAttributes="Bold" VerticalOptions="Center" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}"/>
+                                                    <Button Grid.Column="1" Text="×" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemovePosCartLineCommand}" CommandParameter="{Binding .}" FontSize="12" Padding="7,2" BackgroundColor="#FCE9E7" TextColor="#A33B32"/>
+                                                </Grid>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="Subtotal" FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
+                                    <Label Grid.Column="1" Text="{Binding PosSubtotalText}" FontSize="13" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                                </Grid>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <VerticalStackLayout Spacing="3">
+                                        <Label Text="Discount %" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"/>
+                                        <Entry x:Name="PosDiscountEntry" Text="0" Keyboard="Numeric" TextChanged="PosTotalsChanged" Placeholder="0"/>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                        <Label Text="Tax / GST %" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"/>
+                                        <Entry x:Name="PosTaxEntry" Text="5" Keyboard="Numeric" TextChanged="PosTotalsChanged" Placeholder="5"/>
+                                    </VerticalStackLayout>
+                                </Grid>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="Discount amount" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
+                                    <Label Grid.Column="1" x:Name="PosDiscountAmountLabel" Text="− ₹0.00" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
+                                </Grid>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="Tax amount" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
+                                    <Label Grid.Column="1" x:Name="PosTaxAmountLabel" Text="+ ₹0.00" FontSize="12" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}"/>
+                                </Grid>
+                                <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}"/>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="AMOUNT PAYABLE" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                                    <Label Grid.Column="1" x:Name="PosGrandTotalLabel" Text="₹0.00" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#075B63, Dark=#75C8C3}"/>
+                                </Grid>
+                                <Label Text="Checkout Details" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                                <Entry x:Name="PosCustomerEntry" Placeholder="Customer name" Text="Walk-in Guest"/>
+                                <Entry x:Name="PosTableEntry" Placeholder="Table / order type" Text="Takeaway"/>
+                                <Picker x:Name="PosPaymentPicker" Title="Payment method" SelectedIndex="0">
+                                    <Picker.Items><x:String>Cash</x:String><x:String>UPI</x:String><x:String>Card</x:String><x:String>Other</x:String></Picker.Items>
+                                </Picker>
+                                <Entry x:Name="PosCashReceivedEntry" Placeholder="Cash received (₹)" Keyboard="Numeric" TextChanged="PosTotalsChanged"/>
+                                <Button Text="Complete Payment &amp; Create Invoice" Clicked="PosCheckoutClicked" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" HeightRequest="48"/>
+                                <Label Text="UPI / Card selections are recorded locally in this demo; no payment gateway is connected." FontSize="10" TextColor="{AppThemeBinding Light=#8A5A12, Dark=#F5C46B}"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+
                     <VerticalStackLayout IsVisible="{Binding IsSelfServiceSection}" Spacing="14">
                         <VerticalStackLayout Spacing="3">
                             <Label Text="Self Service Ordering" FontSize="25" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
