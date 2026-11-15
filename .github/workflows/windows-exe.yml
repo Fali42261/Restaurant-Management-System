@@ -28,7 +28,7 @@ jobs:
         run: dotnet restore RestaurantManagement.UI/RestaurantManagement.UI.csproj -p:TargetFramework=net10.0-windows10.0.19041.0
 
       - name: Publish Windows x64 application
-        run: dotnet publish RestaurantManagement.UI/RestaurantManagement.UI.csproj -f net10.0-windows10.0.19041.0 -c Release -p:SelfContained=false -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -r win-x64 -o ./publish/windows
+        run: dotnet publish RestaurantManagement.UI/RestaurantManagement.UI.csproj -f net10.0-windows10.0.19041.0 -c Release -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -o ./publish/windows
 
       - name: Upload Windows EXE package
         uses: actions/upload-artifact@v4
