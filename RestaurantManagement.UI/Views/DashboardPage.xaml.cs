@@ -206,9 +206,7 @@ Created: {order.CreatedText}", "Close");
     private async void SubscriptionPlanClicked(object sender, EventArgs e)
     {
         if (sender is Button button && button.CommandParameter is string plan)
-            await DisplayAlert("Plan selected", $"{plan}
-
-Online payment and subscription activation will be enabled after payment gateway integration.", "OK");
+            await DisplayAlert("Plan selected", $"{plan}\n\nOnline payment and subscription activation will be enabled after payment gateway integration.", "OK");
     }
     private void HelpMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Help Support"); ((Border)FindByName("UserMenu")).IsVisible = false; }
     private void LogoutMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).LogoutCommand.Execute(null); ((Border)FindByName("UserMenu")).IsVisible = false; }
