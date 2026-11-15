@@ -276,6 +276,51 @@ public partial class DashboardPage : ContentPage
         ManagementPopup.IsVisible = false;
     }
 
+    private async void AddReservationClicked(object sender, EventArgs e)
+    {
+        if (BindingContext is not DashboardViewModel vm) return;
+        var guest = ReservationGuestEntry.Text?.Trim() ?? "";
+        var phone = ReservationPhoneEntry.Text?.Trim() ?? "";
+        var table = ReservationTableEntry.Text?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(guest) || string.IsNullOrWhiteSpace(phone) || string.IsNullOrWhiteSpace(table) ||
+            !int.TryParse(ReservationGuestsEntry.Text, out var guests) || guests < 1)
+        {
+            await DisplayAlert("Check booking details", "Enter guest name, mobile number, table and a valid guest count.", "OK");
+            return;
+        }
+
+        vm.AddReservation(guest, phone, ReservationDatePicker.Date, ReservationTimePicker.Time, table, guests);
+        ReservationGuestEntry.Text = "";
+        ReservationPhoneEntry.Text = "";
+        ReservationTableEntry.Text = "";
+        ReservationGuestsEntry.Text = "";
+        await DisplayAlert("Reservation added", "The booking has been added with Pending status.", "OK");
+    }
+
+    private async void CreateBillClicked(object sender, EventArgs e)
+    {
+        if (BindingContext is not DashboardViewModel vm) return;
+        var customer = await DisplayPromptAsync("Create bill", "Customer name:", "Continue", "Cancel", "Walk-in Guest");
+        if (string.IsNullOrWhiteSpace(customer)) return;
+        var table = await DisplayPromptAsync("Create bill", "Table / order type:", "Continue", "Cancel", "Takeaway");
+        if (string.IsNullOrWhiteSpace(table)) return;
+        var amountText = await DisplayPromptAsync("Create bill", "Bill amount (₹):", "Create", "Cancel", "0", keyboard: Keyboard.Numeric);
+        if (!decimal.TryParse(amountText, out var amount) || amount <= 0)
+        {
+            await DisplayAlert("Invalid amount", "Enter a bill amount greater than zero.", "OK");
+            return;
+        }
+        vm.AddBill(customer.Trim(), table.Trim(), amount);
+    }
+
+    private async void ViewInvoiceClicked(object sender, EventArgs e)
+    {
+        if (sender is not Button { BindingContext: BillRecord bill }) return;
+        await DisplayAlert(bill.InvoiceNumber,
+            $"Customer: {bill.Customer}\\nTable: {bill.Table}\\nAmount: {bill.AmountText}\\nStatus: {bill.Status}\\nCreated: {bill.CreatedText}",
+            "Close");
+    }
+
     private void UpdateNavigationSelection(string selected)
     {
         UpdateButtons(((Grid)FindByName("Sidebar")), selected);
