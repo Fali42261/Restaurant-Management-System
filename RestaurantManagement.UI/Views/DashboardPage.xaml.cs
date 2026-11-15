@@ -311,6 +311,41 @@ public partial class DashboardPage : ContentPage
         await DisplayAlert("Reservation added", "The booking has been added with Pending status.", "OK");
     }
 
+
+    private void PosTotalsChanged(object sender, TextChangedEventArgs e)
+    {
+        if (BindingContext is not DashboardViewModel vm) return;
+        decimal.TryParse(PosDiscountEntry.Text, out var discount);
+        decimal.TryParse(PosTaxEntry.Text, out var tax);
+        vm.PosDiscountPercent = Math.Clamp(discount, 0m, 100m);
+        vm.PosTaxPercent = Math.Clamp(tax, 0m, 100m);
+        PosDiscountAmountLabel.Text = vm.PosDiscountAmountText;
+        PosTaxAmountLabel.Text = vm.PosTaxAmountText;
+        PosGrandTotalLabel.Text = vm.PosGrandTotalText;
+    }
+
+    private async void PosCheckoutClicked(object sender, EventArgs e)
+    {
+        if (BindingContext is not DashboardViewModel vm) return;
+        decimal.TryParse(PosDiscountEntry.Text, out var discount);
+        decimal.TryParse(PosTaxEntry.Text, out var tax);
+        decimal.TryParse(PosCashReceivedEntry.Text, out var cashReceived);
+        var paymentMethod = PosPaymentPicker.SelectedItem?.ToString() ?? "Cash";
+        var success = vm.CompletePosSale(
+            PosCustomerEntry.Text ?? "Walk-in Guest",
+            PosTableEntry.Text ?? "Takeaway",
+            discount, tax, paymentMethod, cashReceived, out var message);
+        await DisplayAlert(success ? "Payment completed" : "Cannot complete checkout", message, "OK");
+        if (success)
+        {
+            PosCashReceivedEntry.Text = "";
+            PosDiscountEntry.Text = "0";
+            PosTaxEntry.Text = "5";
+            PosTotalsChanged(this, new TextChangedEventArgs("", ""));
+            ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Sales / Bills");
+        }
+    }
+
     private async void CreateBillClicked(object sender, EventArgs e)
     {
         if (BindingContext is not DashboardViewModel vm) return;
@@ -331,7 +366,7 @@ public partial class DashboardPage : ContentPage
     {
         if (sender is not Button { BindingContext: BillRecord bill }) return;
         await DisplayAlert(bill.InvoiceNumber,
-            $"Customer: {bill.Customer}\\nTable: {bill.Table}\\nAmount: {bill.AmountText}\\nStatus: {bill.Status}\\nCreated: {bill.CreatedText}",
+            $"Customer: {bill.Customer}\\nTable / Type: {bill.Table}\\nItems: {bill.Items}\\nSubtotal: ₹{bill.Subtotal:N2}\\nDiscount: ₹{bill.Discount:N2}\\nTax: ₹{bill.Tax:N2}\\nTotal: {bill.AmountText}\\nPayment: {bill.PaymentMethod}\\nCash received: ₹{bill.CashReceived:N2}\\nChange: ₹{bill.Change:N2}\\nStatus: {bill.Status}\\nCreated: {bill.CreatedText}",
             "Close");
     }
 
