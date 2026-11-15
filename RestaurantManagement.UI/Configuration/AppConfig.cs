@@ -1,8 +1,9 @@
 namespace RestaurantManagement.UI.Configuration;
 
 /// <summary>
-/// Central registry for application settings, API routes, backend naming conventions,
-/// and payment-provider configuration keys. Keep real server secrets out of this file.
+/// UI-side application constants and future integration naming references.
+/// DevUI is currently UI/demo-only: no API URL, gateway provider, or secret
+/// configuration belongs in this client project.
 /// </summary>
 public static class AppConfig
 {
@@ -13,16 +14,9 @@ public static class AppConfig
         public const int RequestTimeoutSeconds = 30;
     }
 
-    public static class Api
-    {
-        // Replace with the deployed API URL when the backend is connected.
-        public const string BaseUrl = ""; // Set to the deployed SwapDigit.Payments.Api HTTPS URL after hosting is selected.
-        public const string ApiVersion = "v1";
-    }
-
     /// <summary>
-    /// Central API route registry. Update routes here rather than scattering strings
-    /// through Views and ViewModels.
+    /// Route names reserved for the later backend phase. They are not active
+    /// network integrations in the current UI-only build.
     /// </summary>
     public static class Routes
     {
@@ -38,9 +32,8 @@ public static class AppConfig
     }
 
     /// <summary>
-    /// Expected backend controller and action names. These are naming references,
-    /// not proof that those controllers/actions already exist in this UI repository.
-    /// Keep the backend implementation aligned with these names or update this map.
+    /// Future backend naming references only. No backend controllers are
+    /// implemented or called by this UI-only project at this stage.
     /// </summary>
     public static class Backend
     {
@@ -70,33 +63,5 @@ public static class AppConfig
             public const string CreatePayment = "CreatePayment";
             public const string ConfirmPayment = "ConfirmPayment";
         }
-    }
-
-    /// <summary>
-    /// Client-safe payment configuration only. Never put secret keys, private keys,
-    /// webhook signing secrets, or database credentials in a MAUI app or Git.
-    /// </summary>
-    public static class PaymentGateway
-    {
-        public const string Provider = "Razorpay";
-        public const string Environment = "Test";
-        public const string PublishableKey = "";
-
-        // These are setting names for the BACKEND deployment environment,
-        // not values to fill into this mobile/desktop client.
-        public const string SecretKeySettingName = "PAYMENT_GATEWAY_SECRET_KEY";
-        public const string WebhookSecretSettingName = "PAYMENT_GATEWAY_WEBHOOK_SECRET";
-    }
-
-    /// <summary>
-    /// Names of secure deployment settings. Store actual values in backend hosting
-    /// secrets or GitHub Actions Secrets, never in source control.
-    /// </summary>
-    public static class SecretNames
-    {
-        public const string ApiBaseUrl = "SWAPDIGIT_API_BASE_URL";
-        public const string PaymentPublishableKey = "PAYMENT_GATEWAY_PUBLISHABLE_KEY";
-        public const string PaymentSecretKey = "PAYMENT_GATEWAY_SECRET_KEY";
-        public const string PaymentWebhookSecret = "PAYMENT_GATEWAY_WEBHOOK_SECRET";
     }
 }
