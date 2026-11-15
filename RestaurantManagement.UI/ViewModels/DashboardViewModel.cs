@@ -172,7 +172,6 @@ public sealed class DashboardViewModel : BaseViewModel
     public ICommand RemoveCartLineCommand { get; }
     public ICommand PlaceSelfServiceOrderCommand { get; }
     public ICommand AdvanceKotCommand { get; }
-    public ICommand AddReservationCommand { get; }
     public ICommand ConfirmReservationCommand { get; }
     public ICommand CancelReservationCommand { get; }
     public ICommand ViewBillCommand { get; }
