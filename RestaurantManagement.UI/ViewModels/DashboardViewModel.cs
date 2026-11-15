@@ -291,6 +291,9 @@ public sealed class DashboardViewModel : BaseViewModel
     public int ReportDineInOrders => Orders.Count(o => InReportRange(o.CreatedAt) && o.TableName.StartsWith("Table", StringComparison.OrdinalIgnoreCase));
     public int ReportTakeawayOrders => Orders.Count(o => InReportRange(o.CreatedAt) && o.TableName.Contains("Takeaway", StringComparison.OrdinalIgnoreCase));
     public int ReportSelfServiceOrders => Orders.Count(o => InReportRange(o.CreatedAt) && o.TableName.Contains("Self Service", StringComparison.OrdinalIgnoreCase));
+    public double ReportDineInProgress => ReportOrderCount == 0 ? 0 : (double)ReportDineInOrders / ReportOrderCount;
+    public double ReportTakeawayProgress => ReportOrderCount == 0 ? 0 : (double)ReportTakeawayOrders / ReportOrderCount;
+    public double ReportSelfServiceProgress => ReportOrderCount == 0 ? 0 : (double)ReportSelfServiceOrders / ReportOrderCount;
     public string ReportAverageBillText => ReportPaidBills == 0 ? "₹0" : $"₹{ReportRevenue / ReportPaidBills:N0}";
     public int PaidBillCount => Bills.Count(b => b.Status == "Paid");
     public int UnpaidBillCount => Bills.Count(b => b.Status == "Unpaid");
@@ -369,7 +372,9 @@ public sealed class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(ReportOrderCount)); OnPropertyChanged(nameof(ReportCompletedOrders));
         OnPropertyChanged(nameof(ReportOpenOrders)); OnPropertyChanged(nameof(ReportReservations));
         OnPropertyChanged(nameof(ReportDineInOrders)); OnPropertyChanged(nameof(ReportTakeawayOrders));
-        OnPropertyChanged(nameof(ReportSelfServiceOrders)); OnPropertyChanged(nameof(ReportAverageBillText));
+        OnPropertyChanged(nameof(ReportSelfServiceOrders)); OnPropertyChanged(nameof(ReportDineInProgress));
+        OnPropertyChanged(nameof(ReportTakeawayProgress)); OnPropertyChanged(nameof(ReportSelfServiceProgress));
+        OnPropertyChanged(nameof(ReportAverageBillText));
     }
 
     private void NotifySalesSummary()
