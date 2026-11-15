@@ -8,6 +8,8 @@ public sealed class DashboardViewModel : BaseViewModel
     private string _searchText = "";
     private string _selectedSection = "Dashboard";
     private int _orderSequence = 2000;
+    private string _reportPeriod = "Today";
+    private string _selectedFloorFilter = "All Floors";
 
     private static readonly Dictionary<string, string> Descriptions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -57,6 +59,11 @@ public sealed class DashboardViewModel : BaseViewModel
             new("T11", 4, "Ready", 9, "₹ 560.00", "Order ready to serve"),
             new("T12", 4, "Available", 0, "₹ 0.00", "Ready for guests")
         };
+        VisibleTables = new ObservableCollection<TableRecord>(Tables);
+        FloorFilterOptions = new ObservableCollection<string> { "All Floors" };
+        foreach (var floor in Floors) FloorFilterOptions.Add(floor.Name);
+        Floors.CollectionChanged += (_, _) => RefreshFloorFilterOptions();
+        Tables.CollectionChanged += (_, _) => { RefreshVisibleTables(); NotifyTableCounts(); };
 
         Orders = new ObservableCollection<OrderRecord>
         {
@@ -64,21 +71,21 @@ public sealed class DashboardViewModel : BaseViewModel
             new("ORD-1002", "Veg Biryani", "Table 05", 2, "Order Placed", DateTime.Now.AddMinutes(-5)),
             new("ORD-1003", "Masala Dosa, Coffee", "Takeaway", 2, "Completed", DateTime.Now.AddMinutes(-38))
         };
-        Orders.CollectionChanged += (_, _) => NotifyOrderCounts();
+        Orders.CollectionChanged += (_, _) => { NotifyOrderCounts(); NotifyReportSummary(); };
         Reservations = new ObservableCollection<ReservationRecord>
         {
             new("RES-1001", "Aarav Sharma", "9876543210", DateTime.Today, new TimeSpan(19, 0, 0), "T3", 4, "Confirmed"),
             new("RES-1002", "Priya Verma", "9876501234", DateTime.Today, new TimeSpan(19, 30, 0), "T5", 2, "Pending"),
             new("RES-1003", "Kabir Singh", "9812345670", DateTime.Today.AddDays(1), new TimeSpan(20, 0, 0), "T8", 5, "Confirmed")
         };
-        Reservations.CollectionChanged += (_, _) => NotifyReservationCounts();
+        Reservations.CollectionChanged += (_, _) => { NotifyReservationCounts(); NotifyReportSummary(); };
         Bills = new ObservableCollection<BillRecord>
         {
             new("INV-2001", "Aarav Sharma", "Table 01", 1240m, "Paid", DateTime.Now.AddHours(-2)),
             new("INV-2002", "Walk-in Guest", "Table 05", 860m, "Unpaid", DateTime.Now.AddMinutes(-45)),
             new("INV-2003", "Priya Verma", "Takeaway", 540m, "Paid", DateTime.Now.AddDays(-1))
         };
-        Bills.CollectionChanged += (_, _) => NotifySalesSummary();
+        Bills.CollectionChanged += (_, _) => { NotifySalesSummary(); NotifyReportSummary(); };
         SelfServiceProducts = new ObservableCollection<MenuProduct>
         {
             new("Paneer Butter Masala", "Main Course", 240, "Rich tomato gravy with paneer"),
@@ -104,14 +111,93 @@ public sealed class DashboardViewModel : BaseViewModel
     }
 
     public ObservableCollection<TableRecord> Tables { get; }
+    public ObservableCollection<TableRecord> VisibleTables { get; }
     public ObservableCollection<FloorRecord> Floors { get; }
+    public ObservableCollection<string> FloorFilterOptions { get; }
 
-    public void AddFloor(string name) { if (!string.IsNullOrWhiteSpace(name) && !Floors.Any(f => f.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) { Floors.Add(new FloorRecord(name.Trim())); } }
-    public void UpdateFloor(FloorRecord floor, string name) { if (string.IsNullOrWhiteSpace(name) || Floors.Any(f => !ReferenceEquals(f, floor) && f.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; var old = floor.Name; floor.Name = name.Trim(); foreach (var table in Tables.Where(t => t.FloorName == old)) table.FloorName = floor.Name; }
-    public void DeleteFloor(FloorRecord floor) { if (Floors.Count <= 1) { return; } if (Tables.Any(t => t.FloorName == floor.Name)) { return; } Floors.Remove(floor); }
-    public void AddTable(string name, int seats, string floor) { if (string.IsNullOrWhiteSpace(name) || seats < 1 || Tables.Any(t => t.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; Tables.Add(new TableRecord(name.Trim(), seats, "Available", 0, "₹ 0.00", "Ready for guests", floor)); NotifyTableCounts(); }
-    public void UpdateTable(TableRecord table, string name, int seats, string floor) { if (string.IsNullOrWhiteSpace(name) || seats < 1 || Tables.Any(t => !ReferenceEquals(t, table) && t.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))) return; table.UpdateDetails(name.Trim(), seats, floor); }
-    public void DeleteTable(TableRecord table) { Tables.Remove(table); NotifyTableCounts(); }
+    public string SelectedFloorFilter
+    {
+        get => _selectedFloorFilter;
+        set { if (SetProperty(ref _selectedFloorFilter, value)) RefreshVisibleTables(); }
+    }
+
+    public bool AddFloor(string name)
+    {
+        var normalized = name?.Trim() ?? "";
+        if (normalized.Length == 0 || Floors.Any(f => f.Name.Equals(normalized, StringComparison.OrdinalIgnoreCase))) return false;
+        Floors.Add(new FloorRecord(normalized));
+        RefreshFloorFilterOptions();
+        return true;
+    }
+
+    public bool UpdateFloor(FloorRecord floor, string name)
+    {
+        var normalized = name?.Trim() ?? "";
+        if (normalized.Length == 0 || Floors.Any(f => !ReferenceEquals(f, floor) && f.Name.Equals(normalized, StringComparison.OrdinalIgnoreCase))) return false;
+        var old = floor.Name;
+        floor.Name = normalized;
+        foreach (var table in Tables.Where(t => t.FloorName == old)) table.FloorName = normalized;
+        RefreshFloorFilterOptions();
+        RefreshVisibleTables();
+        return true;
+    }
+
+    public bool DeleteFloor(FloorRecord floor)
+    {
+        if (Floors.Count <= 1 || Tables.Any(t => t.FloorName == floor.Name)) return false;
+        Floors.Remove(floor);
+        if (SelectedFloorFilter == floor.Name) SelectedFloorFilter = "All Floors";
+        RefreshFloorFilterOptions();
+        return true;
+    }
+
+    public bool AddTable(string name, int seats, string floor)
+    {
+        var normalized = name?.Trim() ?? "";
+        if (normalized.Length == 0 || seats < 1 ||
+            Tables.Any(t => t.Name.Equals(normalized, StringComparison.OrdinalIgnoreCase)) ||
+            !Floors.Any(f => f.Name == floor)) return false;
+        Tables.Add(new TableRecord(normalized, seats, "Available", 0, "₹ 0.00", "Ready for guests", floor));
+        NotifyTableCounts();
+        return true;
+    }
+
+    public bool UpdateTable(TableRecord table, string name, int seats, string floor)
+    {
+        var normalized = name?.Trim() ?? "";
+        if (normalized.Length == 0 || seats < 1 ||
+            Tables.Any(t => !ReferenceEquals(t, table) && t.Name.Equals(normalized, StringComparison.OrdinalIgnoreCase)) ||
+            !Floors.Any(f => f.Name == floor)) return false;
+        table.UpdateDetails(normalized, seats, floor);
+        RefreshVisibleTables();
+        return true;
+    }
+
+    public void DeleteTable(TableRecord table)
+    {
+        Tables.Remove(table);
+        NotifyTableCounts();
+    }
+
+    private void RefreshFloorFilterOptions()
+    {
+        var selected = SelectedFloorFilter;
+        FloorFilterOptions.Clear();
+        FloorFilterOptions.Add("All Floors");
+        foreach (var floor in Floors) FloorFilterOptions.Add(floor.Name);
+        if (!FloorFilterOptions.Contains(selected)) _selectedFloorFilter = "All Floors";
+        OnPropertyChanged(nameof(SelectedFloorFilter));
+        RefreshVisibleTables();
+    }
+
+    private void RefreshVisibleTables()
+    {
+        if (VisibleTables == null) return;
+        var selected = _selectedFloorFilter;
+        var filtered = selected == "All Floors" ? Tables.ToList() : Tables.Where(t => t.FloorName == selected).ToList();
+        VisibleTables.Clear();
+        foreach (var table in filtered) VisibleTables.Add(table);
+    }
     public ObservableCollection<OrderRecord> Orders { get; }
 
     public string SearchText { get => _searchText; set => SetProperty(ref _searchText, value); }
@@ -136,6 +222,7 @@ public sealed class DashboardViewModel : BaseViewModel
                 OnPropertyChanged(nameof(IsKotSection));
                 OnPropertyChanged(nameof(IsReservationsSection));
                 OnPropertyChanged(nameof(IsSalesBillsSection));
+                OnPropertyChanged(nameof(IsReportsSection));
             }
         }
     }
@@ -152,7 +239,8 @@ public sealed class DashboardViewModel : BaseViewModel
     public bool IsKotSection => SelectedSection.Equals("KOT", StringComparison.OrdinalIgnoreCase);
     public bool IsReservationsSection => SelectedSection.Equals("Reservations", StringComparison.OrdinalIgnoreCase);
     public bool IsSalesBillsSection => SelectedSection.Equals("Sales / Bills", StringComparison.OrdinalIgnoreCase);
-    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection && !IsReservationsSection && !IsSalesBillsSection;
+    public bool IsReportsSection => SelectedSection.Equals("Reports", StringComparison.OrdinalIgnoreCase);
+    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection && !IsReservationsSection && !IsSalesBillsSection && !IsReportsSection;
 
     public int AvailableTableCount => Tables.Count(t => t.Status == "Available");
     public int ReservedTableCount => Tables.Count(t => t.Status == "Reserved");
@@ -186,6 +274,24 @@ public sealed class DashboardViewModel : BaseViewModel
     public int ConfirmedReservationCount => Reservations.Count(r => r.Status == "Confirmed");
     public decimal TotalSales => Bills.Where(b => b.Status == "Paid").Sum(b => b.Amount);
     public string TotalSalesText => $"₹{TotalSales:N0}";
+    public string ReportPeriod { get => _reportPeriod; set { if (SetProperty(ref _reportPeriod, value)) NotifyReportSummary(); } }
+    public IReadOnlyList<string> ReportPeriodOptions { get; } = new[] { "Today", "Last 7 Days", "Last 30 Days" };
+    private DateTime ReportStart => ReportPeriod switch { "Last 7 Days" => DateTime.Today.AddDays(-6), "Last 30 Days" => DateTime.Today.AddDays(-29), _ => DateTime.Today };
+    private bool InReportRange(DateTime value) => value >= ReportStart && value < DateTime.Today.AddDays(1);
+    public decimal ReportRevenue => Bills.Where(b => b.Status == "Paid" && InReportRange(b.CreatedAt)).Sum(b => b.Amount);
+    public string ReportRevenueText => $"₹{ReportRevenue:N0}";
+    public decimal ReportOutstanding => Bills.Where(b => b.Status == "Unpaid" && InReportRange(b.CreatedAt)).Sum(b => b.Amount);
+    public string ReportOutstandingText => $"₹{ReportOutstanding:N0}";
+    public int ReportPaidBills => Bills.Count(b => b.Status == "Paid" && InReportRange(b.CreatedAt));
+    public int ReportUnpaidBills => Bills.Count(b => b.Status == "Unpaid" && InReportRange(b.CreatedAt));
+    public int ReportOrderCount => Orders.Count(o => InReportRange(o.CreatedAt));
+    public int ReportCompletedOrders => Orders.Count(o => InReportRange(o.CreatedAt) && o.Status == "Completed");
+    public int ReportOpenOrders => Orders.Count(o => InReportRange(o.CreatedAt) && o.Status != "Completed" && o.Status != "Cancelled");
+    public int ReportReservations => Reservations.Count(r => InReportRange(r.ReservationDate) && r.Status != "Canceled");
+    public int ReportDineInOrders => Orders.Count(o => InReportRange(o.CreatedAt) && o.TableName.StartsWith("Table", StringComparison.OrdinalIgnoreCase));
+    public int ReportTakeawayOrders => Orders.Count(o => InReportRange(o.CreatedAt) && o.TableName.Contains("Takeaway", StringComparison.OrdinalIgnoreCase));
+    public int ReportSelfServiceOrders => Orders.Count(o => InReportRange(o.CreatedAt) && o.TableName.Contains("Self Service", StringComparison.OrdinalIgnoreCase));
+    public string ReportAverageBillText => ReportPaidBills == 0 ? "₹0" : $"₹{ReportRevenue / ReportPaidBills:N0}";
     public int PaidBillCount => Bills.Count(b => b.Status == "Paid");
     public int UnpaidBillCount => Bills.Count(b => b.Status == "Unpaid");
     public ObservableCollection<MenuProduct> SelfServiceProducts { get; }
@@ -252,6 +358,18 @@ public sealed class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(TodayReservationCount));
         OnPropertyChanged(nameof(PendingReservationCount));
         OnPropertyChanged(nameof(ConfirmedReservationCount));
+        NotifyReportSummary();
+    }
+
+    private void NotifyReportSummary()
+    {
+        OnPropertyChanged(nameof(ReportRevenue)); OnPropertyChanged(nameof(ReportRevenueText));
+        OnPropertyChanged(nameof(ReportOutstanding)); OnPropertyChanged(nameof(ReportOutstandingText));
+        OnPropertyChanged(nameof(ReportPaidBills)); OnPropertyChanged(nameof(ReportUnpaidBills));
+        OnPropertyChanged(nameof(ReportOrderCount)); OnPropertyChanged(nameof(ReportCompletedOrders));
+        OnPropertyChanged(nameof(ReportOpenOrders)); OnPropertyChanged(nameof(ReportReservations));
+        OnPropertyChanged(nameof(ReportDineInOrders)); OnPropertyChanged(nameof(ReportTakeawayOrders));
+        OnPropertyChanged(nameof(ReportSelfServiceOrders)); OnPropertyChanged(nameof(ReportAverageBillText));
     }
 
     private void NotifySalesSummary()
@@ -260,6 +378,7 @@ public sealed class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(TotalSalesText));
         OnPropertyChanged(nameof(PaidBillCount));
         OnPropertyChanged(nameof(UnpaidBillCount));
+        NotifyReportSummary();
     }
 
     private void AdvanceKot(KotTicket? ticket)
@@ -340,6 +459,7 @@ public sealed class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(TotalOrderCount));
         OnPropertyChanged(nameof(ActiveOrderCount));
         OnPropertyChanged(nameof(CompletedOrderCount));
+        NotifyReportSummary();
     }
 
     private void Navigate(string? section)
