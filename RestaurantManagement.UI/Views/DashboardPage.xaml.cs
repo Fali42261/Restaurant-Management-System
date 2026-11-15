@@ -289,7 +289,7 @@ public partial class DashboardPage : ContentPage
             return;
         }
 
-        vm.AddReservation(guest, phone, ReservationDatePicker.Date, ReservationTimePicker.Time, table, guests);
+        vm.AddReservation(guest, phone, ReservationDatePicker.Date ?? DateTime.Today, ReservationTimePicker.Time ?? new TimeSpan(19, 0, 0), table, guests);
         ReservationGuestEntry.Text = "";
         ReservationPhoneEntry.Text = "";
         ReservationTableEntry.Text = "";
