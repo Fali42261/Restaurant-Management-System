@@ -671,7 +671,7 @@ public sealed class CartLine : BaseViewModel
     public CartLine(string productName, decimal unitPrice) { ProductName = productName; UnitPrice = unitPrice; }
     public string ProductName { get; }
     public decimal UnitPrice { get; }
-    public int Quantity { get => _quantity; set { if (SetProperty(ref _quantity, Math.Max(1, value))) OnPropertyChanged(nameof(LineTotalText)); } }
+    public int Quantity { get => _quantity; set { if (SetProperty(ref _quantity, Math.Max(1, value))) { OnPropertyChanged(nameof(LineTotal)); OnPropertyChanged(nameof(LineTotalText)); } } }
     public decimal LineTotal => UnitPrice * Quantity;
     public string LineTotalText => $"₹{LineTotal:N0}";
 }
