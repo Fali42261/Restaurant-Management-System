@@ -255,7 +255,7 @@
 
                     <VerticalStackLayout IsVisible="{Binding IsSalesBillsSection}" Spacing="14">
                         <VerticalStackLayout Spacing="3">
-                            <Label Text="Sales & Bills" FontSize="25" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
+                            <Label Text="Sales &amp; Bills" FontSize="25" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
                             <Label Text="Review invoices, track payment status and record sales." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                         </VerticalStackLayout>
                         <Border BackgroundColor="{AppThemeBinding Light=#EAF4F2, Dark=#203A3E}" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14">
