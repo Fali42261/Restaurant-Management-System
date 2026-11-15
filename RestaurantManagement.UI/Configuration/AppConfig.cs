@@ -16,7 +16,7 @@ public static class AppConfig
     public static class Api
     {
         // Replace with the deployed API URL when the backend is connected.
-        public const string BaseUrl = "";
+        public const string BaseUrl = ""; // Set to the deployed SwapDigit.Payments.Api HTTPS URL.
         public const string ApiVersion = "v1";
     }
 
@@ -78,8 +78,8 @@ public static class AppConfig
     /// </summary>
     public static class PaymentGateway
     {
-        public const string Provider = "NotConfigured";
-        public const string Environment = "Sandbox";
+        public const string Provider = "Razorpay";
+        public const string Environment = "Test";
         public const string PublishableKey = "";
 
         // These are setting names for the BACKEND deployment environment,
