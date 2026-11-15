@@ -34,6 +34,10 @@ public sealed class DashboardViewModel : BaseViewModel
         NavigateCommand = new Command<string>(Navigate);
         TableActionCommand = new Command<string>(_ => { });
         AddReservationCommand = new Command(() => { });
+        ConfirmReservationCommand = new Command<ReservationRecord>(r => { if (r != null) UpdateReservationStatus(r, "Confirmed"); });
+        CancelReservationCommand = new Command<ReservationRecord>(r => { if (r != null) UpdateReservationStatus(r, "Canceled"); });
+        ViewBillCommand = new Command<BillRecord>(b => { if (b != null) SelectedBill = b; });
+        MarkBillPaidCommand = new Command<BillRecord>(b => { if (b != null) MarkBillPaid(b); });
         SupportCommand = new Command(() => Navigate("Help Support"));
         NotificationCommand = new Command(() => { });
 
@@ -61,6 +65,20 @@ public sealed class DashboardViewModel : BaseViewModel
             new("ORD-1003", "Masala Dosa, Coffee", "Takeaway", 2, "Completed", DateTime.Now.AddMinutes(-38))
         };
         Orders.CollectionChanged += (_, _) => NotifyOrderCounts();
+        Reservations = new ObservableCollection<ReservationRecord>
+        {
+            new("RES-1001", "Aarav Sharma", "9876543210", DateTime.Today, new TimeSpan(19, 0, 0), "T3", 4, "Confirmed"),
+            new("RES-1002", "Priya Verma", "9876501234", DateTime.Today, new TimeSpan(19, 30, 0), "T5", 2, "Pending"),
+            new("RES-1003", "Kabir Singh", "9812345670", DateTime.Today.AddDays(1), new TimeSpan(20, 0, 0), "T8", 5, "Confirmed")
+        };
+        Reservations.CollectionChanged += (_, _) => NotifyReservationCounts();
+        Bills = new ObservableCollection<BillRecord>
+        {
+            new("INV-2001", "Aarav Sharma", "Table 01", 1240m, "Paid", DateTime.Now.AddHours(-2)),
+            new("INV-2002", "Walk-in Guest", "Table 05", 860m, "Unpaid", DateTime.Now.AddMinutes(-45)),
+            new("INV-2003", "Priya Verma", "Takeaway", 540m, "Paid", DateTime.Now.AddDays(-1))
+        };
+        Bills.CollectionChanged += (_, _) => NotifySalesSummary();
         SelfServiceProducts = new ObservableCollection<MenuProduct>
         {
             new("Paneer Butter Masala", "Main Course", 240, "Rich tomato gravy with paneer"),
@@ -116,6 +134,8 @@ public sealed class DashboardViewModel : BaseViewModel
                 OnPropertyChanged(nameof(IsHelpSupportSection));
                 OnPropertyChanged(nameof(IsSelfServiceSection));
                 OnPropertyChanged(nameof(IsKotSection));
+                OnPropertyChanged(nameof(IsReservationsSection));
+                OnPropertyChanged(nameof(IsSalesBillsSection));
             }
         }
     }
@@ -130,7 +150,9 @@ public sealed class DashboardViewModel : BaseViewModel
     public bool IsHelpSupportSection => SelectedSection.Equals("Help Support", StringComparison.OrdinalIgnoreCase);
     public bool IsSelfServiceSection => SelectedSection.Equals("Self Service", StringComparison.OrdinalIgnoreCase);
     public bool IsKotSection => SelectedSection.Equals("KOT", StringComparison.OrdinalIgnoreCase);
-    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection;
+    public bool IsReservationsSection => SelectedSection.Equals("Reservations", StringComparison.OrdinalIgnoreCase);
+    public bool IsSalesBillsSection => SelectedSection.Equals("Sales / Bills", StringComparison.OrdinalIgnoreCase);
+    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection && !IsReservationsSection && !IsSalesBillsSection;
 
     public int AvailableTableCount => Tables.Count(t => t.Status == "Available");
     public int ReservedTableCount => Tables.Count(t => t.Status == "Reserved");
@@ -150,6 +172,23 @@ public sealed class DashboardViewModel : BaseViewModel
     public ICommand RemoveCartLineCommand { get; }
     public ICommand PlaceSelfServiceOrderCommand { get; }
     public ICommand AdvanceKotCommand { get; }
+    public ICommand AddReservationCommand { get; }
+    public ICommand ConfirmReservationCommand { get; }
+    public ICommand CancelReservationCommand { get; }
+    public ICommand ViewBillCommand { get; }
+    public ICommand MarkBillPaidCommand { get; }
+    public ObservableCollection<ReservationRecord> Reservations { get; }
+    public ObservableCollection<BillRecord> Bills { get; }
+    public ReservationRecord? SelectedReservation { get; private set; }
+    public BillRecord? SelectedBill { get => _selectedBill; private set => SetProperty(ref _selectedBill, value); }
+    private BillRecord? _selectedBill;
+    public int TodayReservationCount => Reservations.Count(r => r.ReservationDate.Date == DateTime.Today && r.Status != "Canceled");
+    public int PendingReservationCount => Reservations.Count(r => r.Status == "Pending");
+    public int ConfirmedReservationCount => Reservations.Count(r => r.Status == "Confirmed");
+    public decimal TotalSales => Bills.Where(b => b.Status == "Paid").Sum(b => b.Amount);
+    public string TotalSalesText => $"₹{TotalSales:N0}";
+    public int PaidBillCount => Bills.Count(b => b.Status == "Paid");
+    public int UnpaidBillCount => Bills.Count(b => b.Status == "Unpaid");
     public ObservableCollection<MenuProduct> SelfServiceProducts { get; }
     public ObservableCollection<CartLine> SelfServiceCart { get; }
     public ObservableCollection<KotTicket> KitchenTickets { get; }
@@ -179,6 +218,49 @@ public sealed class DashboardViewModel : BaseViewModel
         SelfServiceCart.Clear();
         OnPropertyChanged(nameof(CartTotalText));
         OnPropertyChanged(nameof(NewKotCount));
+    }
+
+    public void AddReservation(string guestName, string phone, DateTime date, TimeSpan time, string table, int guests)
+    {
+        if (string.IsNullOrWhiteSpace(guestName) || string.IsNullOrWhiteSpace(phone) || string.IsNullOrWhiteSpace(table) || guests < 1) return;
+        var number = 1000 + Reservations.Count + 1;
+        Reservations.Insert(0, new ReservationRecord($"RES-{number}", guestName.Trim(), phone.Trim(), date.Date, time, table, guests, "Pending"));
+        NotifyReservationCounts();
+    }
+
+    public void UpdateReservationStatus(ReservationRecord reservation, string status)
+    {
+        reservation.SetStatus(status);
+        NotifyReservationCounts();
+    }
+
+    public void AddBill(string customer, string table, decimal amount)
+    {
+        if (string.IsNullOrWhiteSpace(customer) || string.IsNullOrWhiteSpace(table) || amount <= 0) return;
+        var number = 2000 + Bills.Count + 1;
+        Bills.Insert(0, new BillRecord($"INV-{number}", customer.Trim(), table.Trim(), amount, "Unpaid", DateTime.Now));
+        NotifySalesSummary();
+    }
+
+    public void MarkBillPaid(BillRecord bill)
+    {
+        bill.SetStatus("Paid");
+        NotifySalesSummary();
+    }
+
+    private void NotifyReservationCounts()
+    {
+        OnPropertyChanged(nameof(TodayReservationCount));
+        OnPropertyChanged(nameof(PendingReservationCount));
+        OnPropertyChanged(nameof(ConfirmedReservationCount));
+    }
+
+    private void NotifySalesSummary()
+    {
+        OnPropertyChanged(nameof(TotalSales));
+        OnPropertyChanged(nameof(TotalSalesText));
+        OnPropertyChanged(nameof(PaidBillCount));
+        OnPropertyChanged(nameof(UnpaidBillCount));
     }
 
     private void AdvanceKot(KotTicket? ticket)
@@ -409,4 +491,44 @@ public sealed class KotTicket : BaseViewModel
     public string ActionText => Status switch { "New" => "Start Preparing", "Preparing" => "Mark Ready", "Ready" => "Mark Served", _ => "Completed" };
     public string StatusColor => Status switch { "New" => "#B7791F", "Preparing" => "#2563A6", "Ready" => "#17804A", _ => "#64748B" };
     public void Advance() { Status = Status switch { "New" => "Preparing", "Preparing" => "Ready", "Ready" => "Served", _ => "Served" }; }
+}
+
+
+public sealed class ReservationRecord : BaseViewModel
+{
+    private string _status;
+    public ReservationRecord(string reservationId, string guestName, string phone, DateTime reservationDate, TimeSpan reservationTime, string table, int guests, string status)
+    {
+        ReservationId = reservationId; GuestName = guestName; Phone = phone; ReservationDate = reservationDate; ReservationTime = reservationTime; Table = table; Guests = guests; _status = status;
+    }
+    public string ReservationId { get; }
+    public string GuestName { get; }
+    public string Phone { get; }
+    public DateTime ReservationDate { get; }
+    public TimeSpan ReservationTime { get; }
+    public string DateText => ReservationDate.ToString("dd MMM yyyy");
+    public string TimeText => DateTime.Today.Add(ReservationTime).ToString("hh:mm tt");
+    public string Table { get; }
+    public int Guests { get; }
+    public string GuestCountText => $"{Guests} guests";
+    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) OnPropertyChanged(nameof(StatusColor)); } }
+    public string StatusColor => Status switch { "Confirmed" => "#17804A", "Pending" => "#B7791F", _ => "#B94B45" };
+    public void SetStatus(string status) => Status = status;
+}
+
+public sealed class BillRecord : BaseViewModel
+{
+    private string _status;
+    public BillRecord(string invoiceNumber, string customer, string table, decimal amount, string status, DateTime createdAt)
+    { InvoiceNumber = invoiceNumber; Customer = customer; Table = table; Amount = amount; _status = status; CreatedAt = createdAt; }
+    public string InvoiceNumber { get; }
+    public string Customer { get; }
+    public string Table { get; }
+    public decimal Amount { get; }
+    public string AmountText => $"₹{Amount:N2}";
+    public DateTime CreatedAt { get; }
+    public string CreatedText => CreatedAt.ToString("dd MMM, hh:mm tt");
+    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) OnPropertyChanged(nameof(StatusColor)); } }
+    public string StatusColor => Status == "Paid" ? "#17804A" : "#B7791F";
+    public void SetStatus(string status) => Status = status;
 }
