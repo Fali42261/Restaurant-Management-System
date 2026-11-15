@@ -10,6 +10,10 @@ public sealed class DashboardViewModel : BaseViewModel
     private int _orderSequence = 2000;
     private string _reportPeriod = "Today";
     private string _selectedFloorFilter = "All Floors";
+    private decimal _posDiscountPercent;
+    private decimal _posTaxPercent = 5m;
+    private decimal _posDiscountAmount;
+    private decimal _posTaxAmount;
 
     private static readonly Dictionary<string, string> Descriptions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -96,6 +100,10 @@ public sealed class DashboardViewModel : BaseViewModel
             new("Gulab Jamun", "Dessert", 80, "Two pieces")
         };
         SelfServiceCart = new ObservableCollection<CartLine>();
+        PosCart = new ObservableCollection<CartLine>();
+        PosCart.CollectionChanged += (_, _) => RefreshPosTotals();
+        AddPosToCartCommand = new Command<string>(AddPosToCart);
+        RemovePosCartLineCommand = new Command<CartLine>(line => { if (line != null) PosCart.Remove(line); });
         SelfServiceCart.CollectionChanged += (_, _) => OnPropertyChanged(nameof(CartTotalText));
         KitchenTickets = new ObservableCollection<KotTicket>
         {
@@ -223,6 +231,7 @@ public sealed class DashboardViewModel : BaseViewModel
                 OnPropertyChanged(nameof(IsReservationsSection));
                 OnPropertyChanged(nameof(IsSalesBillsSection));
                 OnPropertyChanged(nameof(IsReportsSection));
+                OnPropertyChanged(nameof(IsPosBillingSection));
             }
         }
     }
@@ -240,7 +249,8 @@ public sealed class DashboardViewModel : BaseViewModel
     public bool IsReservationsSection => SelectedSection.Equals("Reservations", StringComparison.OrdinalIgnoreCase);
     public bool IsSalesBillsSection => SelectedSection.Equals("Sales / Bills", StringComparison.OrdinalIgnoreCase);
     public bool IsReportsSection => SelectedSection.Equals("Reports", StringComparison.OrdinalIgnoreCase);
-    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection && !IsReservationsSection && !IsSalesBillsSection && !IsReportsSection;
+    public bool IsPosBillingSection => SelectedSection.Equals("POS Billing", StringComparison.OrdinalIgnoreCase);
+    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection && !IsReservationsSection && !IsSalesBillsSection && !IsReportsSection && !IsPosBillingSection;
 
     public int AvailableTableCount => Tables.Count(t => t.Status == "Available");
     public int ReservedTableCount => Tables.Count(t => t.Status == "Reserved");
@@ -257,6 +267,8 @@ public sealed class DashboardViewModel : BaseViewModel
     public ICommand SupportCommand { get; }
     public ICommand NotificationCommand { get; }
     public ICommand AddToCartCommand { get; }
+    public ICommand AddPosToCartCommand { get; }
+    public ICommand RemovePosCartLineCommand { get; }
     public ICommand RemoveCartLineCommand { get; }
     public ICommand PlaceSelfServiceOrderCommand { get; }
     public ICommand AdvanceKotCommand { get; }
@@ -299,11 +311,74 @@ public sealed class DashboardViewModel : BaseViewModel
     public int UnpaidBillCount => Bills.Count(b => b.Status == "Unpaid");
     public ObservableCollection<MenuProduct> SelfServiceProducts { get; }
     public ObservableCollection<CartLine> SelfServiceCart { get; }
+    public ObservableCollection<CartLine> PosCart { get; }
+    public decimal PosSubtotal => PosCart.Sum(x => x.LineTotal);
+    public string PosSubtotalText => $"₹{PosSubtotal:N2}";
+    public decimal PosDiscountPercent { get => _posDiscountPercent; set { if (SetProperty(ref _posDiscountPercent, Math.Clamp(value, 0m, 100m))) RefreshPosTotals(); } }
+    public decimal PosTaxPercent { get => _posTaxPercent; set { if (SetProperty(ref _posTaxPercent, Math.Clamp(value, 0m, 100m))) RefreshPosTotals(); } }
+    public string PosDiscountAmountText => $"− ₹{_posDiscountAmount:N2}";
+    public string PosTaxAmountText => $"+ ₹{_posTaxAmount:N2}";
+    public decimal PosGrandTotal => Math.Max(0m, PosSubtotal - _posDiscountAmount + _posTaxAmount);
+    public string PosGrandTotalText => $"₹{PosGrandTotal:N2}";
+    public string PosCartCountText => $"{PosCart.Sum(x => x.Quantity)} items";
     public ObservableCollection<KotTicket> KitchenTickets { get; }
     public string CartTotalText => $"Cart total: ₹{SelfServiceCart.Sum(x => x.LineTotal):N0}";
     public int NewKotCount => KitchenTickets.Count(x => x.Status == "New");
     public int PreparingKotCount => KitchenTickets.Count(x => x.Status == "Preparing");
     public int ReadyKotCount => KitchenTickets.Count(x => x.Status == "Ready");
+
+
+    private void AddPosToCart(string? productName)
+    {
+        var product = SelfServiceProducts.FirstOrDefault(x => x.Name == productName);
+        if (product == null) return;
+        var line = PosCart.FirstOrDefault(x => x.ProductName == product.Name);
+        if (line == null) PosCart.Add(new CartLine(product.Name, product.Price));
+        else line.Quantity++;
+        RefreshPosTotals();
+    }
+
+    public void RefreshPosTotals()
+    {
+        var subtotal = PosCart.Sum(x => x.LineTotal);
+        _posDiscountAmount = Math.Round(subtotal * PosDiscountPercent / 100m, 2);
+        _posTaxAmount = Math.Round((subtotal - _posDiscountAmount) * PosTaxPercent / 100m, 2);
+        OnPropertyChanged(nameof(PosSubtotal)); OnPropertyChanged(nameof(PosSubtotalText));
+        OnPropertyChanged(nameof(PosDiscountAmountText)); OnPropertyChanged(nameof(PosTaxAmountText));
+        OnPropertyChanged(nameof(PosGrandTotal)); OnPropertyChanged(nameof(PosGrandTotalText));
+        OnPropertyChanged(nameof(PosCartCountText));
+    }
+
+    public bool CompletePosSale(string customer, string table, decimal discountPercent, decimal taxPercent, string paymentMethod, decimal cashReceived, out string message)
+    {
+        message = "";
+        if (PosCart.Count == 0) { message = "Add at least one item to the cart."; return false; }
+        if (string.IsNullOrWhiteSpace(customer) || string.IsNullOrWhiteSpace(table)) { message = "Enter customer name and table / order type."; return false; }
+        if (discountPercent < 0 || discountPercent > 100 || taxPercent < 0 || taxPercent > 100) { message = "Discount and tax must be between 0 and 100."; return false; }
+        var subtotal = PosCart.Sum(x => x.LineTotal);
+        var discount = Math.Round(subtotal * discountPercent / 100m, 2);
+        var tax = Math.Round((subtotal - discount) * taxPercent / 100m, 2);
+        var total = subtotal - discount + tax;
+        if (total <= 0) { message = "The payable amount must be greater than zero."; return false; }
+        if (string.Equals(paymentMethod, "Cash", StringComparison.OrdinalIgnoreCase) && cashReceived < total)
+        { message = $"Cash received is less than the payable amount (₹{total:N2})."; return false; }
+
+        var invoice = $"INV-{++_orderSequence}";
+        var items = string.Join(", ", PosCart.Select(x => $"{x.ProductName} × {x.Quantity}"));
+        var method = string.IsNullOrWhiteSpace(paymentMethod) ? "Cash" : paymentMethod;
+        var received = method == "Cash" ? cashReceived : total;
+        var bill = new BillRecord(invoice, customer.Trim(), table.Trim(), total, "Paid", DateTime.Now, method, subtotal, discount, tax, received, Math.Max(0m, received - total), items);
+        Bills.Insert(0, bill);
+        Orders.Insert(0, new OrderRecord($"ORD-{_orderSequence}", items, table.Trim(), PosCart.Sum(x => x.Quantity), "Completed", DateTime.Now));
+        KitchenTickets.Insert(0, new KotTicket($"KOT-{_orderSequence}", table.Trim(), items, "New", DateTime.Now));
+        PosCart.Clear();
+        NotifySalesSummary();
+        NotifyOrderCounts();
+        OnPropertyChanged(nameof(NewKotCount));
+        RefreshPosTotals();
+        message = $"Payment recorded successfully. Invoice {invoice}. Change: ₹{bill.Change:N2}.";
+        return true;
+    }
 
     private void AddToCart(string? productName)
     {
@@ -643,8 +718,14 @@ public sealed class ReservationRecord : BaseViewModel
 public sealed class BillRecord : BaseViewModel
 {
     private string _status;
-    public BillRecord(string invoiceNumber, string customer, string table, decimal amount, string status, DateTime createdAt)
-    { InvoiceNumber = invoiceNumber; Customer = customer; Table = table; Amount = amount; _status = status; CreatedAt = createdAt; }
+    public BillRecord(string invoiceNumber, string customer, string table, decimal amount, string status, DateTime createdAt,
+        string paymentMethod = "Unspecified", decimal subtotal = 0m, decimal discount = 0m, decimal tax = 0m,
+        decimal cashReceived = 0m, decimal change = 0m, string items = "")
+    {
+        InvoiceNumber = invoiceNumber; Customer = customer; Table = table; Amount = amount; _status = status; CreatedAt = createdAt;
+        PaymentMethod = paymentMethod; Subtotal = subtotal == 0m ? amount : subtotal; Discount = discount; Tax = tax;
+        CashReceived = cashReceived; Change = change; Items = items;
+    }
     public string InvoiceNumber { get; }
     public string Customer { get; }
     public string Table { get; }
@@ -652,6 +733,13 @@ public sealed class BillRecord : BaseViewModel
     public string AmountText => $"₹{Amount:N2}";
     public DateTime CreatedAt { get; }
     public string CreatedText => CreatedAt.ToString("dd MMM, hh:mm tt");
+    public string PaymentMethod { get; }
+    public decimal Subtotal { get; }
+    public decimal Discount { get; }
+    public decimal Tax { get; }
+    public decimal CashReceived { get; }
+    public decimal Change { get; }
+    public string Items { get; }
     public string Status { get => _status; private set { if (SetProperty(ref _status, value)) OnPropertyChanged(nameof(StatusColor)); } }
     public string StatusColor => Status == "Paid" ? "#17804A" : "#B7791F";
     public void SetStatus(string status) => Status = status;
