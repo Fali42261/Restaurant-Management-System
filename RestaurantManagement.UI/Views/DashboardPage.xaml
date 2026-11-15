@@ -214,7 +214,7 @@
                                 <Entry x:Name="ReservationGuestEntry" Placeholder="Guest name" />
                                 <Entry x:Name="ReservationPhoneEntry" Placeholder="Mobile number" Keyboard="Telephone" />
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                    <DatePicker x:Name="ReservationDatePicker" Date="{x:Static sys:DateTime.Today}" />
+                                    <DatePicker x:Name="ReservationDatePicker" />
                                     <TimePicker x:Name="ReservationTimePicker" Grid.Column="1" Time="19:00:00" />
                                 </Grid>
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
@@ -291,7 +291,7 @@
                                             </Grid>
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <Button Text="View Invoice" Clicked="ViewInvoiceClicked" FontSize="11" Padding="10,6" BackgroundColor="#EAF4F2" TextColor="#075B63"/>
-                                                <Button Grid.Column="1" Text="Mark Paid" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MarkBillPaidCommand}" CommandParameter="{Binding .}" IsEnabled="{Binding Status, Converter={StaticResource UnpaidStatusConverter}}" FontSize="11" Padding="10,6" BackgroundColor="#E8F5EC" TextColor="#17804A"/>
+                                                <Button Grid.Column="1" Text="Mark Paid" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MarkBillPaidCommand}" CommandParameter="{Binding .}" FontSize="11" Padding="10,6" BackgroundColor="#E8F5EC" TextColor="#17804A"/>
                                             </Grid>
                                         </VerticalStackLayout>
                                     </Border>
