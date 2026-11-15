@@ -16,7 +16,7 @@ public static class AppConfig
     public static class Api
     {
         // Replace with the deployed API URL when the backend is connected.
-        public const string BaseUrl = ""; // Set to the deployed SwapDigit.Payments.Api HTTPS URL.
+        public const string BaseUrl = ""; // Set to the deployed SwapDigit.Payments.Api HTTPS URL after hosting is selected.
         public const string ApiVersion = "v1";
     }
 
