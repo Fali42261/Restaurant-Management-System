@@ -271,7 +271,7 @@
                             </Grid>
                         </Border>
                         <Button Text="+ Create Bill" Clicked="CreateBillClicked" BackgroundColor="#075B63" TextColor="White" FontAttributes="Bold" HeightRequest="46"/>
-                        <Label Text="Invoices & Transactions" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
+                        <Label Text="Invoices &amp; Transactions" FontSize="18" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#26332D, Dark=#E7EFEB}"/>
                         <CollectionView ItemsSource="{Binding Bills}" SelectionMode="None" HeightRequest="430">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
