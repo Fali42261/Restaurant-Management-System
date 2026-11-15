@@ -226,7 +226,11 @@ public partial class DashboardPage : ContentPage
     {
         if (sender is not Button { BindingContext: FloorRecord floor }) return;
         if (await DisplayAlert("Delete floor", $"Delete {floor.Name}?", "Delete", "Cancel"))
-            ((DashboardViewModel)BindingContext).DeleteFloor(floor);
+        {
+            var deleted = ((DashboardViewModel)BindingContext).DeleteFloor(floor);
+            if (!deleted)
+                await DisplayAlert("Cannot delete floor", "This floor is the only remaining floor or still has tables. Move or delete its tables first.", "OK");
+        }
     }
 
     private void AddTableClicked(object sender, EventArgs e)
@@ -264,14 +268,24 @@ public partial class DashboardPage : ContentPage
         {
             var name = FloorNameEntry.Text?.Trim();
             if (string.IsNullOrWhiteSpace(name)) { await DisplayAlert("Required", "Enter a floor name.", "OK"); return; }
-            if (_editingFloor is null) vm.AddFloor(name); else vm.UpdateFloor(_editingFloor, name);
+            var saved = _editingFloor is null ? vm.AddFloor(name) : vm.UpdateFloor(_editingFloor, name);
+            if (!saved)
+            {
+                await DisplayAlert("Floor not saved", "A floor with this name may already exist. Enter a unique floor name.", "OK");
+                return;
+            }
         }
         else
         {
             var name = TableNameEntry.Text?.Trim();
             if (string.IsNullOrWhiteSpace(name) || !int.TryParse(TableSeatsEntry.Text, out var seats) || seats < 1 || TableFloorPicker.SelectedItem is not string floor)
             { await DisplayAlert("Check details", "Enter a table name, valid seat count and floor.", "OK"); return; }
-            if (_editingTable is null) vm.AddTable(name, seats, floor); else vm.UpdateTable(_editingTable, name, seats, floor);
+            var saved = _editingTable is null ? vm.AddTable(name, seats, floor) : vm.UpdateTable(_editingTable, name, seats, floor);
+            if (!saved)
+            {
+                await DisplayAlert("Table not saved", "A table with this name may already exist, or the selected floor is no longer available. Check the details and try again.", "OK");
+                return;
+            }
         }
         ManagementPopup.IsVisible = false;
     }
