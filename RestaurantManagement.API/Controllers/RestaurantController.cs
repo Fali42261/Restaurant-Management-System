@@ -24,7 +24,12 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
             P("@Id",id),P("@No",number),P("@Customer",r.CustomerName),P("@Type",r.OrderType),P("@Table",r.TableId),P("@Sub",subtotal),P("@Discount",r.Discount),P("@Tax",r.Tax),P("@Total",total),P("@Payment",r.PaymentMethod),P("@Cash",r.CashReceived),P("@User",CurrentUserId));
         foreach(var item in r.Items) await Db.ExecuteAsync("INSERT dbo.OrderItems(OrderItemId,OrderId,ProductId,Quantity,UnitPrice,Notes) VALUES(NEWID(),@Order,@Product,@Qty,@Price,@Notes)",P("@Order",id),P("@Product",item.ProductId),P("@Qty",item.Quantity),P("@Price",item.UnitPrice),P("@Notes",item.Notes));
         await Db.ExecuteAsync("INSERT dbo.KitchenTickets(TicketId,OrderId,Status,CreatedAt) VALUES(NEWID(),@Order,'New',SYSUTCDATETIME())",P("@Order",id));
-        return CreatedResult(new { orderId=id,orderNumber=number,total });
+        var invoice = "INV-" + DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
+        var paid = r.PaymentMethod.Equals("Cash",StringComparison.OrdinalIgnoreCase) ? Math.Min(r.CashReceived,total) :
+                   r.PaymentMethod.Equals("UPI",StringComparison.OrdinalIgnoreCase) || r.PaymentMethod.Equals("Card",StringComparison.OrdinalIgnoreCase) ? total : 0m;
+        await Db.ExecuteAsync("INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt) VALUES(NEWID(),@Invoice,@Order,@Customer,@Type,@Sub,@Discount,@Tax,@Total,@Method,@Paid,@Status,SYSUTCDATETIME())",
+            P("@Invoice",invoice),P("@Order",id),P("@Customer",r.CustomerName ?? "Walk-in Guest"),P("@Type",r.OrderType),P("@Sub",subtotal),P("@Discount",r.Discount),P("@Tax",r.Tax),P("@Total",total),P("@Method",r.PaymentMethod),P("@Paid",paid),P("@Status",paid>=total?"Paid":"Unpaid"));
+        return CreatedResult(new { orderId=id,orderNumber=number,invoiceNumber=invoice,total });
     }
     [HttpPut("orders/{id:guid}/status")] public async Task<IActionResult> OrderStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Order status updated."); }
 
