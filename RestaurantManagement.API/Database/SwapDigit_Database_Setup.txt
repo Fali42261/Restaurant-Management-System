@@ -260,7 +260,7 @@ GO
 IF NOT EXISTS(SELECT 1 FROM dbo.Categories)
 BEGIN
  INSERT dbo.Categories(CategoryId,Name,SortOrder) VALUES
- (NEWID(),'Main Course',1),(NEWID(),'Rice',2),(NEWID(),'Breads',3),
+ (NEWID(),'Main Course',1),(NEWID(),'Rice',2),(NEWID(),'Breads',3),(NEWID(),'South Indian',4),
  (NEWID(),'Beverages',4),(NEWID(),'Desserts',5),(NEWID(),'Starters',6);
 END
 GO
