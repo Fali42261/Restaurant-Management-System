@@ -19,7 +19,8 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
 {
     private readonly AppSettings _settings = options.Value;
 
-    [AllowAnonymous, HttpPost("register-owner")]
+    [AllowAnonymous, HttpPost("register")]
+    [HttpPost("register-owner")]
     public async Task<IActionResult> RegisterOwner(OwnerRegistration request)
     {
         if (string.IsNullOrWhiteSpace(request.FullName) || !request.Email.Contains('@') || request.MobileNumber.Length < 10 || request.Password.Length < _settings.Business.PasswordMinimumLength)
@@ -34,6 +35,7 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     }
 
     [AllowAnonymous, HttpPost("login")]
+    [HttpPost("sign-in")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var rows = await Db.QueryAsync("SELECT TOP 1 UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive FROM dbo.Users WHERE (Email=@Identifier OR MobileNumber=@Identifier) AND IsDeleted=0",
@@ -99,5 +101,6 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     }
 
     [Authorize, HttpPost("logout")]
+    [HttpPost("sign-out")]
     public async Task<IActionResult> Logout() { await Db.ExecuteAsync("UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() WHERE UserId=@Id AND RevokedAt IS NULL", P("@Id", CurrentUserId)); return Success(null, "Logged out."); }
 }
