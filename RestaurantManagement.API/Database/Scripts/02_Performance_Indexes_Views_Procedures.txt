@@ -1,0 +1,92 @@
+/*
+ Execute after 01_Tables_And_Seed_Data.txt in SSMS.
+*/
+USE swapDigitDb;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Products_Category_Available' AND object_id=OBJECT_ID('dbo.Products'))
+ CREATE INDEX IX_Products_Category_Available ON dbo.Products(CategoryId,IsAvailable,Name) INCLUDE(Price,ImageUrl) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Orders_CreatedAt_Id' AND object_id=OBJECT_ID('dbo.Orders'))
+ CREATE INDEX IX_Orders_CreatedAt_Id ON dbo.Orders(CreatedAt DESC,OrderId) INCLUDE(OrderNumber,CustomerName,OrderType,TableId,Total,Status) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Orders_Status_CreatedAt' AND object_id=OBJECT_ID('dbo.Orders'))
+ CREATE INDEX IX_Orders_Status_CreatedAt ON dbo.Orders(Status,CreatedAt DESC) INCLUDE(OrderId,OrderNumber,Total) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_OrderItems_OrderId' AND object_id=OBJECT_ID('dbo.OrderItems'))
+ CREATE INDEX IX_OrderItems_OrderId ON dbo.OrderItems(OrderId) INCLUDE(ProductId,Quantity,UnitPrice);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Bills_CreatedAt_Id' AND object_id=OBJECT_ID('dbo.Bills'))
+ CREATE INDEX IX_Bills_CreatedAt_Id ON dbo.Bills(CreatedAt DESC,BillId) INCLUDE(InvoiceNumber,OrderId,Total,AmountPaid,Status);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Reservations_Date_Time' AND object_id=OBJECT_ID('dbo.Reservations'))
+ CREATE INDEX IX_Reservations_Date_Time ON dbo.Reservations(ReservationDate,ReservationTime) INCLUDE(GuestName,MobileNumber,GuestCount,TableId,Status) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_StockMovements_CreatedAt' AND object_id=OBJECT_ID('dbo.StockMovements'))
+ CREATE INDEX IX_StockMovements_CreatedAt ON dbo.StockMovements(CreatedAt DESC,MovementId) INCLUDE(ItemId,MovementType,Quantity);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_SupportTickets_User_CreatedAt' AND object_id=OBJECT_ID('dbo.SupportTickets'))
+ CREATE INDEX IX_SupportTickets_User_CreatedAt ON dbo.SupportTickets(CreatedBy,CreatedAt DESC) INCLUDE(TicketId,Subject,Priority,Status);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_RefreshTokens_User_Expiry' AND object_id=OBJECT_ID('dbo.RefreshTokens'))
+ CREATE INDEX IX_RefreshTokens_User_Expiry ON dbo.RefreshTokens(UserId,ExpiresAt) INCLUDE(TokenHash,RevokedAt);
+GO
+
+CREATE OR ALTER VIEW dbo.vw_ActiveProducts
+AS
+ SELECT p.ProductId,p.CategoryId,c.Name AS CategoryName,p.Name,p.Description,p.Price,p.ImageUrl,p.IsAvailable
+ FROM dbo.Products p LEFT JOIN dbo.Categories c ON c.CategoryId=p.CategoryId
+ WHERE p.IsDeleted=0;
+GO
+CREATE OR ALTER VIEW dbo.vw_DailyBillTotals
+AS
+ SELECT CONVERT(date,CreatedAt) AS SaleDate,COUNT_BIG(*) AS BillCount,
+        SUM(Total) AS GrossSales,SUM(Discount) AS Discounts,SUM(Tax) AS Tax
+ FROM dbo.Bills GROUP BY CONVERT(date,CreatedAt);
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Products_ListPaged
+ @PageNumber int=1,@PageSize int=25,@CategoryId uniqueidentifier=NULL,@Search nvarchar(160)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>100 THEN 100 ELSE @PageSize END;
+ SELECT ProductId,CategoryId,Name,Description,Price,ImageUrl,IsAvailable
+ FROM dbo.Products
+ WHERE IsDeleted=0 AND (@CategoryId IS NULL OR CategoryId=@CategoryId)
+   AND (@Search IS NULL OR Name LIKE @Search+N'%')
+ ORDER BY Name,ProductId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Orders_ListPaged
+ @PageNumber int=1,@PageSize int=25,@Status nvarchar(30)=NULL,@FromUtc datetime2=NULL,@ToUtc datetime2=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>100 THEN 100 ELSE @PageSize END;
+ SELECT OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,PaymentMethod,Status,CreatedAt
+ FROM dbo.Orders
+ WHERE IsDeleted=0 AND (@Status IS NULL OR Status=@Status)
+   AND (@FromUtc IS NULL OR CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR CreatedAt<@ToUtc)
+ ORDER BY CreatedAt DESC,OrderId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Bills_ListPaged
+ @PageNumber int=1,@PageSize int=25,@FromUtc datetime2=NULL,@ToUtc datetime2=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>100 THEN 100 ELSE @PageSize END;
+ SELECT BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt
+ FROM dbo.Bills
+ WHERE (@FromUtc IS NULL OR CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR CreatedAt<@ToUtc)
+ ORDER BY CreatedAt DESC,BillId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+PRINT 'swapDigit performance objects created.';
+GO

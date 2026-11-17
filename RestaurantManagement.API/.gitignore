@@ -4,3 +4,7 @@ App_Data/
 *.user
 *.suo
 secrets.json
+
+# Runtime logs are local and must not be committed
+SysLogs/*.log
+SysLogs/*.log.*
