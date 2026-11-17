@@ -50,7 +50,7 @@ AS
 BEGIN
  SET NOCOUNT ON;
  SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
- SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>100 THEN 100 ELSE @PageSize END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
  SELECT ProductId,CategoryId,Name,Description,Price,ImageUrl,IsAvailable
  FROM dbo.Products
  WHERE IsDeleted=0 AND (@CategoryId IS NULL OR CategoryId=@CategoryId)
@@ -65,7 +65,7 @@ AS
 BEGIN
  SET NOCOUNT ON;
  SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
- SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>100 THEN 100 ELSE @PageSize END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
  SELECT OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,PaymentMethod,Status,CreatedAt
  FROM dbo.Orders
  WHERE IsDeleted=0 AND (@Status IS NULL OR Status=@Status)
@@ -80,7 +80,7 @@ AS
 BEGIN
  SET NOCOUNT ON;
  SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
- SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>100 THEN 100 ELSE @PageSize END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
  SELECT BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt
  FROM dbo.Bills
  WHERE (@FromUtc IS NULL OR CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR CreatedAt<@ToUtc)
