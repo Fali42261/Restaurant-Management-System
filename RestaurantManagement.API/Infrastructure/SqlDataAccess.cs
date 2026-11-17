@@ -45,8 +45,6 @@ public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSett
     }
 
     public static SqlParameter P(string name, object? value) => new(name, value ?? DBNull.Value);
-}
-
     public async Task<List<Dictionary<string, object?>>> QueryProcedureAsync(string procedureName, params SqlParameter[] parameters)
     {
         if (string.IsNullOrWhiteSpace(procedureName) || procedureName.Any(c => !(char.IsLetterOrDigit(c) || c == '_' || c == '.')))
@@ -71,3 +69,4 @@ public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSett
         }
         return rows;
     }
+}
