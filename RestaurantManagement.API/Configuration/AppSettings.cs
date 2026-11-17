@@ -1,10 +1,19 @@
 namespace RestaurantManagement.API.Configuration;
-public sealed class AppSettings{
- public const string SectionName="AppSettings"; public string ApplicationName{get;set;}="RestaurantManagement.API"; public string PublicBaseUrl{get;set;}="https://localhost:7001"; public string[] AllowedOrigins{get;set;}=[];
- public DatabaseSettings Database{get;set;}=new(); public JwtSettings Jwt{get;set;}=new(); public PathSettings Paths{get;set;}=new(); public LoggingSettings Logging{get;set;}=new(); public SwaggerSettings Swagger{get;set;}=new(); public AuthSettings Auth{get;set;}=new();
- public void Validate(IHostEnvironment env){if(string.IsNullOrWhiteSpace(Database.ConnectionString))throw new InvalidOperationException("Database connection string is required.");if(Jwt.SigningKey.Length<32||(env.IsProduction()&&Jwt.SigningKey.Contains("CHANGE_THIS",StringComparison.OrdinalIgnoreCase)))throw new InvalidOperationException("Configure a strong JWT signing key (32+ characters).");}
+
+public sealed class AppSettings
+{
+    public const string SectionName = "App";
+    public string Name { get; set; } = "swapDigit API";
+    public DatabaseSettings Database { get; set; } = new();
+    public JwtSettings Jwt { get; set; } = new();
+    public EmailSettings Email { get; set; } = new();
+    public CorsSettings Cors { get; set; } = new();
+    public FileStorageSettings FileStorage { get; set; } = new();
+    public BusinessSettings Business { get; set; } = new();
 }
-public sealed class DatabaseSettings{public string ConnectionString{get;set;}="";public int CommandTimeoutSeconds{get;set;}=30;}
-public sealed class JwtSettings{public string Issuer{get;set;}="RestaurantManagement";public string Audience{get;set;}="RestaurantManagement.Clients";public string SigningKey{get;set;}="CHANGE_THIS_DEVELOPMENT_KEY_32_CHARS_MINIMUM";public int AccessTokenMinutes{get;set;}=15;public int RefreshTokenDays{get;set;}=30;}
-public sealed class PathSettings{public string Logs{get;set;}="App_Data/Logs";public string UserImages{get;set;}="App_Data/Uploads/Users";public string Temp{get;set;}="App_Data/Temp";public string PublicFiles{get;set;}="wwwroot";}
-public sealed class LoggingSettings{public int RetainedFileCount{get;set;}=14;} public sealed class SwaggerSettings{public bool Enabled{get;set;}=true;} public sealed class AuthSettings{public int PasswordMinimumLength{get;set;}=10;public bool RequireEmailVerification{get;set;}=false;}
+public sealed class DatabaseSettings { public string ConnectionString { get; set; } = ""; public int CommandTimeoutSeconds { get; set; } = 30; }
+public sealed class JwtSettings { public string Issuer { get; set; } = "swapDigit"; public string Audience { get; set; } = "swapDigit.Clients"; public string SigningKey { get; set; } = ""; public int AccessTokenMinutes { get; set; } = 30; public int RefreshTokenDays { get; set; } = 14; }
+public sealed class EmailSettings { public string SmtpHost { get; set; } = ""; public int SmtpPort { get; set; } = 587; public bool EnableSsl { get; set; } = true; public string UserName { get; set; } = ""; public string Password { get; set; } = ""; public string FromEmail { get; set; } = ""; public string FromName { get; set; } = "swapDigit"; }
+public sealed class CorsSettings { public string[] AllowedOrigins { get; set; } = []; }
+public sealed class FileStorageSettings { public string RootPath { get; set; } = "App_Data/Uploads"; public long MaxFileSizeMb { get; set; } = 10; }
+public sealed class BusinessSettings { public string CurrencyCode { get; set; } = "INR"; public decimal DefaultTaxPercent { get; set; } = 5m; public int PasswordMinimumLength { get; set; } = 8; }

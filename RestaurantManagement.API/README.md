@@ -1,59 +1,41 @@
-# Restaurant Management API
+# swapDigit API
 
-.NET 10 ASP.NET Core Web API using ADO.NET (Microsoft.Data.SqlClient), Controller → Service → Repository, Swagger, ASP.NET Core Identity password hashing, JWT access tokens and rotating refresh tokens.
+ASP.NET Core Web API (.NET 10) using **ADO.NET / Microsoft.Data.SqlClient**. No Entity Framework and no Dapper.
 
-## Configure
+## Configuration
+All settings are centralized under the `App` section in appsettings.json and bound to typed classes in Configuration/AppSettings.cs. Connection strings, JWT signing keys, SMTP credentials and sender email must be supplied with .NET User Secrets locally or environment variables in deployment. Do not commit real credentials.
 
-Local development values are in appsettings.json. Override secrets and deployment-specific values with environment variables:
-- AppSettings__Database__ConnectionString
-- AppSettings__Jwt__SigningKey
-- AppSettings__PublicBaseUrl
-- AppSettings__AllowedOrigins__0
-- AppSettings__Paths__Logs
-- AppSettings__Paths__UserImages
-- AppSettings__Paths__Temp
+Example local User Secrets (run from RestaurantManagement.API):
+```bash
+dotnet user-secrets init
+dotnet user-secrets set "App:Database:ConnectionString" "Server=localhost;Database=swapDigitDb;Trusted_Connection=True;TrustServerCertificate=True;"
+dotnet user-secrets set "App:Jwt:SigningKey" "REPLACE_WITH_A_RANDOM_SECRET_AT_LEAST_32_CHARACTERS"
+dotnet user-secrets set "App:Email:SmtpHost" "smtp.gmail.com"
+dotnet user-secrets set "App:Email:SmtpPort" "587"
+dotnet user-secrets set "App:Email:EnableSsl" "true"
+dotnet user-secrets set "App:Email:UserName" "your-email@gmail.com"
+dotnet user-secrets set "App:Email:Password" "your-google-app-password"
+dotnet user-secrets set "App:Email:FromEmail" "your-email@gmail.com"
+```
 
-Never commit production secrets. Use HTTPS and a cryptographically random JWT signing key of at least 32 characters. The committed SQL connection string is a local-development example only.
+Environment variable equivalents use double underscores, e.g. `App__Database__ConnectionString`, `App__Jwt__SigningKey`, `App__Email__SmtpHost`, `App__Email__Password`.
 
-## Database setup / upgrade
-
-Run database/auth-schema.sql against the intended SQL Server database. It creates the auth schema/tables if missing and adds CountryCode to an existing auth.Users table. Review existing duplicate emails/mobile values before adding unique indexes. Existing mobile values should be normalized to E.164 before using the new mobile-login contract; do not blindly rewrite production identity data.
-
-## Authentication contract
-
-- POST /api/v1/auth/register: fullName, email, optional countryCode, optional mobileNumber, password. Country code and mobile are stored as normalized E.164 when supplied.
-- POST /api/v1/auth/login: emailOrMobile and password. Mobile login uses the full international number (for example +919876543210).
-- POST /api/v1/auth/refresh: rotates a refresh token; old token is revoked atomically.
-- POST /api/v1/auth/logout: revokes the submitted refresh token.
-- GET /api/v1/auth/me: requires Bearer access token.
-- GET /api/v1/auth/owner-check: sample role-protected endpoint (Owner/Admin).
-
-Responses use success, message, data, and stable errorCode fields. Duplicate email/mobile returns HTTP 409. Registration now assigns the least-privilege Staff role; it no longer silently grants Owner to every public registrant. Owner/Admin assignment must be an explicit trusted administrative workflow.
-
-Passwords are stored using ASP.NET Core PasswordHasher<TUser>; refresh tokens are random opaque values and only SHA-256 hashes are persisted. Never log passwords or tokens. Email verification is configurable; set AppSettings__Auth__RequireEmailVerification=true only when the verification workflow is deployed end-to-end.
+## Database
+Execute `database/SwapDigit_Database_Setup.txt` in SQL Server Management Studio. It creates the database and tables used by the API. Change the database name there only if you also update the connection string.
 
 ## Run
-
-Create/configure the SQL Server database, apply the schema, configure connection string and JWT signing key, then:
-
 ```bash
-dotnet restore RestaurantManagement.API/RestaurantManagement.API.csproj
-dotnet build RestaurantManagement.API/RestaurantManagement.API.csproj --configuration Release
+dotnet restore
 dotnet run --project RestaurantManagement.API
 ```
+Swagger: `/swagger`; health: `/health`.
 
-Swagger is at /swagger; health is at /health. Run only over HTTPS outside local development.
+## API modules
+Auth, staff/users, products/categories, floors/tables, orders/order items, reservations, KOT, bills, inventory/stock movements, dashboard and sales reports, restaurant settings, subscription plans/current subscription, and support tickets.
 
-## Automated tests
-
-Run the API authentication service tests without a SQL Server instance:
-
-```bash
-dotnet test RestaurantManagement.API.Tests/RestaurantManagement.API.Tests.csproj --configuration Release
-```
-
-The unit tests cover registration normalization and Staff-role assignment, password policy, duplicate email/mobile rejection, email/mobile login, invalid credentials, inactive accounts, refresh-token rotation and replay rejection, logout revocation, and the current-user response. The fake repository isolates service behavior; SQL Server schema and repository integration still require a configured database.
-
-## Verification status
-
-GitHub Actions runs the authentication unit tests and then builds the API on DevApi pushes and pull requests. SQL migrations, live SQL Server repository tests, endpoint integration tests, deployment, production secret management, and rate-limit load testing still require environment-level verification.
+## Important
+- Public owner registration is allowed only while no Owner exists.
+- Staff accounts are created and managed by an authenticated Owner/Manager.
+- Cash/UPI/Card are stored as payment methods on orders/bills. A live payment gateway is not enabled by this API baseline.
+- Email-based password reset requires valid SMTP credentials.
+- API must be served over HTTPS outside local development.
