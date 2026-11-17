@@ -2,6 +2,7 @@ namespace RestaurantManagement.API.Models;
 
 public sealed record OwnerRegistration(string FullName, string Email, string MobileNumber, string Password);
 public sealed record LoginRequest(string EmailOrMobile, string Password);
+public sealed record RefreshTokenRequest(string RefreshToken);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Email, string Code, string NewPassword);
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
