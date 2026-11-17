@@ -274,5 +274,21 @@ BEGIN
 END
 GO
 
+IF NOT EXISTS(SELECT 1 FROM dbo.Products)
+BEGIN
+ INSERT dbo.Products(ProductId,CategoryId,Name,Description,Price,IsAvailable,IsDeleted,CreatedAt)
+ SELECT NEWID(),c.CategoryId,v.Name,v.Description,v.Price,1,0,SYSUTCDATETIME()
+ FROM (VALUES
+  (N'Paneer Butter Masala',N'Main Course',N'Rich tomato gravy with paneer',240.00),
+  (N'Veg Biryani',N'Rice',N'Fragrant basmati rice',190.00),
+  (N'Masala Dosa',N'South Indian',N'Crispy dosa with chutney',130.00),
+  (N'Butter Naan',N'Breads',N'Freshly baked naan',55.00),
+  (N'Cold Coffee',N'Beverages',N'Chilled coffee',110.00),
+  (N'Gulab Jamun',N'Desserts',N'Two pieces',80.00)
+ ) v(Name,CategoryName,Description,Price)
+ INNER JOIN dbo.Categories c ON c.Name=v.CategoryName;
+END
+GO
+
 PRINT 'swapDigit database setup completed successfully.';
 GO
