@@ -9,7 +9,13 @@ namespace RestaurantManagement.API.Controllers;
 [Authorize(Roles="Owner,Manager"), Route("api/v1/users")]
 public sealed class UsersController(SqlDataAccess db, IPasswordHasher<string> hasher) : ApiControllerBase(db)
 {
-    [HttpGet("staff")] public async Task<IActionResult> Staff() => Success(await Db.QueryAsync("SELECT UserId,FullName,Email,MobileNumber,Role,IsActive,CreatedAt FROM dbo.Users WHERE Role IN('Manager','Staff') AND IsDeleted=0 ORDER BY FullName"));
+    [HttpGet("staff")] public async Task<IActionResult> Staff([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] string? search = null)
+    {
+        var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
+        var rows = await Db.QueryProcedureAsync("dbo.usp_Staff_ListPaged", P("@PageNumber", page), P("@PageSize", size + 1), P("@Search", string.IsNullOrWhiteSpace(search) ? null : search.Trim()));
+        var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
+        return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
+    }
     [HttpPost("staff")] public async Task<IActionResult> CreateStaff(OwnerRegistration r)
     {
         var id=Guid.NewGuid(); var hash=hasher.HashPassword(id.ToString(),r.Password);

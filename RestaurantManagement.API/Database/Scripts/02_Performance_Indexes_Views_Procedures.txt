@@ -90,3 +90,87 @@ END;
 GO
 PRINT 'swapDigit performance objects created.';
 GO
+
+
+/* Bounded page procedures for remaining high-volume collections.
+   API passes pageSize+1 (max 101) to calculate hasMore without COUNT(*) scans. */
+CREATE OR ALTER PROCEDURE dbo.usp_InventoryItems_ListPaged
+ @PageNumber int=1,@PageSize int=26,@Search nvarchar(160)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT ItemId,Name,Unit,CurrentStock,ReorderLevel,CostPrice,IsActive
+ FROM dbo.InventoryItems
+ WHERE IsDeleted=0 AND (@Search IS NULL OR Name LIKE @Search+N'%')
+ ORDER BY Name,ItemId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_StockMovements_ListPaged
+ @PageNumber int=1,@PageSize int=26,@ItemId uniqueidentifier=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT m.MovementId,m.ItemId,i.Name AS ItemName,m.MovementType,m.Quantity,m.Reference,m.Notes,m.CreatedAt
+ FROM dbo.StockMovements m INNER JOIN dbo.InventoryItems i ON i.ItemId=m.ItemId
+ WHERE (@ItemId IS NULL OR m.ItemId=@ItemId)
+ ORDER BY m.CreatedAt DESC,m.MovementId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Reservations_ListPaged
+ @PageNumber int=1,@PageSize int=26,@Date date=NULL,@Status nvarchar(30)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT ReservationId,GuestName,MobileNumber,ReservationDate,ReservationTime,GuestCount,TableId,Status,Notes
+ FROM dbo.Reservations
+ WHERE IsDeleted=0 AND (@Date IS NULL OR ReservationDate=@Date) AND (@Status IS NULL OR Status=@Status)
+ ORDER BY ReservationDate DESC,ReservationTime,ReservationId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_KitchenTickets_ListPaged
+ @PageNumber int=1,@PageSize int=26,@Status nvarchar(30)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT k.TicketId,k.OrderId,o.OrderNumber,o.OrderType,o.TableId,k.Status,k.CreatedAt
+ FROM dbo.KitchenTickets k INNER JOIN dbo.Orders o ON o.OrderId=k.OrderId
+ WHERE (@Status IS NULL OR k.Status=@Status)
+ ORDER BY k.CreatedAt DESC,k.TicketId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Staff_ListPaged
+ @PageNumber int=1,@PageSize int=26,@Search nvarchar(160)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT UserId,FullName,Email,MobileNumber,Role,IsActive,CreatedAt
+ FROM dbo.Users
+ WHERE Role IN('Manager','Staff') AND IsDeleted=0
+   AND (@Search IS NULL OR FullName LIKE @Search+N'%' OR Email LIKE @Search+N'%')
+ ORDER BY FullName,UserId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_SupportTickets_ListPaged
+ @PageNumber int=1,@PageSize int=26,@User uniqueidentifier,@Status nvarchar(30)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT TicketId,Subject,Message,Priority,Status,CreatedAt,UpdatedAt
+ FROM dbo.SupportTickets
+ WHERE CreatedBy=@User AND (@Status IS NULL OR Status=@Status)
+ ORDER BY CreatedAt DESC,TicketId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO

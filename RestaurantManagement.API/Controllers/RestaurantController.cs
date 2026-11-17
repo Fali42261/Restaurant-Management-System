@@ -18,7 +18,13 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
     [HttpDelete("tables/{id:guid}"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> DeleteTable(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.RestaurantTables SET IsDeleted=1 WHERE TableId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Table deleted."); }
     [HttpPut("tables/{id:guid}/status")] public async Task<IActionResult> TableStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.RestaurantTables SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE TableId=@Id AND IsDeleted=0",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Table status updated."); }
 
-    [HttpGet("orders")] public async Task<IActionResult> Orders([FromQuery] string? status) => Success(await Db.QueryAsync("SELECT OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,PaymentMethod,Status,CreatedAt FROM dbo.Orders WHERE IsDeleted=0 AND (@Status IS NULL OR Status=@Status) ORDER BY CreatedAt DESC",P("@Status",status)));
+    [HttpGet("orders")] public async Task<IActionResult> Orders([FromQuery] string? status, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25)
+    {
+        var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
+        var rows = await Db.QueryProcedureAsync("dbo.usp_Orders_ListPaged", P("@PageNumber", page), P("@PageSize", size + 1), P("@Status", status));
+        var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
+        return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
+    }
     [HttpPost("orders")] public async Task<IActionResult> CreateOrder(CreateOrderRequest r)
     {
         if(r.Items.Count==0) return BadRequest(new {success=false,message="Add at least one item."});
@@ -39,14 +45,32 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
     [HttpDelete("orders/{id:guid}")] public async Task<IActionResult> DeleteOrder(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET IsDeleted=1,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Order deleted."); }
     [HttpPut("orders/{id:guid}/status")] public async Task<IActionResult> OrderStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Order status updated."); }
 
-    [HttpGet("reservations")] public async Task<IActionResult> Reservations() => Success(await Db.QueryAsync("SELECT ReservationId,GuestName,MobileNumber,ReservationDate,ReservationTime,GuestCount,TableId,Status,Notes FROM dbo.Reservations WHERE IsDeleted=0 ORDER BY ReservationDate,ReservationTime"));
+    [HttpGet("reservations")] public async Task<IActionResult> Reservations([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] DateTime? date = null, [FromQuery] string? status = null)
+    {
+        var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
+        var rows = await Db.QueryProcedureAsync("dbo.usp_Reservations_ListPaged", P("@PageNumber", page), P("@PageSize", size + 1), P("@Date", date?.Date), P("@Status", status));
+        var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
+        return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
+    }
     [HttpPost("reservations")] public async Task<IActionResult> AddReservation(CreateReservationRequest r) { var id=Guid.NewGuid(); await Db.ExecuteAsync("INSERT dbo.Reservations(ReservationId,GuestName,MobileNumber,ReservationDate,ReservationTime,GuestCount,TableId,Status,Notes,CreatedAt,IsDeleted) VALUES(@Id,@Guest,@Mobile,@Date,@Time,@Count,@Table,'Pending',@Notes,SYSUTCDATETIME(),0)",P("@Id",id),P("@Guest",r.GuestName),P("@Mobile",r.MobileNumber),P("@Date",r.ReservationDate.Date),P("@Time",r.ReservationTime),P("@Count",r.GuestCount),P("@Table",r.TableId),P("@Notes",r.Notes)); return CreatedResult(new { reservationId=id }); }
     [HttpPut("reservations/{id:guid}/status")] public async Task<IActionResult> ReservationStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Reservations SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE ReservationId=@Id AND IsDeleted=0",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Reservation updated."); }
 
-    [HttpGet("kots")] public async Task<IActionResult> Kots() => Success(await Db.QueryAsync("SELECT k.TicketId,k.OrderId,o.OrderNumber,o.OrderType,o.TableId,k.Status,k.CreatedAt FROM dbo.KitchenTickets k INNER JOIN dbo.Orders o ON o.OrderId=k.OrderId ORDER BY k.CreatedAt"));
+    [HttpGet("kots")] public async Task<IActionResult> Kots([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] string? status = null)
+    {
+        var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
+        var rows = await Db.QueryProcedureAsync("dbo.usp_KitchenTickets_ListPaged", P("@PageNumber", page), P("@PageSize", size + 1), P("@Status", status));
+        var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
+        return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
+    }
     [HttpPut("kots/{id:guid}/status")] public async Task<IActionResult> KotStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.KitchenTickets SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE TicketId=@Id",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Kitchen ticket updated."); }
 
-    [HttpGet("bills")] public async Task<IActionResult> Bills() => Success(await Db.QueryAsync("SELECT BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt FROM dbo.Bills ORDER BY CreatedAt DESC"));
+    [HttpGet("bills")] public async Task<IActionResult> Bills([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
+    {
+        var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
+        var rows = await Db.QueryProcedureAsync("dbo.usp_Bills_ListPaged", P("@PageNumber", page), P("@PageSize", size + 1), P("@FromUtc", from?.Date), P("@ToUtc", to?.Date.AddDays(1)));
+        var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
+        return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
+    }
     [HttpPost("bills")] public async Task<IActionResult> AddBill(CreateBillRequest r) { var id=Guid.NewGuid(); var invoice="INV-"+DateTime.UtcNow.ToString("yyyyMMddHHmmss"); await Db.ExecuteAsync("INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt) VALUES(@Id,@Invoice,@Order,@Customer,@Type,@Sub,@Discount,@Tax,@Total,@Method,@Paid,@Status,SYSUTCDATETIME())",P("@Id",id),P("@Invoice",invoice),P("@Order",r.OrderId),P("@Customer",r.CustomerName),P("@Type",r.OrderType),P("@Sub",r.Subtotal),P("@Discount",r.Discount),P("@Tax",r.Tax),P("@Total",r.Total),P("@Method",r.PaymentMethod),P("@Paid",r.AmountPaid),P("@Status",r.AmountPaid>=r.Total?"Paid":"Unpaid")); return CreatedResult(new { billId=id,invoiceNumber=invoice }); }
     [HttpPut("bills/{id:guid}/pay")] public async Task<IActionResult> MarkBillPaid(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.Bills SET AmountPaid=Total,Status='Paid' WHERE BillId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Bill marked paid."); }
 }

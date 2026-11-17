@@ -11,8 +11,17 @@ public sealed class CatalogController(SqlDataAccess db) : ApiControllerBase(db)
     [HttpGet("categories")]
     public async Task<IActionResult> Categories() => Success(await Db.QueryAsync("SELECT CategoryId,Name,SortOrder,IsActive FROM dbo.Categories WHERE IsDeleted=0 ORDER BY SortOrder,Name"));
     [HttpGet("products")]
-    public async Task<IActionResult> Products([FromQuery] string? search, [FromQuery] Guid? categoryId) =>
-        Success(await Db.QueryAsync("SELECT p.ProductId,p.Name,p.Description,p.Price,p.ImageUrl,p.IsAvailable,p.CategoryId,c.Name AS CategoryName FROM dbo.Products p LEFT JOIN dbo.Categories c ON c.CategoryId=p.CategoryId WHERE p.IsDeleted=0 AND (@Search IS NULL OR p.Name LIKE '%'+@Search+'%') AND (@CategoryId IS NULL OR p.CategoryId=@CategoryId) ORDER BY c.Name,p.Name", P("@Search", search), P("@CategoryId", categoryId)));
+    public async Task<IActionResult> Products([FromQuery] string? search, [FromQuery] Guid? categoryId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25)
+    {
+        var page = Math.Max(1, pageNumber);
+        var size = Math.Clamp(pageSize, 1, 100);
+        var rows = await Db.QueryProcedureAsync("dbo.usp_Products_ListPaged",
+            P("@PageNumber", page), P("@PageSize", size + 1), P("@CategoryId", categoryId),
+            P("@Search", string.IsNullOrWhiteSpace(search) ? null : search.Trim()));
+        var hasMore = rows.Count > size;
+        if (hasMore) rows.RemoveAt(size);
+        return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
+    }
     [HttpPost("products")]
     [Authorize(Roles="Owner,Manager")]
     public async Task<IActionResult> CreateProduct(CreateProductRequest r)
