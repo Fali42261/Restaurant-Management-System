@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -74,6 +75,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
 
 var app = builder.Build();
 Console.WriteLine("swapDigit API host built.");
@@ -101,6 +116,8 @@ app.UseExceptionHandler(error => error.Run(async context =>
     await context.Response.WriteAsJsonAsync(new { success = false, message = "An unexpected server error occurred.", traceId = context.TraceIdentifier });
 }));
 app.UseHttpsRedirection();
+app.UseRouting();
+app.UseRateLimiter();
 app.UseCors("Clients");
 app.UseAuthentication();
 app.UseAuthorization();
