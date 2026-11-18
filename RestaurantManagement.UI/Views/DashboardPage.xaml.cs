@@ -158,6 +158,13 @@ public partial class DashboardPage : ContentPage
             var refreshed = new DashboardViewModel();
             BindingContext = refreshed;
             AttachViewModel(refreshed);
+            _productIds.Clear();
+            _orderIds.Clear();
+            _billIds.Clear();
+            _tables.Clear();
+            _ = LoadProductsAsync(refreshed);
+            _ = LoadOrdersAsync(refreshed);
+            _ = LoadBillsAsync(refreshed);
             UpdateNavigationSelection(refreshed.SelectedSection);
         }
         catch (Exception ex)
@@ -560,6 +567,15 @@ public partial class DashboardPage : ContentPage
         var subtotal = vm.PosCart.Sum(x => x.LineTotal);
         var discountAmount = Math.Round(subtotal * Math.Clamp(discount, 0m, 100m) / 100m, 2);
         var taxAmount = Math.Round((subtotal - discountAmount) * Math.Clamp(tax, 0m, 100m) / 100m, 2);
+        var payable = subtotal - discountAmount + taxAmount;
+        if (method.Equals("Cash", StringComparison.OrdinalIgnoreCase) && cashReceived < payable)
+        {
+            await DisplayAlert("Insufficient cash", $"Cash received must be at least ₹{payable:N2}.", "OK");
+            return;
+        }
+        if (!method.Equals("Cash", StringComparison.OrdinalIgnoreCase) &&
+            !await DisplayAlert("Confirm payment", $"Confirm that ₹{payable:N2} has been collected through {method}.", "Confirm", "Cancel"))
+            return;
         var items = vm.PosCart.Select(x => new PosCheckoutItem(_productIds[x.ProductName], x.Quantity, null)).ToList();
         try
         {
