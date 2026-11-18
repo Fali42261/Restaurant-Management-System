@@ -150,10 +150,28 @@ BEGIN
  SET NOCOUNT ON;
  SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
  SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
- SELECT k.TicketId,k.OrderId,o.OrderNumber,o.OrderType,o.TableId,k.Status,k.CreatedAt
- FROM dbo.KitchenTickets k INNER JOIN dbo.Orders o ON o.OrderId=k.OrderId
- WHERE (@Status IS NULL OR k.Status=@Status)
- ORDER BY k.CreatedAt DESC,k.TicketId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+
+ ;WITH TicketRows AS
+ (
+  SELECT k.TicketId,k.OrderId,o.OrderNumber,o.OrderType,o.TableId,
+         COALESCE(t.Name,o.OrderType) AS Location,
+         k.Status,k.CreatedAt,k.UpdatedAt,
+         STRING_AGG(CONCAT(p.Name,N' × ',oi.Quantity),N', ')
+           WITHIN GROUP (ORDER BY p.Name) AS Items
+  FROM dbo.KitchenTickets k
+  INNER JOIN dbo.Orders o ON o.OrderId=k.OrderId
+  LEFT JOIN dbo.RestaurantTables t ON t.TableId=o.TableId
+  LEFT JOIN dbo.OrderItems oi ON oi.OrderId=o.OrderId
+  LEFT JOIN dbo.Products p ON p.ProductId=oi.ProductId
+  WHERE o.IsDeleted=0 AND (@Status IS NULL OR k.Status=@Status)
+  GROUP BY k.TicketId,k.OrderId,o.OrderNumber,o.OrderType,o.TableId,
+           t.Name,k.Status,k.CreatedAt,k.UpdatedAt
+ )
+ SELECT TicketId,OrderId,OrderNumber,OrderType,TableId,Location,
+        Status,CreatedAt,UpdatedAt,COALESCE(Items,N'') AS Items
+ FROM TicketRows
+ ORDER BY CreatedAt DESC,TicketId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
 END;
 GO
 CREATE OR ALTER PROCEDURE dbo.usp_Staff_ListPaged
