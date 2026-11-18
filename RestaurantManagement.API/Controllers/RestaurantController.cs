@@ -9,14 +9,59 @@ namespace RestaurantManagement.API.Controllers;
 public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(db)
 {
     [HttpGet("floors")] public async Task<IActionResult> Floors() => Success(await Db.QueryAsync("SELECT FloorId,Name,IsActive FROM dbo.Floors WHERE IsDeleted=0 ORDER BY Name"));
-    [HttpPost("floors"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> AddFloor(CreateFloorRequest r) { var id=Guid.NewGuid(); await Db.ExecuteAsync("INSERT dbo.Floors(FloorId,Name,IsActive,IsDeleted) VALUES(@Id,@Name,1,0)",P("@Id",id),P("@Name",r.Name)); return CreatedResult(new { floorId=id }); }
-    [HttpPut("floors/{id:guid}"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> UpdateFloor(Guid id, UpdateFloorRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Floors SET Name=@Name WHERE FloorId=@Id AND IsDeleted=0",P("@Name",r.Name),P("@Id",id)); return n==0?NotFound():Success(null,"Floor updated."); }
+    [HttpPost("floors"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> AddFloor(CreateFloorRequest r)
+    {
+        if(string.IsNullOrWhiteSpace(r.Name)||r.Name.Trim().Length>100) return BadRequest(new {success=false,message="Floor name is required and must be 100 characters or fewer."});
+        var name=r.Name.Trim();
+        var exists=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Floors WHERE Name=@Name AND IsDeleted=0",P("@Name",name));
+        if(Convert.ToInt32(exists)>0) return Conflict(new {success=false,message="A floor with this name already exists."});
+        var id=Guid.NewGuid(); await Db.ExecuteAsync("INSERT dbo.Floors(FloorId,Name,IsActive,IsDeleted) VALUES(@Id,@Name,1,0)",P("@Id",id),P("@Name",name));
+        return CreatedResult(new {floorId=id});
+    }
+    [HttpPut("floors/{id:guid}"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> UpdateFloor(Guid id, UpdateFloorRequest r)
+    {
+        if(string.IsNullOrWhiteSpace(r.Name)||r.Name.Trim().Length>100) return BadRequest(new {success=false,message="Invalid floor name."});
+        var name=r.Name.Trim(); var exists=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Floors WHERE Name=@Name AND FloorId<>@Id AND IsDeleted=0",P("@Name",name),P("@Id",id));
+        if(Convert.ToInt32(exists)>0) return Conflict(new {success=false,message="A floor with this name already exists."});
+        var n=await Db.ExecuteAsync("UPDATE dbo.Floors SET Name=@Name WHERE FloorId=@Id AND IsDeleted=0",P("@Name",name),P("@Id",id));
+        return n==0?NotFound():Success(null,"Floor updated.");
+    }
     [HttpDelete("floors/{id:guid}"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> DeleteFloor(Guid id) { var used=Convert.ToInt32(await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.RestaurantTables WHERE FloorId=@Id AND IsDeleted=0",P("@Id",id))); if(used>0) return BadRequest(new {success=false,message="Move or delete the floor tables first."}); var n=await Db.ExecuteAsync("UPDATE dbo.Floors SET IsDeleted=1,IsActive=0 WHERE FloorId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Floor deleted."); }
     [HttpGet("tables")] public async Task<IActionResult> Tables() => Success(await Db.QueryAsync("SELECT t.TableId,t.Name,t.Seats,t.Status,t.FloorId,f.Name AS FloorName FROM dbo.RestaurantTables t LEFT JOIN dbo.Floors f ON f.FloorId=t.FloorId WHERE t.IsDeleted=0 ORDER BY f.Name,t.Name"));
-    [HttpPost("tables"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> AddTable(CreateTableRequest r) { var id=Guid.NewGuid(); await Db.ExecuteAsync("INSERT dbo.RestaurantTables(TableId,FloorId,Name,Seats,Status,IsDeleted) VALUES(@Id,@Floor,@Name,@Seats,'Available',0)",P("@Id",id),P("@Floor",r.FloorId),P("@Name",r.Name),P("@Seats",r.Seats)); return CreatedResult(new { tableId=id }); }
-    [HttpPut("tables/{id:guid}"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> UpdateTable(Guid id, UpdateTableRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.RestaurantTables SET Name=@Name,Seats=@Seats,FloorId=@Floor,UpdatedAt=SYSUTCDATETIME() WHERE TableId=@Id AND IsDeleted=0",P("@Name",r.Name),P("@Seats",r.Seats),P("@Floor",r.FloorId),P("@Id",id)); return n==0?NotFound():Success(null,"Table updated."); }
-    [HttpDelete("tables/{id:guid}"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> DeleteTable(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.RestaurantTables SET IsDeleted=1 WHERE TableId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Table deleted."); }
-    [HttpPut("tables/{id:guid}/status")] public async Task<IActionResult> TableStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.RestaurantTables SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE TableId=@Id AND IsDeleted=0",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Table status updated."); }
+    [HttpPost("tables"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> AddTable(CreateTableRequest r)
+    {
+        if(string.IsNullOrWhiteSpace(r.Name)||r.Name.Trim().Length>50||r.Seats<1||r.Seats>100) return BadRequest(new {success=false,message="Table name is required and seats must be between 1 and 100."});
+        var floor=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Floors WHERE FloorId=@Floor AND IsDeleted=0 AND IsActive=1",P("@Floor",r.FloorId));
+        if(Convert.ToInt32(floor)==0) return BadRequest(new {success=false,message="Selected floor does not exist in this restaurant."});
+        var duplicate=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.RestaurantTables WHERE FloorId=@Floor AND Name=@Name AND IsDeleted=0",P("@Floor",r.FloorId),P("@Name",r.Name.Trim()));
+        if(Convert.ToInt32(duplicate)>0) return Conflict(new {success=false,message="A table with this name already exists on the selected floor."});
+        var id=Guid.NewGuid(); await Db.ExecuteAsync("INSERT dbo.RestaurantTables(TableId,FloorId,Name,Seats,Status,IsDeleted) VALUES(@Id,@Floor,@Name,@Seats,'Available',0)",P("@Id",id),P("@Floor",r.FloorId),P("@Name",r.Name.Trim()),P("@Seats",r.Seats));
+        return CreatedResult(new {tableId=id});
+    }
+    [HttpPut("tables/{id:guid}"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> UpdateTable(Guid id, UpdateTableRequest r)
+    {
+        if(string.IsNullOrWhiteSpace(r.Name)||r.Name.Trim().Length>50||r.Seats<1||r.Seats>100) return BadRequest(new {success=false,message="Invalid table name or seats. Seats must be between 1 and 100."});
+        var floor=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Floors WHERE FloorId=@Floor AND IsDeleted=0 AND IsActive=1",P("@Floor",r.FloorId));
+        if(Convert.ToInt32(floor)==0) return BadRequest(new {success=false,message="Selected floor does not exist in this restaurant."});
+        var duplicate=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.RestaurantTables WHERE FloorId=@Floor AND Name=@Name AND TableId<>@Id AND IsDeleted=0",P("@Floor",r.FloorId),P("@Name",r.Name.Trim()),P("@Id",id));
+        if(Convert.ToInt32(duplicate)>0) return Conflict(new {success=false,message="A table with this name already exists on the selected floor."});
+        var n=await Db.ExecuteAsync("UPDATE dbo.RestaurantTables SET Name=@Name,Seats=@Seats,FloorId=@Floor,UpdatedAt=SYSUTCDATETIME() WHERE TableId=@Id AND IsDeleted=0",P("@Name",r.Name.Trim()),P("@Seats",r.Seats),P("@Floor",r.FloorId),P("@Id",id));
+        return n==0?NotFound():Success(null,"Table updated.");
+    }
+    [HttpDelete("tables/{id:guid}"), Authorize(Roles="Owner,Manager")] public async Task<IActionResult> DeleteTable(Guid id)
+    {
+        var inUse=await Db.ScalarAsync("SELECT (SELECT COUNT(1) FROM dbo.Orders WHERE TableId=@Id AND IsDeleted=0 AND Status NOT IN('Completed','Cancelled'))+(SELECT COUNT(1) FROM dbo.Reservations WHERE TableId=@Id AND IsDeleted=0 AND Status IN('Pending','Confirmed'))",P("@Id",id));
+        if(Convert.ToInt32(inUse)>0) return Conflict(new {success=false,message="Table is linked to an active order or reservation."});
+        var n=await Db.ExecuteAsync("UPDATE dbo.RestaurantTables SET IsDeleted=1 WHERE TableId=@Id AND IsDeleted=0",P("@Id",id));
+        return n==0?NotFound():Success(null,"Table deleted.");
+    }
+    [HttpPut("tables/{id:guid}/status")] public async Task<IActionResult> TableStatus(Guid id, UpdateStatusRequest r)
+    {
+        var allowed=new[]{"Available","Occupied","Reserved","Cleaning","OutOfService"};
+        if(!allowed.Contains(r.Status,StringComparer.OrdinalIgnoreCase)) return BadRequest(new {success=false,message="Invalid table status."});
+        var n=await Db.ExecuteAsync("UPDATE dbo.RestaurantTables SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE TableId=@Id AND IsDeleted=0",P("@Status",allowed.First(x=>x.Equals(r.Status,StringComparison.OrdinalIgnoreCase))),P("@Id",id));
+        return n==0?NotFound():Success(null,"Table status updated.");
+    }
 
     [HttpGet("orders")] public async Task<IActionResult> Orders([FromQuery] string? status, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25)
     {
