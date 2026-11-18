@@ -115,6 +115,8 @@ public partial class DashboardPage : ContentPage
     {
         var restaurants = RestaurantSession.Restaurants;
         var selected = RestaurantSession.SelectedRestaurant ?? restaurants.FirstOrDefault();
+        ProfileName.Text = RestaurantSession.User?.FullName ?? "User";
+        ProfileRole.Text = selected?.Role ?? RestaurantSession.User?.Role ?? "Staff";
         _changingRestaurant = true;
         RestaurantSingleName.Text = selected?.Name ?? "Restaurant";
         SidebarRestaurantName.Text = selected?.Name ?? "My Restaurant";
