@@ -105,6 +105,11 @@ public sealed class AuthService : IAuthService
         return envelope.Data;
     }
 
+    public async Task<DashboardSummary?> GetDashboardSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        return await SendAuthorizedAsync<DashboardSummary>(HttpMethod.Get, "api/v1/reports/dashboard", null, cancellationToken);
+    }
+
     public async Task SignOutAsync(CancellationToken cancellationToken = default)
     {
         var token = await SecureStorage.Default.GetAsync("swapDigit.accessToken");
