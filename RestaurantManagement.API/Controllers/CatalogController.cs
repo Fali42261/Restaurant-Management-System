@@ -87,6 +87,13 @@ public sealed class CatalogController(SqlDataAccess db) : ApiControllerBase(db)
         return count==0?NotFound():Success(null,"Product updated.");
     }
 
+    [HttpPut("products/{id:guid}/availability"),Authorize(Roles="Owner,Manager")]
+    public async Task<IActionResult> SetProductAvailability(Guid id,ProductAvailabilityRequest request)
+    {
+        var n=await Db.ExecuteAsync("UPDATE dbo.Products SET IsAvailable=@Available,UpdatedAt=SYSUTCDATETIME() WHERE ProductId=@Id AND IsDeleted=0",P("@Available",request.IsAvailable),P("@Id",id));
+        return n==0?NotFound():Success(null,"Product availability updated.");
+    }
+
     [HttpDelete("products/{id:guid}"),Authorize(Roles="Owner,Manager")]
     public async Task<IActionResult> DeleteProduct(Guid id)
     {
@@ -111,3 +118,5 @@ public sealed class CatalogController(SqlDataAccess db) : ApiControllerBase(db)
     }
 }
 public sealed record CategoryRequest(string Name,int SortOrder=0,bool IsActive=true);
+
+public sealed record ProductAvailabilityRequest(bool IsAvailable);

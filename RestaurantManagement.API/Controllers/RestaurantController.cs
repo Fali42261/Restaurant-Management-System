@@ -146,8 +146,8 @@ END CATCH;";
         if(orders.Count==0) return NotFound();
         if(orders[0]["Status"]?.ToString() is "Completed" or "Cancelled")
             return Conflict(new {success=false,message="Completed or cancelled orders cannot be edited."});
-        var paid=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Bills WHERE OrderId=@Id AND Status='Paid'",P("@Id",id));
-        if(Convert.ToInt32(paid)>0) return Conflict(new {success=false,message="A paid order cannot be edited."});
+        var paid=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Bills WHERE OrderId=@Id AND AmountPaid>0",P("@Id",id));
+        if(Convert.ToInt32(paid)>0) return Conflict(new {success=false,message="An order with any payment received cannot be edited."});
         var ids=request.Items.Select(x=>x.ProductId).Distinct().ToArray();
         var parameters=ids.Select((product,index)=>P("@Product"+index,product)).ToArray();
         var products=await Db.QueryAsync("SELECT ProductId,Price FROM dbo.Products WHERE IsDeleted=0 AND IsAvailable=1 AND ProductId IN ("+string.Join(",",ids.Select((_,index)=>"@Product"+index))+")",parameters);
