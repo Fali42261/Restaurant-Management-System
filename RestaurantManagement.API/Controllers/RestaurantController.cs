@@ -82,10 +82,11 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
     [HttpPost("orders")]
     public async Task<IActionResult> CreateOrder(CreateOrderRequest r)
     {
-        if(r.Items is null||r.Items.Count==0||r.Items.Count>100||r.Items.Any(x=>x.Quantity<1||x.Quantity>1000))
+        if(r.Items is null||r.Items.Count==0||r.Items.Count>100||r.Items.Any(x=>x is null||x.Quantity<1||x.Quantity>1000||x.Notes?.Length>300))
             return BadRequest(new {success=false,message="An order must contain 1 to 100 lines, each with quantity from 1 to 1000."});
         if(string.IsNullOrWhiteSpace(r.OrderType)||!new[]{"DineIn","Dine-In","Dine In","Takeaway","Take Away","Delivery"}.Contains(r.OrderType,StringComparer.OrdinalIgnoreCase))
             return BadRequest(new {success=false,message="Invalid order type."});
+        if(r.CustomerName?.Length>150||r.Tax>9999999999999999m) return BadRequest(new {success=false,message="Customer name or tax amount exceeds the supported limit."});
         if(string.IsNullOrWhiteSpace(r.PaymentMethod)||!new[]{"Cash","UPI","Card","Online","Unpaid"}.Contains(r.PaymentMethod,StringComparer.OrdinalIgnoreCase))
             return BadRequest(new {success=false,message="Invalid payment method."});
         if(r.Discount<0||r.Tax<0||r.CashReceived<0||r.CashReceived>9999999999999999m)
@@ -183,6 +184,7 @@ END CATCH",P("@Id",id),P("@ItemsJson",json),P("@Subtotal",subtotal),P("@Total",t
         if(!orderTypes.Contains(r.OrderType,StringComparer.OrdinalIgnoreCase)||!statuses.Contains(r.Status,StringComparer.OrdinalIgnoreCase))
             return BadRequest(new {success=false,message="Invalid order type or status."});
         if(r.CustomerName?.Length>150) return BadRequest(new {success=false,message="Customer name cannot exceed 150 characters."});
+        if((r.OrderType.Equals("DineIn",StringComparison.OrdinalIgnoreCase)||r.OrderType.Equals("Dine-In",StringComparison.OrdinalIgnoreCase)||r.OrderType.Equals("Dine In",StringComparison.OrdinalIgnoreCase))&&!r.TableId.HasValue) return BadRequest(new {success=false,message="A table must be selected for dine-in orders."});
         if(r.TableId.HasValue)
         {
             var table=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.RestaurantTables WHERE TableId=@Id AND IsDeleted=0",P("@Id",r.TableId.Value));
@@ -238,7 +240,7 @@ END CATCH",P("@Id",id),P("@ItemsJson",json),P("@Subtotal",subtotal),P("@Total",t
     [HttpPut("reservations/{id:guid}")]
     public async Task<IActionResult> UpdateReservation(Guid id,CreateReservationRequest r)
     {
-        if(string.IsNullOrWhiteSpace(r.GuestName)||r.GuestName.Trim().Length>150||!ValidReservationMobile(r.MobileNumber)||r.GuestCount<1||r.GuestCount>100||r.ReservationDate.Date>DateTime.UtcNow.Date.AddYears(1)||r.ReservationTime<TimeSpan.Zero||r.ReservationTime>=TimeSpan.FromDays(1))
+        if(string.IsNullOrWhiteSpace(r.GuestName)||r.GuestName.Trim().Length>150||!ValidReservationMobile(r.MobileNumber)||r.GuestCount<1||r.GuestCount>100||r.Notes?.Length>500||r.ReservationDate.Date>DateTime.UtcNow.Date.AddYears(1)||r.ReservationTime<TimeSpan.Zero||r.ReservationTime>=TimeSpan.FromDays(1))
             return BadRequest(new {success=false,message="Invalid guest details, guest count or reservation date/time."});
         if(r.TableId.HasValue)
         {
@@ -320,7 +322,7 @@ END CATCH",P("@Id",id),P("@ItemsJson",json),P("@Subtotal",subtotal),P("@Total",t
     [HttpPost("bills")]
     public async Task<IActionResult> AddBill(CreateBillRequest r)
     {
-        if(string.IsNullOrWhiteSpace(r.CustomerName)||r.CustomerName.Trim().Length>150||r.Subtotal<0||r.Discount<0||r.Tax<0||r.Total<=0||r.AmountPaid<0||r.AmountPaid>r.Total||r.Discount>r.Subtotal||r.Total!=r.Subtotal-r.Discount+r.Tax||
+        if(string.IsNullOrWhiteSpace(r.CustomerName)||r.CustomerName.Trim().Length>150||r.OrderType?.Length>30||r.PaymentMethod?.Length>30||r.Subtotal<0||r.Discount<0||r.Tax<0||r.Total<=0||r.AmountPaid<0||r.AmountPaid>r.Total||r.Discount>r.Subtotal||r.Total!=r.Subtotal-r.Discount+r.Tax||
            !new[]{"DineIn","Dine-In","Dine In","Takeaway","Take Away","Delivery"}.Contains(r.OrderType,StringComparer.OrdinalIgnoreCase)||
            !new[]{"Cash","UPI","Card","Online","Unpaid"}.Contains(r.PaymentMethod,StringComparer.OrdinalIgnoreCase))
             return BadRequest(new {success=false,message="Invalid bill details or totals. Total must equal subtotal minus discount plus tax."});

@@ -26,7 +26,7 @@ public sealed class ReportsController(SqlDataAccess db) : ApiControllerBase(db)
     public async Task<IActionResult> TopProducts([FromQuery]DateTime from,[FromQuery]DateTime to)
     {
         if(!ValidRange(from,to)) return BadRequest(new {success=false,message="Date range is invalid or exceeds 24 months."});
-        return Success(await Db.QueryAsync("SELECT TOP 10 p.Name,SUM(oi.Quantity) AS QuantitySold,SUM(oi.Quantity*oi.UnitPrice) AS Sales FROM dbo.OrderItems oi INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId INNER JOIN dbo.Orders o ON o.OrderId=oi.OrderId WHERE o.CreatedAt>=@From AND o.CreatedAt<DATEADD(day,1,@To) GROUP BY p.Name ORDER BY QuantitySold DESC",P("@From",from.Date),P("@To",to.Date)));
+        return Success(await Db.QueryAsync("SELECT TOP 10 p.Name,SUM(oi.Quantity) AS QuantitySold,SUM(oi.Quantity*oi.UnitPrice) AS Sales FROM dbo.OrderItems oi INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId INNER JOIN dbo.Orders o ON o.OrderId=oi.OrderId WHERE o.IsDeleted=0 AND o.CreatedAt>=@From AND o.CreatedAt<DATEADD(day,1,@To) GROUP BY p.Name ORDER BY QuantitySold DESC",P("@From",from.Date),P("@To",to.Date)));
     }
 
     private static bool ValidRange(DateTime from,DateTime to)=>from!=default&&to!=default&&from.Date<=to.Date&&to.Date<=from.Date.AddMonths(24);
