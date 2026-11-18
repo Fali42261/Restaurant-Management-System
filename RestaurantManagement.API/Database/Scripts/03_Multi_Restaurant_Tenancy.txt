@@ -299,3 +299,10 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_SupportTickets_Restaurant_Creator')
  ALTER TABLE dbo.SupportTickets WITH CHECK ADD CONSTRAINT FK_SupportTickets_Restaurant_Creator FOREIGN KEY(CreatedBy,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
 GO
+
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Subscriptions_Restaurant_Owner')
+ ALTER TABLE dbo.Subscriptions WITH CHECK ADD CONSTRAINT FK_Subscriptions_Restaurant_Owner FOREIGN KEY(UserId,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_RefreshTokens_User_Restaurant')
+ ALTER TABLE dbo.RefreshTokens WITH CHECK ADD CONSTRAINT FK_RefreshTokens_User_Restaurant FOREIGN KEY(UserId,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
