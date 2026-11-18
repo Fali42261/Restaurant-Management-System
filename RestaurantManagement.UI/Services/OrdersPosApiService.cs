@@ -142,6 +142,7 @@ public sealed class BillDto
     public string PaymentMethod { get; set; } = "";
     public decimal AmountPaid { get; set; }
     public string Status { get; set; } = "";
+    public string ItemSummary { get; set; } = "";
     public DateTime CreatedAt { get; set; }
 }
 
