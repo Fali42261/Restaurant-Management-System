@@ -833,8 +833,9 @@ public sealed class KotTicket : BaseViewModel
     public string Items { get; }
     public DateTime CreatedAt { get; }
     public string AgeText => string.Format("{0} min ago", Math.Max(0, (int)(DateTime.Now - CreatedAt).TotalMinutes));
-    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(ActionText)); OnPropertyChanged(nameof(StatusColor)); } } }
-    public string ActionText => Status switch { "New" => "Start Preparing", "Preparing" => "Mark Ready", "Ready" => "Mark Served", _ => "Completed" };
+    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(ActionText)); OnPropertyChanged(nameof(StatusColor)); OnPropertyChanged(nameof(CanAdvance)); } } }
+    public string ActionText => Status switch { "New" => "Start Preparing", "Preparing" => "Mark Ready", "Ready" => "Mark Served", "Served" => "Served", "Cancelled" => "Cancelled", _ => "Completed" };
+    public bool CanAdvance => Status is "New" or "Preparing" or "Ready";
     public string StatusColor => Status switch { "New" => "#B7791F", "Preparing" => "#2563A6", "Ready" => "#17804A", _ => "#64748B" };
     public void SetStatus(string status) => Status = status;
     public void Advance() { Status = Status switch { "New" => "Preparing", "Preparing" => "Ready", "Ready" => "Served", _ => "Served" }; }
