@@ -11,6 +11,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection(AppSettings.SectionName));
+builder.Services.PostConfigure<AppSettings>(settings => settings.Jwt.AccessTokenMinutes = 60);
 var appSettings = builder.Configuration.GetSection(AppSettings.SectionName).Get<AppSettings>() ?? new AppSettings();
 // Product requirement: access tokens always expire after exactly one hour.
 appSettings.Jwt.AccessTokenMinutes = 60;
