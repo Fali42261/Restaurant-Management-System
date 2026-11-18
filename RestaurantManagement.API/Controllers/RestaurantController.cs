@@ -195,7 +195,32 @@ END CATCH",P("@Id",id),P("@ItemsJson",json),P("@Subtotal",subtotal),P("@Total",t
             P("@Customer",r.CustomerName?.Trim()),P("@Type",r.OrderType),P("@Table",r.TableId),P("@Status",status),P("@Id",id));
         return n==0?NotFound():Success(null,"Order updated.");
     }
-    [HttpDelete("orders/{id:guid}")] public async Task<IActionResult> DeleteOrder(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET IsDeleted=1,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Order deleted."); }
+    [HttpDelete("orders/{id:guid}")]
+    public async Task<IActionResult> DeleteOrder(Guid id)
+    {
+        var order = await Db.QueryAsync("SELECT Status FROM dbo.Orders WHERE OrderId=@Id AND IsDeleted=0", P("@Id", id));
+        if (order.Count == 0) return NotFound();
+        var paid = Convert.ToInt32(await Db.ScalarAsync(
+            "SELECT COUNT(1) FROM dbo.Bills WHERE OrderId=@Id AND AmountPaid>0", P("@Id", id)));
+        if (paid > 0)
+            return Conflict(new { success = false, message = "An order with payment received cannot be deleted. Refund or resolve the bill first." });
+
+        await Db.ExecuteAsync(@"SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+BEGIN TRY
+ UPDATE dbo.Bills SET Status='Cancelled' WHERE OrderId=@Id AND AmountPaid=0 AND Status='Unpaid';
+ UPDATE dbo.KitchenTickets SET Status='Cancelled',UpdatedAt=SYSUTCDATETIME()
+ WHERE OrderId=@Id AND Status IN('New','Preparing','Ready');
+ UPDATE dbo.Orders SET IsDeleted=1,Status='Cancelled',UpdatedAt=SYSUTCDATETIME()
+ WHERE OrderId=@Id AND IsDeleted=0;
+ COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+ THROW;
+END CATCH", P("@Id", id));
+        return Success(null, "Order cancelled and its unpaid invoice was cancelled.");
+    }
     [HttpPut("orders/{id:guid}/status")] public async Task<IActionResult> OrderStatus(Guid id,UpdateStatusRequest r)
     {
         var allowed=new[]{"Placed","Preparing","Ready","Completed","Cancelled"};
