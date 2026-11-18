@@ -62,7 +62,7 @@ public sealed class CreateRestaurantPage : ContentPage
         Content = new Grid
         {
             Padding = 18,
-            Children = { new ScrollView { Content = card, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Center, WidthRequest = 520 } }
+            Children = { new ScrollView { Content = card, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Fill } }
         };
         _save.Clicked += SaveClicked;
     }
