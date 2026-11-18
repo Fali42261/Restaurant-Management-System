@@ -1,4 +1,15 @@
 /*
+  swapDigit COMPLETE DATABASE INSTALLER
+  Execute this ONE file in SQL Server Management Studio (SSMS).
+  Database: swapDigitDb
+  Includes base schema + seed data, indexes/views/procedures, multi-restaurant
+  tenancy, Orders/POS/Billing, and Auth tables/procedures.
+  Re-run safety is inherited from each module's IF NOT EXISTS / CREATE OR ALTER
+  guards. Review the Legacy Restaurant mapping in the tenancy section before
+  production deployment.
+*/
+
+/*
   swapDigit SQL Server database setup
   Run this entire file in SQL Server Management Studio (SSMS).
   Local database name: swapDigitDb
@@ -301,6 +312,927 @@ GO
 
 PRINT 'swapDigit database setup completed successfully.';
 GO
+
+
+
+/* =====================================================================
+   MODULE 2: PERFORMANCE INDEXES, VIEWS AND PROCEDURES
+   ===================================================================== */
+
+/*
+ Execute after 01_Tables_And_Seed_Data.txt in SSMS.
+*/
+USE swapDigitDb;
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Products_Category_Available' AND object_id=OBJECT_ID('dbo.Products'))
+ CREATE INDEX IX_Products_Category_Available ON dbo.Products(CategoryId,IsAvailable,Name) INCLUDE(Price,ImageUrl) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Orders_CreatedAt_Id' AND object_id=OBJECT_ID('dbo.Orders'))
+ CREATE INDEX IX_Orders_CreatedAt_Id ON dbo.Orders(CreatedAt DESC,OrderId) INCLUDE(OrderNumber,CustomerName,OrderType,TableId,Total,Status) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Orders_Status_CreatedAt' AND object_id=OBJECT_ID('dbo.Orders'))
+ CREATE INDEX IX_Orders_Status_CreatedAt ON dbo.Orders(Status,CreatedAt DESC) INCLUDE(OrderId,OrderNumber,Total) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_OrderItems_OrderId' AND object_id=OBJECT_ID('dbo.OrderItems'))
+ CREATE INDEX IX_OrderItems_OrderId ON dbo.OrderItems(OrderId) INCLUDE(ProductId,Quantity,UnitPrice);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Bills_CreatedAt_Id' AND object_id=OBJECT_ID('dbo.Bills'))
+ CREATE INDEX IX_Bills_CreatedAt_Id ON dbo.Bills(CreatedAt DESC,BillId) INCLUDE(InvoiceNumber,OrderId,Total,AmountPaid,Status);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Reservations_Date_Time' AND object_id=OBJECT_ID('dbo.Reservations'))
+ CREATE INDEX IX_Reservations_Date_Time ON dbo.Reservations(ReservationDate,ReservationTime) INCLUDE(GuestName,MobileNumber,GuestCount,TableId,Status) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_StockMovements_CreatedAt' AND object_id=OBJECT_ID('dbo.StockMovements'))
+ CREATE INDEX IX_StockMovements_CreatedAt ON dbo.StockMovements(CreatedAt DESC,MovementId) INCLUDE(ItemId,MovementType,Quantity);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_SupportTickets_User_CreatedAt' AND object_id=OBJECT_ID('dbo.SupportTickets'))
+ CREATE INDEX IX_SupportTickets_User_CreatedAt ON dbo.SupportTickets(CreatedBy,CreatedAt DESC) INCLUDE(TicketId,Subject,Priority,Status);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_RefreshTokens_User_Expiry' AND object_id=OBJECT_ID('dbo.RefreshTokens'))
+ CREATE INDEX IX_RefreshTokens_User_Expiry ON dbo.RefreshTokens(UserId,ExpiresAt) INCLUDE(TokenHash,RevokedAt);
+GO
+
+CREATE OR ALTER VIEW dbo.vw_ActiveProducts
+AS
+ SELECT p.ProductId,p.CategoryId,c.Name AS CategoryName,p.Name,p.Description,p.Price,p.ImageUrl,p.IsAvailable
+ FROM dbo.Products p LEFT JOIN dbo.Categories c ON c.CategoryId=p.CategoryId
+ WHERE p.IsDeleted=0;
+GO
+CREATE OR ALTER VIEW dbo.vw_DailyBillTotals
+AS
+ SELECT CONVERT(date,CreatedAt) AS SaleDate,COUNT_BIG(*) AS BillCount,
+        SUM(Total) AS GrossSales,SUM(Discount) AS Discounts,SUM(Tax) AS Tax
+ FROM dbo.Bills GROUP BY CONVERT(date,CreatedAt);
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Products_ListPaged
+ @PageNumber int=1,@PageSize int=25,@CategoryId uniqueidentifier=NULL,@Search nvarchar(160)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT p.ProductId,p.CategoryId,c.Name AS CategoryName,p.Name,p.Description,p.Price,p.ImageUrl,p.IsAvailable
+ FROM dbo.Products p LEFT JOIN dbo.Categories c ON c.CategoryId=p.CategoryId
+ WHERE p.IsDeleted=0 AND (@CategoryId IS NULL OR p.CategoryId=@CategoryId)
+   AND (@Search IS NULL OR p.Name LIKE @Search+N'%')
+ ORDER BY p.Name,p.ProductId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Orders_ListPaged
+ @PageNumber int=1,@PageSize int=25,@Status nvarchar(30)=NULL,@FromUtc datetime2=NULL,@ToUtc datetime2=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT o.OrderId,o.OrderNumber,o.CustomerName,o.OrderType,o.TableId,o.Subtotal,o.Discount,o.Tax,o.Total,o.PaymentMethod,o.Status,o.CreatedAt,
+        COALESCE(items.ItemSummary,N'') AS ItemSummary,COALESCE(items.Quantity,0) AS Quantity
+ FROM dbo.Orders o
+ OUTER APPLY
+ (
+  SELECT STRING_AGG(CONVERT(nvarchar(max),CONCAT(p.Name,N' × ',oi.Quantity)),N', ')
+           WITHIN GROUP (ORDER BY p.Name) AS ItemSummary,
+         SUM(oi.Quantity) AS Quantity
+  FROM dbo.OrderItems oi INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId
+  WHERE oi.OrderId=o.OrderId
+ ) items
+ WHERE o.IsDeleted=0 AND (@Status IS NULL OR o.Status=@Status)
+   AND (@FromUtc IS NULL OR o.CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR o.CreatedAt<@ToUtc)
+ ORDER BY o.CreatedAt DESC,o.OrderId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Bills_ListPaged
+ @PageNumber int=1,@PageSize int=25,@FromUtc datetime2=NULL,@ToUtc datetime2=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT b.BillId,b.InvoiceNumber,b.OrderId,b.CustomerName,b.OrderType,b.Subtotal,b.Discount,b.Tax,b.Total,b.PaymentMethod,b.AmountPaid,b.Status,b.CreatedAt,
+        COALESCE(items.ItemSummary,N'') AS ItemSummary
+ FROM dbo.Bills b
+ OUTER APPLY
+ (
+  SELECT STRING_AGG(CONVERT(nvarchar(max),CONCAT(p.Name,N' × ',oi.Quantity)),N', ')
+           WITHIN GROUP (ORDER BY p.Name) AS ItemSummary
+  FROM dbo.OrderItems oi INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId
+  WHERE oi.OrderId=b.OrderId
+ ) items
+ WHERE (@FromUtc IS NULL OR b.CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR b.CreatedAt<@ToUtc)
+ ORDER BY b.CreatedAt DESC,b.BillId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+PRINT 'swapDigit performance objects created.';
+GO
+
+
+/* Bounded page procedures for remaining high-volume collections.
+   API passes pageSize+1 (max 101) to calculate hasMore without COUNT(*) scans. */
+CREATE OR ALTER PROCEDURE dbo.usp_InventoryItems_ListPaged
+ @PageNumber int=1,@PageSize int=26,@Search nvarchar(160)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT ItemId,Name,Unit,CurrentStock,ReorderLevel,CostPrice,IsActive
+ FROM dbo.InventoryItems
+ WHERE IsDeleted=0 AND (@Search IS NULL OR Name LIKE @Search+N'%')
+ ORDER BY Name,ItemId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_StockMovements_ListPaged
+ @PageNumber int=1,@PageSize int=26,@ItemId uniqueidentifier=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT m.MovementId,m.ItemId,i.Name AS ItemName,m.MovementType,m.Quantity,m.Reference,m.Notes,m.CreatedAt
+ FROM dbo.StockMovements m INNER JOIN dbo.InventoryItems i ON i.ItemId=m.ItemId
+ WHERE (@ItemId IS NULL OR m.ItemId=@ItemId)
+ ORDER BY m.CreatedAt DESC,m.MovementId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Reservations_ListPaged
+ @PageNumber int=1,@PageSize int=26,@Date date=NULL,@Status nvarchar(30)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT ReservationId,GuestName,MobileNumber,ReservationDate,ReservationTime,GuestCount,TableId,Status,Notes
+ FROM dbo.Reservations
+ WHERE IsDeleted=0 AND (@Date IS NULL OR ReservationDate=@Date) AND (@Status IS NULL OR Status=@Status)
+ ORDER BY ReservationDate DESC,ReservationTime,ReservationId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_KitchenTickets_ListPaged
+ @PageNumber int=1,@PageSize int=26,@Status nvarchar(30)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+
+ ;WITH TicketRows AS
+ (
+  SELECT k.TicketId,k.OrderId,o.OrderNumber,o.OrderType,o.TableId,
+         COALESCE(t.Name,o.OrderType) AS Location,
+         k.Status,k.CreatedAt,k.UpdatedAt,
+         STRING_AGG(CONVERT(nvarchar(max),CONCAT(p.Name,N' × ',oi.Quantity)),N', ')
+           WITHIN GROUP (ORDER BY p.Name) AS Items
+  FROM dbo.KitchenTickets k
+  INNER JOIN dbo.Orders o ON o.OrderId=k.OrderId
+  LEFT JOIN dbo.RestaurantTables t ON t.TableId=o.TableId
+  LEFT JOIN dbo.OrderItems oi ON oi.OrderId=o.OrderId
+  LEFT JOIN dbo.Products p ON p.ProductId=oi.ProductId
+  WHERE o.IsDeleted=0 AND (@Status IS NULL OR k.Status=@Status)
+  GROUP BY k.TicketId,k.OrderId,o.OrderNumber,o.OrderType,o.TableId,
+           t.Name,k.Status,k.CreatedAt,k.UpdatedAt
+ )
+ SELECT TicketId,OrderId,OrderNumber,OrderType,TableId,Location,
+        Status,CreatedAt,UpdatedAt,COALESCE(Items,N'') AS Items
+ FROM TicketRows
+ ORDER BY CreatedAt DESC,TicketId
+ OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Staff_ListPaged
+ @PageNumber int=1,@PageSize int=26,@Search nvarchar(160)=NULL,@RestaurantId uniqueidentifier
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT u.UserId,u.FullName,u.Email,u.MobileNumber,ur.Role,u.IsActive,u.CreatedAt
+ FROM dbo.Users u
+ INNER JOIN dbo.UserRestaurants ur ON ur.UserId=u.UserId
+ WHERE ur.RestaurantId=@RestaurantId AND ur.IsActive=1
+   AND ur.Role IN('Manager','Staff') AND u.IsDeleted=0
+   AND (@Search IS NULL OR u.FullName LIKE @Search+N'%' OR u.Email LIKE @Search+N'%')
+ ORDER BY u.FullName,u.UserId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_SupportTickets_ListPaged
+ @PageNumber int=1,@PageSize int=26,@User uniqueidentifier,@Status nvarchar(30)=NULL
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
+ SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
+ SELECT TicketId,Subject,Message,Priority,Status,CreatedAt,UpdatedAt
+ FROM dbo.SupportTickets
+ WHERE CreatedBy=@User AND (@Status IS NULL OR Status=@Status)
+ ORDER BY CreatedAt DESC,TicketId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END;
+GO
+
+
+/* Restaurant-scoped dashboard KPIs. Row-level security applies through the
+   RestaurantId session context set by SqlDataAccess for every API connection. */
+CREATE OR ALTER PROCEDURE dbo.usp_Dashboard_Summary
+AS
+BEGIN
+ SET NOCOUNT ON;
+ DECLARE @Today date=CONVERT(date,SYSUTCDATETIME());
+
+ SELECT
+  (SELECT COUNT(1) FROM dbo.Orders
+   WHERE CreatedAt>=@Today AND CreatedAt<DATEADD(day,1,@Today) AND IsDeleted=0) AS TodayOrders,
+  (SELECT COALESCE(SUM(AmountPaid),0) FROM dbo.Bills
+   WHERE CreatedAt>=@Today AND CreatedAt<DATEADD(day,1,@Today)) AS TodaySales,
+  (SELECT COUNT(1) FROM dbo.Reservations
+   WHERE ReservationDate=@Today AND IsDeleted=0) AS TodayReservations,
+  (SELECT COUNT(1) FROM dbo.RestaurantTables
+   WHERE Status='Available' AND IsDeleted=0) AS AvailableTables,
+  (SELECT COUNT(1) FROM dbo.Orders
+   WHERE Status NOT IN('Completed','Cancelled') AND IsDeleted=0) AS ActiveOrders,
+  (SELECT COUNT(1) FROM dbo.RestaurantTables WHERE IsDeleted=0) AS TotalTables,
+  (SELECT COUNT(1) FROM dbo.RestaurantTables
+   WHERE Status='Occupied' AND IsDeleted=0) AS OccupiedTables,
+  (SELECT COALESCE(SUM(GuestCount),0) FROM dbo.Reservations
+   WHERE ReservationDate>=@Today AND Status IN('Pending','Confirmed') AND IsDeleted=0) AS UpcomingGuests;
+END;
+GO
+PRINT 'swapDigit dashboard summary procedure created.';
+GO
+
+
+/* Dashboard analytics: date-bounded sales trend and top products. */
+CREATE OR ALTER PROCEDURE dbo.usp_Dashboard_Sales
+ @FromUtc datetime2,
+ @ToUtcExclusive datetime2
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SELECT CONVERT(date,CreatedAt) AS SaleDate,
+        COUNT(1) AS BillCount,
+        COALESCE(SUM(AmountPaid),0) AS GrossSales,
+        COALESCE(SUM(Discount),0) AS Discounts,
+        COALESCE(SUM(Tax),0) AS Tax
+ FROM dbo.Bills
+ WHERE CreatedAt>=@FromUtc AND CreatedAt<@ToUtcExclusive
+ GROUP BY CONVERT(date,CreatedAt)
+ ORDER BY SaleDate;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Dashboard_TopProducts
+ @FromUtc datetime2,
+ @ToUtcExclusive datetime2
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SELECT TOP(10) p.Name,
+        SUM(oi.Quantity) AS QuantitySold,
+        SUM(oi.Quantity*oi.UnitPrice) AS Sales
+ FROM dbo.OrderItems oi
+ INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId
+ INNER JOIN dbo.Orders o ON o.OrderId=oi.OrderId
+ WHERE o.IsDeleted=0
+   AND o.CreatedAt>=@FromUtc AND o.CreatedAt<@ToUtcExclusive
+   AND o.Status<>'Cancelled' AND p.IsDeleted=0
+ GROUP BY p.Name
+ ORDER BY QuantitySold DESC,p.Name;
+END;
+GO
+
+
+CREATE OR ALTER PROCEDURE dbo.usp_KitchenTicket_UpdateStatus
+ @TicketId uniqueidentifier,
+ @Status nvarchar(30)
+AS
+BEGIN
+ SET NOCOUNT ON;
+ DECLARE @CurrentStatus nvarchar(30);
+ SELECT @CurrentStatus=Status FROM dbo.KitchenTickets WHERE TicketId=@TicketId;
+ IF @CurrentStatus IS NULL
+ BEGIN
+  SELECT CAST(0 AS int) AS UpdatedRows,N'NotFound' AS Outcome;
+  RETURN;
+ END;
+
+ IF NOT (
+   (@CurrentStatus='New' AND @Status IN('Preparing','Cancelled')) OR
+   (@CurrentStatus='Preparing' AND @Status IN('Ready','Cancelled')) OR
+   (@CurrentStatus='Ready' AND @Status IN('Served','Cancelled'))
+ )
+ BEGIN
+  SELECT CAST(0 AS int) AS UpdatedRows,N'InvalidTransition' AS Outcome;
+  RETURN;
+ END;
+
+ UPDATE dbo.KitchenTickets
+ SET Status=@Status,UpdatedAt=SYSUTCDATETIME()
+ WHERE TicketId=@TicketId AND Status=@CurrentStatus;
+
+ DECLARE @UpdatedRows int=@@ROWCOUNT;
+ SELECT @UpdatedRows AS UpdatedRows,
+        CASE WHEN @UpdatedRows=1 THEN N'Updated' ELSE N'Conflict' END AS Outcome;
+END;
+GO
+
+
+/* =====================================================================
+   MODULE 3: MULTI-RESTAURANT TENANCY
+   ===================================================================== */
+
+/*
+  swapDigit multi-restaurant tenant migration.
+  Run AFTER 01_Tables_And_Seed_Data.txt and 02_Performance_Indexes_Views_Procedures.txt.
+  Existing records are assigned to one Legacy Restaurant. Review that mapping before production.
+*/
+USE swapDigitDb;
+GO
+
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
+IF OBJECT_ID('dbo.Restaurants','U') IS NULL
+BEGIN
+ CREATE TABLE dbo.Restaurants(
+  RestaurantId UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Restaurants PRIMARY KEY,
+  OwnerUserId UNIQUEIDENTIFIER NULL,
+  Name NVARCHAR(160) NOT NULL,
+  IsActive BIT NOT NULL CONSTRAINT DF_Restaurants_IsActive DEFAULT(1),
+  CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Restaurants_CreatedAt DEFAULT(SYSUTCDATETIME()),
+  UpdatedAt DATETIME2 NULL,
+  CONSTRAINT FK_Restaurants_Owner FOREIGN KEY(OwnerUserId) REFERENCES dbo.Users(UserId)
+ );
+END
+GO
+IF OBJECT_ID('dbo.UserRestaurants','U') IS NULL
+BEGIN
+ CREATE TABLE dbo.UserRestaurants(
+  UserId UNIQUEIDENTIFIER NOT NULL,
+  RestaurantId UNIQUEIDENTIFIER NOT NULL,
+  Role NVARCHAR(30) NOT NULL,
+  IsActive BIT NOT NULL CONSTRAINT DF_UserRestaurants_IsActive DEFAULT(1),
+  CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_UserRestaurants_CreatedAt DEFAULT(SYSUTCDATETIME()),
+  CONSTRAINT PK_UserRestaurants PRIMARY KEY(UserId,RestaurantId),
+  CONSTRAINT FK_UserRestaurants_User FOREIGN KEY(UserId) REFERENCES dbo.Users(UserId),
+  CONSTRAINT FK_UserRestaurants_Restaurant FOREIGN KEY(RestaurantId) REFERENCES dbo.Restaurants(RestaurantId)
+ );
+ CREATE INDEX IX_UserRestaurants_Restaurant ON dbo.UserRestaurants(RestaurantId,IsActive) INCLUDE(UserId,Role);
+END
+GO
+/* A legacy container preserves existing data; new owners create their own restaurants. */
+IF NOT EXISTS(SELECT 1 FROM dbo.Restaurants)
+BEGIN
+ DECLARE @LegacyOwner UNIQUEIDENTIFIER=(SELECT TOP(1) UserId FROM dbo.Users WHERE Role='Owner' AND IsDeleted=0 ORDER BY CreatedAt);
+ INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name)
+ VALUES(NEWID(),@LegacyOwner,N'Legacy Restaurant');
+END
+GO
+INSERT dbo.UserRestaurants(UserId,RestaurantId,Role)
+SELECT u.UserId,r.RestaurantId,u.Role
+FROM dbo.Users u CROSS JOIN (SELECT TOP(1) RestaurantId FROM dbo.Restaurants ORDER BY CreatedAt) r
+WHERE u.Role IN('Owner','Manager','Staff')
+ AND NOT EXISTS(SELECT 1 FROM dbo.UserRestaurants ur WHERE ur.UserId=u.UserId AND ur.RestaurantId=r.RestaurantId);
+GO
+/* Add tenant keys to every restaurant-owned business table. */
+DECLARE @Tables TABLE(TableName SYSNAME PRIMARY KEY);
+INSERT @Tables VALUES
+('Categories'),('Products'),('Floors'),('RestaurantTables'),('Orders'),('OrderItems'),
+('KitchenTickets'),('Reservations'),('Bills'),('InventoryItems'),('StockMovements'),
+('RestaurantSettings'),('Subscriptions'),('SupportTickets');
+DECLARE @Table SYSNAME,@Sql NVARCHAR(MAX);
+DECLARE c CURSOR LOCAL FAST_FORWARD FOR SELECT TableName FROM @Tables;
+OPEN c; FETCH NEXT FROM c INTO @Table;
+WHILE @@FETCH_STATUS=0
+BEGIN
+ IF COL_LENGTH('dbo.'+@Table,'RestaurantId') IS NULL
+ BEGIN
+  SET @Sql=N'ALTER TABLE dbo.'+QUOTENAME(@Table)+N' ADD RestaurantId UNIQUEIDENTIFIER NULL;';
+  EXEC sys.sp_executesql @Sql;
+ END;
+ SET @Sql=N'UPDATE dbo.'+QUOTENAME(@Table)+N' SET RestaurantId=(SELECT TOP(1) RestaurantId FROM dbo.Restaurants ORDER BY CreatedAt) WHERE RestaurantId IS NULL;';
+ EXEC sys.sp_executesql @Sql;
+ IF NOT EXISTS(SELECT 1 FROM sys.default_constraints WHERE parent_object_id=OBJECT_ID('dbo.'+@Table) AND name='DF_'+@Table+'_RestaurantId')
+ BEGIN
+  SET @Sql=N'ALTER TABLE dbo.'+QUOTENAME(@Table)+N' ADD CONSTRAINT '+QUOTENAME('DF_'+@Table+'_RestaurantId')+
+    N' DEFAULT(TRY_CONVERT(uniqueidentifier,SESSION_CONTEXT(N''RestaurantId''))) FOR RestaurantId;';
+  EXEC sys.sp_executesql @Sql;
+ END;
+ SET @Sql=N'ALTER TABLE dbo.'+QUOTENAME(@Table)+N' ALTER COLUMN RestaurantId UNIQUEIDENTIFIER NOT NULL;';
+ EXEC sys.sp_executesql @Sql;
+ IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_'+@Table+'_Restaurants')
+ BEGIN
+  SET @Sql=N'ALTER TABLE dbo.'+QUOTENAME(@Table)+N' WITH CHECK ADD CONSTRAINT '+QUOTENAME('FK_'+@Table+'_Restaurants')+
+   N' FOREIGN KEY(RestaurantId) REFERENCES dbo.Restaurants(RestaurantId);';
+  EXEC sys.sp_executesql @Sql;
+ END;
+ IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.'+@Table) AND name='IX_'+@Table+'_RestaurantId')
+ BEGIN
+  SET @Sql=N'CREATE INDEX '+QUOTENAME('IX_'+@Table+'_RestaurantId')+N' ON dbo.'+QUOTENAME(@Table)+N'(RestaurantId);';
+  EXEC sys.sp_executesql @Sql;
+ END;
+ FETCH NEXT FROM c INTO @Table;
+END
+CLOSE c; DEALLOCATE c;
+GO
+/* Settings keys must be unique per restaurant, not globally. */
+IF NOT EXISTS
+(
+ SELECT 1 FROM sys.key_constraints kc
+ INNER JOIN sys.index_columns ic ON ic.object_id=kc.parent_object_id AND ic.index_id=kc.unique_index_id
+ INNER JOIN sys.columns col ON col.object_id=ic.object_id AND col.column_id=ic.column_id
+ WHERE kc.parent_object_id=OBJECT_ID('dbo.RestaurantSettings') AND kc.type='PK'
+ GROUP BY kc.name HAVING COUNT(1)=2 AND SUM(CASE WHEN col.name IN('RestaurantId','SettingKey') THEN 1 ELSE 0 END)=2
+)
+BEGIN
+ DECLARE @Pk SYSNAME;
+ SELECT @Pk=kc.name FROM sys.key_constraints kc WHERE kc.parent_object_id=OBJECT_ID('dbo.RestaurantSettings') AND kc.type='PK';
+ IF @Pk IS NOT NULL
+ BEGIN
+  DECLARE @DropPkSql NVARCHAR(MAX)=N'ALTER TABLE dbo.RestaurantSettings DROP CONSTRAINT '+QUOTENAME(@Pk);
+  EXEC sys.sp_executesql @DropPkSql;
+ END;
+ ALTER TABLE dbo.RestaurantSettings ADD CONSTRAINT PK_RestaurantSettings PRIMARY KEY(RestaurantId,SettingKey);
+END
+GO
+/* Subscriptions are restaurant-scoped. One restaurant can have only one current active subscription. */
+/* Preserve only the newest active subscription per legacy restaurant before enforcing the rule. */
+;WITH ranked AS
+(
+ SELECT SubscriptionId,ROW_NUMBER() OVER(PARTITION BY RestaurantId ORDER BY CreatedAt DESC,SubscriptionId DESC) AS rn
+ FROM dbo.Subscriptions WHERE Status IN('Active','Trial')
+)
+UPDATE s SET Status='Expired' FROM dbo.Subscriptions s INNER JOIN ranked r ON r.SubscriptionId=s.SubscriptionId WHERE r.rn>1;
+GO
+/* Use a physical flag: SQL Server does not allow a computed column in a filtered-index predicate. */
+IF EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Active')
+ DROP INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions;
+GO
+IF COL_LENGTH('dbo.Subscriptions','IsCurrentSubscription') IS NOT NULL
+   AND COLUMNPROPERTY(OBJECT_ID('dbo.Subscriptions'),'IsCurrentSubscription','IsComputed')=1
+ ALTER TABLE dbo.Subscriptions DROP COLUMN IsCurrentSubscription;
+GO
+IF COL_LENGTH('dbo.Subscriptions','IsCurrentSubscription') IS NULL
+ ALTER TABLE dbo.Subscriptions ADD IsCurrentSubscription BIT NOT NULL CONSTRAINT DF_Subscriptions_IsCurrentSubscription DEFAULT(0);
+GO
+IF NOT EXISTS
+(
+ SELECT 1 FROM sys.default_constraints
+ WHERE parent_object_id=OBJECT_ID('dbo.Subscriptions')
+   AND parent_column_id=COLUMNPROPERTY(OBJECT_ID('dbo.Subscriptions'),'IsCurrentSubscription','ColumnId')
+)
+ ALTER TABLE dbo.Subscriptions ADD CONSTRAINT DF_Subscriptions_IsCurrentSubscription_2 DEFAULT(0) FOR IsCurrentSubscription;
+GO
+UPDATE dbo.Subscriptions
+SET IsCurrentSubscription=CASE WHEN Status IN('Active','Trial') THEN 1 ELSE 0 END
+WHERE IsCurrentSubscription<>CASE WHEN Status IN('Active','Trial') THEN 1 ELSE 0 END;
+GO
+CREATE OR ALTER TRIGGER dbo.trg_Subscriptions_CurrentFlag
+ON dbo.Subscriptions
+AFTER INSERT, UPDATE
+AS
+BEGIN
+ SET NOCOUNT ON;
+ IF TRIGGER_NESTLEVEL()>1 RETURN;
+ UPDATE s
+ SET IsCurrentSubscription=CASE WHEN s.Status IN('Active','Trial') THEN 1 ELSE 0 END
+ FROM dbo.Subscriptions s
+ INNER JOIN inserted i ON i.SubscriptionId=s.SubscriptionId
+ WHERE s.IsCurrentSubscription<>CASE WHEN s.Status IN('Active','Trial') THEN 1 ELSE 0 END;
+END
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Active')
+ CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions(RestaurantId) WHERE IsCurrentSubscription=1;
+GO
+IF OBJECT_ID(N'dbo.fn_TenantMembershipAccess',N'IF') IS NULL
+ EXEC(N'CREATE FUNCTION dbo.fn_TenantMembershipAccess(@RestaurantId UNIQUEIDENTIFIER)
+ RETURNS TABLE WITH SCHEMABINDING
+ AS
+ RETURN SELECT 1 AS access_result
+ WHERE @RestaurantId=TRY_CONVERT(UNIQUEIDENTIFIER,SESSION_CONTEXT(N''RestaurantId''))
+ AND EXISTS
+ (
+  SELECT 1
+  FROM dbo.UserRestaurants ur
+  INNER JOIN dbo.Users u ON u.UserId=ur.UserId
+  INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId
+  WHERE ur.UserId=TRY_CONVERT(UNIQUEIDENTIFIER,SESSION_CONTEXT(N''UserId''))
+    AND ur.RestaurantId=@RestaurantId AND ur.IsActive=1
+    AND u.IsActive=1 AND u.IsDeleted=0 AND r.IsActive=1
+ );');
+GO
+IF EXISTS(SELECT 1 FROM sys.security_policies WHERE name='TenantIsolationPolicy')
+ DROP SECURITY POLICY dbo.TenantIsolationPolicy;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.security_policies WHERE name='TenantIsolationPolicy')
+BEGIN
+ EXEC(N'CREATE SECURITY POLICY dbo.TenantIsolationPolicy
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Categories,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Categories AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Categories AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Products,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Products AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Products AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Floors,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Floors AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Floors AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantTables,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantTables AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantTables AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Orders,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Orders AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Orders AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.OrderItems,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.OrderItems AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.OrderItems AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.KitchenTickets,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.KitchenTickets AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.KitchenTickets AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Reservations,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Reservations AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Reservations AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Bills,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Bills AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Bills AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.InventoryItems,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.InventoryItems AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.InventoryItems AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.StockMovements,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.StockMovements AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.StockMovements AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantSettings,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantSettings AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantSettings AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Subscriptions,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Subscriptions AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Subscriptions AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.SupportTickets,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.SupportTickets AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.SupportTickets AFTER UPDATE
+ WITH (STATE=ON);');
+END
+GO
+PRINT 'swapDigit multi-restaurant tenant schema and row-level isolation are ready.';
+GO
+
+/* Keep refresh sessions bound to the selected restaurant during token rotation. */
+IF COL_LENGTH('dbo.RefreshTokens','RestaurantId') IS NULL
+ ALTER TABLE dbo.RefreshTokens ADD RestaurantId UNIQUEIDENTIFIER NULL;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_RefreshTokens_Restaurants')
+ ALTER TABLE dbo.RefreshTokens ADD CONSTRAINT FK_RefreshTokens_Restaurants FOREIGN KEY(RestaurantId) REFERENCES dbo.Restaurants(RestaurantId);
+GO
+
+/* Subscription request metadata; activation remains a separate payment/admin action. */
+IF COL_LENGTH('dbo.Subscriptions','BillingCycle') IS NULL ALTER TABLE dbo.Subscriptions ADD BillingCycle NVARCHAR(20) NULL;
+IF COL_LENGTH('dbo.Subscriptions','Amount') IS NULL ALTER TABLE dbo.Subscriptions ADD Amount DECIMAL(18,2) NULL;
+IF COL_LENGTH('dbo.Subscriptions','PaymentReference') IS NULL ALTER TABLE dbo.Subscriptions ADD PaymentReference NVARCHAR(120) NULL;
+GO
+
+/* Password reset OTP abuse protection. */
+IF COL_LENGTH('dbo.PasswordResetCodes','AttemptCount') IS NULL
+ ALTER TABLE dbo.PasswordResetCodes ADD AttemptCount INT NOT NULL CONSTRAINT DF_PasswordResetCodes_AttemptCount DEFAULT(0);
+GO
+
+/* Tenant-local natural-key uniqueness. */
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Categories') AND name='UX_Categories_Restaurant_Name')
+ CREATE UNIQUE INDEX UX_Categories_Restaurant_Name ON dbo.Categories(RestaurantId,Name) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Floors') AND name='UX_Floors_Restaurant_Name')
+ CREATE UNIQUE INDEX UX_Floors_Restaurant_Name ON dbo.Floors(RestaurantId,Name) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.RestaurantTables') AND name='UX_Tables_Restaurant_Floor_Name')
+ CREATE UNIQUE INDEX UX_Tables_Restaurant_Floor_Name ON dbo.RestaurantTables(RestaurantId,FloorId,Name) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Products') AND name='UX_Products_Restaurant_Name')
+ CREATE UNIQUE INDEX UX_Products_Restaurant_Name ON dbo.Products(RestaurantId,Name) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.InventoryItems') AND name='UX_InventoryItems_Restaurant_Name')
+ CREATE UNIQUE INDEX UX_InventoryItems_Restaurant_Name ON dbo.InventoryItems(RestaurantId,Name) WHERE IsDeleted=0;
+GO
+
+/* A staff/manager identity is assigned to one active restaurant only. Owners may own many. */
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.UserRestaurants') AND name='UX_UserRestaurants_OneStaffRestaurant')
+ CREATE UNIQUE INDEX UX_UserRestaurants_OneStaffRestaurant ON dbo.UserRestaurants(UserId) WHERE IsActive=1 AND Role<>'Owner';
+GO
+
+/* One pending payment request per restaurant at a time. */
+;WITH pending AS
+(
+ SELECT SubscriptionId,ROW_NUMBER() OVER(PARTITION BY RestaurantId ORDER BY CreatedAt DESC,SubscriptionId DESC) AS rn
+ FROM dbo.Subscriptions WHERE Status='PendingPayment'
+)
+UPDATE s SET Status='Cancelled' FROM dbo.Subscriptions s INNER JOIN pending p ON p.SubscriptionId=s.SubscriptionId WHERE p.rn>1;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Pending')
+ CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Pending ON dbo.Subscriptions(RestaurantId) WHERE Status='PendingPayment';
+GO
+
+/* Composite keys prevent cross-restaurant foreign-key relationships even if an API query is changed later. */
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Categories') AND name='UX_Categories_Restaurant_CategoryId')
+ CREATE UNIQUE INDEX UX_Categories_Restaurant_CategoryId ON dbo.Categories(RestaurantId,CategoryId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Floors') AND name='UX_Floors_Restaurant_FloorId')
+ CREATE UNIQUE INDEX UX_Floors_Restaurant_FloorId ON dbo.Floors(RestaurantId,FloorId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.RestaurantTables') AND name='UX_Tables_Restaurant_TableId')
+ CREATE UNIQUE INDEX UX_Tables_Restaurant_TableId ON dbo.RestaurantTables(RestaurantId,TableId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Products') AND name='UX_Products_Restaurant_ProductId')
+ CREATE UNIQUE INDEX UX_Products_Restaurant_ProductId ON dbo.Products(RestaurantId,ProductId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Orders') AND name='UX_Orders_Restaurant_OrderId')
+ CREATE UNIQUE INDEX UX_Orders_Restaurant_OrderId ON dbo.Orders(RestaurantId,OrderId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.InventoryItems') AND name='UX_Inventory_Restaurant_ItemId')
+ CREATE UNIQUE INDEX UX_Inventory_Restaurant_ItemId ON dbo.InventoryItems(RestaurantId,ItemId);
+GO
+
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Products_Restaurant_Category')
+ ALTER TABLE dbo.Products WITH CHECK ADD CONSTRAINT FK_Products_Restaurant_Category FOREIGN KEY(RestaurantId,CategoryId) REFERENCES dbo.Categories(RestaurantId,CategoryId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Tables_Restaurant_Floor')
+ ALTER TABLE dbo.RestaurantTables WITH CHECK ADD CONSTRAINT FK_Tables_Restaurant_Floor FOREIGN KEY(RestaurantId,FloorId) REFERENCES dbo.Floors(RestaurantId,FloorId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Orders_Restaurant_Table')
+ ALTER TABLE dbo.Orders WITH CHECK ADD CONSTRAINT FK_Orders_Restaurant_Table FOREIGN KEY(RestaurantId,TableId) REFERENCES dbo.RestaurantTables(RestaurantId,TableId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_OrderItems_Restaurant_Order')
+ ALTER TABLE dbo.OrderItems WITH CHECK ADD CONSTRAINT FK_OrderItems_Restaurant_Order FOREIGN KEY(RestaurantId,OrderId) REFERENCES dbo.Orders(RestaurantId,OrderId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_OrderItems_Restaurant_Product')
+ ALTER TABLE dbo.OrderItems WITH CHECK ADD CONSTRAINT FK_OrderItems_Restaurant_Product FOREIGN KEY(RestaurantId,ProductId) REFERENCES dbo.Products(RestaurantId,ProductId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_KitchenTickets_Restaurant_Order')
+ ALTER TABLE dbo.KitchenTickets WITH CHECK ADD CONSTRAINT FK_KitchenTickets_Restaurant_Order FOREIGN KEY(RestaurantId,OrderId) REFERENCES dbo.Orders(RestaurantId,OrderId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Reservations_Restaurant_Table')
+ ALTER TABLE dbo.Reservations WITH CHECK ADD CONSTRAINT FK_Reservations_Restaurant_Table FOREIGN KEY(RestaurantId,TableId) REFERENCES dbo.RestaurantTables(RestaurantId,TableId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Bills_Restaurant_Order')
+ ALTER TABLE dbo.Bills WITH CHECK ADD CONSTRAINT FK_Bills_Restaurant_Order FOREIGN KEY(RestaurantId,OrderId) REFERENCES dbo.Orders(RestaurantId,OrderId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_StockMovements_Restaurant_Item')
+ ALTER TABLE dbo.StockMovements WITH CHECK ADD CONSTRAINT FK_StockMovements_Restaurant_Item FOREIGN KEY(RestaurantId,ItemId) REFERENCES dbo.InventoryItems(RestaurantId,ItemId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Orders_Restaurant_Creator')
+ ALTER TABLE dbo.Orders WITH CHECK ADD CONSTRAINT FK_Orders_Restaurant_Creator FOREIGN KEY(CreatedBy,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_StockMovements_Restaurant_Creator')
+ ALTER TABLE dbo.StockMovements WITH CHECK ADD CONSTRAINT FK_StockMovements_Restaurant_Creator FOREIGN KEY(CreatedBy,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_SupportTickets_Restaurant_Creator')
+ ALTER TABLE dbo.SupportTickets WITH CHECK ADD CONSTRAINT FK_SupportTickets_Restaurant_Creator FOREIGN KEY(CreatedBy,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
+
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Subscriptions_Restaurant_Owner')
+ ALTER TABLE dbo.Subscriptions WITH CHECK ADD CONSTRAINT FK_Subscriptions_Restaurant_Owner FOREIGN KEY(UserId,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_RefreshTokens_User_Restaurant')
+ ALTER TABLE dbo.RefreshTokens WITH CHECK ADD CONSTRAINT FK_RefreshTokens_User_Restaurant FOREIGN KEY(UserId,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
+
+
+/* Restaurant profile fields used by the post-login restaurant selector and first-run creation flow. */
+IF COL_LENGTH('dbo.Restaurants','MobileNumber') IS NULL ALTER TABLE dbo.Restaurants ADD MobileNumber NVARCHAR(25) NULL;
+IF COL_LENGTH('dbo.Restaurants','Address') IS NULL ALTER TABLE dbo.Restaurants ADD Address NVARCHAR(500) NULL;
+IF COL_LENGTH('dbo.Restaurants','OpeningTime') IS NULL ALTER TABLE dbo.Restaurants ADD OpeningTime TIME NULL;
+IF COL_LENGTH('dbo.Restaurants','ClosingTime') IS NULL ALTER TABLE dbo.Restaurants ADD ClosingTime TIME NULL;
+IF COL_LENGTH('dbo.Restaurants','OperatingDays') IS NULL ALTER TABLE dbo.Restaurants ADD OperatingDays NVARCHAR(200) NULL;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_UserRestaurants_List
+    @UserId UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT r.RestaurantId, r.Name, r.MobileNumber, r.Address,
+           CONVERT(VARCHAR(5), r.OpeningTime, 108) AS OpeningTime,
+           CONVERT(VARCHAR(5), r.ClosingTime, 108) AS ClosingTime,
+           r.OperatingDays, ur.Role
+    FROM dbo.UserRestaurants ur
+    INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId
+    WHERE ur.UserId=@UserId AND ur.IsActive=1 AND r.IsActive=1
+    ORDER BY r.Name;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Restaurant_CreateForOwner
+    @UserId UNIQUEIDENTIFIER,
+    @Name NVARCHAR(160),
+    @MobileNumber NVARCHAR(25),
+    @Address NVARCHAR(500),
+    @OpeningTime TIME,
+    @ClosingTime TIME,
+    @OperatingDays NVARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    DECLARE @RestaurantId UNIQUEIDENTIFIER=NEWID();
+    BEGIN TRANSACTION;
+    IF NOT EXISTS(SELECT 1 FROM dbo.Users WHERE UserId=@UserId AND Role='Owner' AND IsActive=1 AND IsDeleted=0)
+    BEGIN
+        ROLLBACK TRANSACTION;
+        THROW 51001, 'Only an active owner can create a restaurant.', 1;
+    END;
+    INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,MobileNumber,Address,OpeningTime,ClosingTime,OperatingDays,IsActive,CreatedAt)
+    VALUES(@RestaurantId,@UserId,@Name,@MobileNumber,@Address,@OpeningTime,@ClosingTime,@OperatingDays,1,SYSUTCDATETIME());
+    INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt)
+    VALUES(@UserId,@RestaurantId,'Owner',1,SYSUTCDATETIME());
+    COMMIT TRANSACTION;
+    SELECT RestaurantId,Name,MobileNumber,Address,
+           CONVERT(VARCHAR(5),OpeningTime,108) AS OpeningTime,
+           CONVERT(VARCHAR(5),ClosingTime,108) AS ClosingTime,
+           OperatingDays,CAST('Owner' AS NVARCHAR(30)) AS Role
+    FROM dbo.Restaurants WHERE RestaurantId=@RestaurantId;
+END
+GO
+
+
+/* Stored procedures for restaurant switching and profile updates. */
+CREATE OR ALTER PROCEDURE dbo.usp_Restaurant_SelectForUser
+    @UserId UNIQUEIDENTIFIER,
+    @RestaurantId UNIQUEIDENTIFIER,
+    @TokenHash NVARCHAR(128),
+    @ExpiresAt DATETIME2
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    DECLARE @Rows TABLE(RestaurantId UNIQUEIDENTIFIER, Name NVARCHAR(160), UserId UNIQUEIDENTIFIER,
+        FullName NVARCHAR(150), Email NVARCHAR(256), Role NVARCHAR(30));
+    INSERT @Rows
+    SELECT TOP(1) r.RestaurantId,r.Name,u.UserId,u.FullName,u.Email,ur.Role
+    FROM dbo.UserRestaurants ur
+    INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId
+    INNER JOIN dbo.Users u ON u.UserId=ur.UserId
+    WHERE ur.UserId=@UserId AND ur.RestaurantId=@RestaurantId AND ur.IsActive=1
+      AND r.IsActive=1 AND u.IsActive=1 AND u.IsDeleted=0;
+    IF NOT EXISTS(SELECT 1 FROM @Rows)
+        THROW 51002, 'Restaurant is not assigned to this account or is inactive.', 1;
+    INSERT dbo.RefreshTokens(TokenId,UserId,RestaurantId,TokenHash,ExpiresAt,CreatedAt)
+    VALUES(NEWID(),@UserId,@RestaurantId,@TokenHash,@ExpiresAt,SYSUTCDATETIME());
+    SELECT * FROM @Rows;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Restaurant_Rename
+    @UserId UNIQUEIDENTIFIER,
+    @RestaurantId UNIQUEIDENTIFIER,
+    @Name NVARCHAR(160)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.Restaurants SET Name=@Name,UpdatedAt=SYSUTCDATETIME()
+    WHERE RestaurantId=@RestaurantId AND OwnerUserId=@UserId AND IsActive=1;
+    SELECT @@ROWCOUNT AS RowsAffected;
+END
+GO
+
+
+/* =====================================================================
+   MODULE 4: ORDERS, POS AND BILLING
+   ===================================================================== */
+
+/*
+  swapDigit Orders + POS checkout migration
+  Execute after 01, 02 and 03 scripts.
+  Checkout is atomic: Orders, OrderItems, KitchenTickets and Bills commit together.
+*/
+USE swapDigitDb;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Pos_Checkout
+ @OrderId uniqueidentifier,
+ @OrderNumber nvarchar(40),
+ @InvoiceNumber nvarchar(40),
+ @CustomerName nvarchar(150)=NULL,
+ @OrderType nvarchar(30),
+ @TableId uniqueidentifier=NULL,
+ @Discount decimal(18,2)=0,
+ @Tax decimal(18,2)=0,
+ @PaymentMethod nvarchar(30),
+ @CashReceived decimal(18,2)=0,
+ @CreatedBy uniqueidentifier,
+ @ItemsJson nvarchar(max)
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET XACT_ABORT ON;
+
+ IF ISJSON(@ItemsJson)<>1 THROW 51001,'Order items must be valid JSON.',1;
+ IF @Discount<0 OR @Tax<0 OR @CashReceived<0 THROW 51002,'Discount, tax and cash received cannot be negative.',1;
+ IF @OrderType NOT IN('DineIn','Takeaway','Delivery') THROW 51003,'Invalid order type.',1;
+ IF @PaymentMethod NOT IN('Cash','UPI','Card','Online','Unpaid') THROW 51004,'Invalid payment method.',1;
+ IF @OrderType='DineIn' AND @TableId IS NULL THROW 51005,'A table is required for dine-in orders.',1;
+
+ DECLARE @Lines TABLE(ProductId uniqueidentifier NOT NULL,Quantity int NOT NULL,Notes nvarchar(300) NULL);
+ INSERT @Lines(ProductId,Quantity,Notes)
+ SELECT ProductId,Quantity,Notes
+ FROM OPENJSON(@ItemsJson)
+ WITH(ProductId uniqueidentifier '$.ProductId',Quantity int '$.Quantity',Notes nvarchar(300) '$.Notes');
+
+ IF NOT EXISTS(SELECT 1 FROM @Lines) OR (SELECT COUNT(1) FROM @Lines)>100
+  THROW 51006,'An order must contain 1 to 100 item lines.',1;
+ IF EXISTS(SELECT 1 FROM @Lines WHERE ProductId IS NULL OR Quantity<1 OR Quantity>1000)
+  THROW 51007,'Each item must have a valid product and quantity from 1 to 1000.',1;
+ IF EXISTS
+ (
+  SELECT 1 FROM @Lines l
+  LEFT JOIN dbo.Products p ON p.ProductId=l.ProductId AND p.IsDeleted=0 AND p.IsAvailable=1
+  WHERE p.ProductId IS NULL
+ )
+  THROW 51008,'One or more products are unavailable in this restaurant.',1;
+ IF @TableId IS NOT NULL AND NOT EXISTS
+ (
+  SELECT 1 FROM dbo.RestaurantTables WHERE TableId=@TableId AND IsDeleted=0 AND Status<>'OutOfService'
+ )
+  THROW 51009,'The selected table is unavailable in this restaurant.',1;
+
+ DECLARE @Subtotal decimal(18,2)=
+ (
+  SELECT SUM(p.Price*l.Quantity)
+  FROM @Lines l INNER JOIN dbo.Products p ON p.ProductId=l.ProductId
+ );
+ IF @Subtotal IS NULL OR @Discount>@Subtotal
+  THROW 51010,'Discount cannot exceed the order subtotal.',1;
+
+ DECLARE @Total decimal(18,2)=@Subtotal-@Discount+@Tax;
+ IF @Total<=0 THROW 51011,'The payable amount must be greater than zero.',1;
+
+ DECLARE @AmountPaid decimal(18,2)=
+  CASE WHEN @PaymentMethod='Cash' THEN CASE WHEN @CashReceived>@Total THEN @Total ELSE @CashReceived END
+       WHEN @PaymentMethod IN('UPI','Card','Online') THEN @Total ELSE 0 END;
+ DECLARE @BillStatus nvarchar(30)=CASE WHEN @AmountPaid>=@Total THEN 'Paid' ELSE 'Unpaid' END;
+ DECLARE @Guest nvarchar(150)=COALESCE(NULLIF(LTRIM(RTRIM(@CustomerName)),''),N'Walk-in Guest');
+
+ BEGIN TRANSACTION;
+ BEGIN TRY
+  INSERT dbo.Orders(OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,
+                    PaymentMethod,CashReceived,Status,CreatedBy,CreatedAt,IsDeleted)
+  VALUES(@OrderId,@OrderNumber,@Guest,@OrderType,@TableId,@Subtotal,@Discount,@Tax,@Total,
+         @PaymentMethod,@CashReceived,'Placed',@CreatedBy,SYSUTCDATETIME(),0);
+
+  INSERT dbo.OrderItems(OrderItemId,OrderId,ProductId,Quantity,UnitPrice,Notes)
+  SELECT NEWID(),@OrderId,l.ProductId,l.Quantity,p.Price,l.Notes
+  FROM @Lines l INNER JOIN dbo.Products p ON p.ProductId=l.ProductId;
+
+  INSERT dbo.KitchenTickets(TicketId,OrderId,Status,CreatedAt)
+  VALUES(NEWID(),@OrderId,'New',SYSUTCDATETIME());
+
+  INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,
+                   PaymentMethod,AmountPaid,Status,CreatedAt)
+  VALUES(NEWID(),@InvoiceNumber,@OrderId,@Guest,@OrderType,@Subtotal,@Discount,@Tax,@Total,
+         @PaymentMethod,@AmountPaid,@BillStatus,SYSUTCDATETIME());
+
+  COMMIT TRANSACTION;
+  SELECT @OrderId AS OrderId,@OrderNumber AS OrderNumber,@InvoiceNumber AS InvoiceNumber,
+         @Subtotal AS Subtotal,@Discount AS Discount,@Tax AS Tax,@Total AS Total,
+         @AmountPaid AS AmountPaid,@BillStatus AS Status;
+ END TRY
+ BEGIN CATCH
+  IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+  THROW;
+ END CATCH
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Bill_MarkPaid
+ @BillId uniqueidentifier
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET XACT_ABORT ON;
+ UPDATE dbo.Bills
+ SET AmountPaid=Total,Status='Paid'
+ WHERE BillId=@BillId AND Status='Unpaid';
+ SELECT @@ROWCOUNT AS Updated;
+END;
+GO
+
+
+
+
+/* =====================================================================
+   MODULE 5: AUTH TABLES, INDEXES AND STORED PROCEDURES
+   ===================================================================== */
 
 /* =====================================================================
    AUTH MODULE: TABLES, INDEXES AND STORED PROCEDURES
