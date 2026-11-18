@@ -19,7 +19,7 @@ public sealed class AuthBusinessLogic(
     private readonly AppSettings _settings=options.Value;
     private int MinimumPasswordLength=>Math.Max(8,_settings.Business.PasswordMinimumLength);
 
-    public async Task<AuthResult> RegisterOwnerAsync(OwnerRegistration request)
+    private async Task<AuthResult> RegisterOwnerCoreAsync(OwnerRegistration request)
     {
         var name=request.FullName?.Trim(); var mail=request.Email?.Trim().ToLowerInvariant(); var mobile=request.MobileNumber?.Trim();
         if(string.IsNullOrWhiteSpace(name)||name.Length>150)return Bad(400,"Full name is required and must be 150 characters or fewer.");
@@ -33,7 +33,7 @@ public sealed class AuthBusinessLogic(
         return new(true,201,new{userId=id,role="Owner"},"Owner account created. Add your first restaurant after signing in.");
     }
 
-    public async Task<AuthResult> LoginAsync(LoginRequest request)
+    private async Task<AuthResult> LoginCoreAsync(LoginRequest request)
     {
         if(string.IsNullOrWhiteSpace(request.EmailOrMobile)||string.IsNullOrWhiteSpace(request.Password))return Bad(400,"Email/mobile and password are required.");
         var rows=await data.LoginUserAsync(request.EmailOrMobile.Trim());
@@ -48,18 +48,20 @@ public sealed class AuthBusinessLogic(
             user=new{userId=id,fullName=T(user,"FullName"),email=T(user,"Email"),mobileNumber=T(user,"MobileNumber"),role=T(user,"Role")},restaurants},"Login successful.");
     }
 
-    public async Task<AuthResult> ChangePasswordAsync(Guid userId,ChangePasswordRequest request)
+    private async Task<AuthResult> ChangePasswordCoreAsync(Guid userId,ChangePasswordRequest request)
     {
         if(string.IsNullOrWhiteSpace(request.CurrentPassword)||!StrongPassword(request.NewPassword))return Bad(400,PasswordMessage());
         var rows=await data.GetPasswordRecordAsync(userId);
         if(rows.Count==0||hasher.VerifyHashedPassword(userId.ToString(),T(rows[0],"PasswordHash"),request.CurrentPassword)==PasswordVerificationResult.Failed)
         {logger.LogWarning("Change password rejected. UserId={UserId}",userId);return Bad(400,"Current password is incorrect.");}
-        await data.ChangePasswordAsync(userId,hasher.HashPassword(userId.ToString(),request.NewPassword));
+        var changed = await data.ChangePasswordAsync(userId, hasher.HashPassword(userId.ToString(), request.NewPassword));
+        if (changed.Count == 0 || !changed[0].TryGetValue("RowsAffected", out var affected) || Convert.ToInt32(affected) != 1)
+            return Bad(409, "Password could not be changed. Please retry.");
         logger.LogInformation("Password changed; refresh sessions revoked. UserId={UserId}",userId);
         return Ok(null,"Password changed. Please sign in again.");
     }
 
-    public async Task<AuthResult> ForgotPasswordAsync(ForgotPasswordRequest request)
+    private async Task<AuthResult> ForgotPasswordCoreAsync(ForgotPasswordRequest request)
     {
         var mail=request.Email?.Trim().ToLowerInvariant();
         if(string.IsNullOrWhiteSpace(mail)||!System.Net.Mail.MailAddress.TryCreate(mail,out _))return Ok(null,"If the account exists, a reset code will be sent.");
@@ -74,7 +76,7 @@ public sealed class AuthBusinessLogic(
         return Ok(null,"If the account exists, a reset code will be sent.");
     }
 
-    public async Task<AuthResult> ResetPasswordAsync(ResetPasswordRequest request)
+    private async Task<AuthResult> ResetPasswordCoreAsync(ResetPasswordRequest request)
     {
         var mail=request.Email?.Trim().ToLowerInvariant();
         if(string.IsNullOrWhiteSpace(mail)||!System.Net.Mail.MailAddress.TryCreate(mail,out _)||string.IsNullOrWhiteSpace(request.Code)||!StrongPassword(request.NewPassword))
@@ -88,7 +90,7 @@ public sealed class AuthBusinessLogic(
         return Ok(null,"Password reset successful. Please sign in again.");
     }
 
-    public async Task<AuthResult> RefreshAsync(RefreshTokenRequest request)
+    private async Task<AuthResult> RefreshCoreAsync(RefreshTokenRequest request)
     {
         if(string.IsNullOrWhiteSpace(request.RefreshToken))return Bad(401,"Refresh token is invalid or expired.");
         var refresh=NewToken();var now=DateTime.UtcNow;
@@ -101,16 +103,59 @@ public sealed class AuthBusinessLogic(
         return Ok(new{accessToken=access,refreshToken=refresh,expiresIn=_settings.Jwt.AccessTokenMinutes*60,restaurantId=restaurant});
     }
 
-    public async Task<AuthResult> MeAsync(Guid userId)
+    private async Task<AuthResult> MeCoreAsync(Guid userId)
     {
         var rows=await data.GetMeAsync(userId);if(rows.Count==0)return Bad(404,"User account was not found.");
         logger.LogDebug("Current-user profile retrieved. UserId={UserId}",userId);return Ok(rows[0]);
     }
 
-    public async Task<AuthResult> LogoutAsync(Guid userId)
+    private async Task<AuthResult> LogoutCoreAsync(Guid userId)
     {
         await data.LogoutAsync(userId);logger.LogInformation("Logout completed; refresh sessions revoked. UserId={UserId}",userId);
         return Ok(null,"Logged out.");
+    }
+
+
+    public Task<AuthResult> RegisterOwnerAsync(OwnerRegistration request) =>
+        ExecuteSafelyAsync(nameof(RegisterOwnerAsync), () => RegisterOwnerCoreAsync(request));
+
+    public Task<AuthResult> LoginAsync(LoginRequest request) =>
+        ExecuteSafelyAsync(nameof(LoginAsync), () => LoginCoreAsync(request));
+
+    public Task<AuthResult> ChangePasswordAsync(Guid userId, ChangePasswordRequest request) =>
+        ExecuteSafelyAsync(nameof(ChangePasswordAsync), () => ChangePasswordCoreAsync(userId, request));
+
+    public Task<AuthResult> ForgotPasswordAsync(ForgotPasswordRequest request) =>
+        ExecuteSafelyAsync(nameof(ForgotPasswordAsync), () => ForgotPasswordCoreAsync(request));
+
+    public Task<AuthResult> ResetPasswordAsync(ResetPasswordRequest request) =>
+        ExecuteSafelyAsync(nameof(ResetPasswordAsync), () => ResetPasswordCoreAsync(request));
+
+    public Task<AuthResult> RefreshAsync(RefreshTokenRequest request) =>
+        ExecuteSafelyAsync(nameof(RefreshAsync), () => RefreshCoreAsync(request));
+
+    public Task<AuthResult> MeAsync(Guid userId) =>
+        ExecuteSafelyAsync(nameof(MeAsync), () => MeCoreAsync(userId));
+
+    public Task<AuthResult> LogoutAsync(Guid userId) =>
+        ExecuteSafelyAsync(nameof(LogoutAsync), () => LogoutCoreAsync(userId));
+
+    private async Task<AuthResult> ExecuteSafelyAsync(string operation, Func<Task<AuthResult>> action)
+    {
+        try
+        {
+            return await action();
+        }
+        catch (OperationCanceledException)
+        {
+            logger.LogWarning("Auth operation cancelled. Operation={Operation}", operation);
+            return Bad(408, "The request was cancelled. Please try again.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Auth operation failed. Operation={Operation}", operation);
+            return Bad(500, "An unexpected error occurred while processing the authentication request.");
+        }
     }
 
     private string CreateJwt(Guid id,string name,string mail,string role,Guid? restaurant,string? restaurantName,DateTime now)
