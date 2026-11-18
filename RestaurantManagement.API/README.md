@@ -4,9 +4,11 @@ ASP.NET Core Web API (.NET 10), using **ADO.NET / Microsoft.Data.SqlClient** onl
 
 ## Database scripts
 All database object definitions are plain-text SQL under `Database/Scripts`. Run these files manually in SQL Server Management Studio (SSMS), in order:
-1. `01_Tables_And_Seed_Data.txt` — database, tables, constraints and starter data.
+1. `01_Tables_And_Seed_Data.txt` — database, base tables, seed data, and the complete Auth module (Auth tables, indexes and stored procedures).
 2. `02_Performance_Indexes_Views_Procedures.txt` — indexes, read views and bounded-page stored procedures.
 3. `03_Multi_Restaurant_Tenancy.txt` — owner/restaurant membership, per-restaurant data keys, subscription scoping and SQL Server row-level security. Existing records are assigned to a Legacy Restaurant; review this mapping before production.
+
+The Auth module is included in script 01. Do not run a separate numbered Auth installer.
 
 The API does not auto-run SQL scripts. Configure the connection string after running the scripts.
 
