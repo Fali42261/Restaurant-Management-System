@@ -63,6 +63,15 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
         return n==0?NotFound():Success(null,"Table status updated.");
     }
 
+    [HttpGet("orders/{id:guid}")]
+    public async Task<IActionResult> Order(Guid id)
+    {
+        var rows=await Db.QueryAsync("SELECT OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,PaymentMethod,CashReceived,Status,CreatedAt FROM dbo.Orders WHERE OrderId=@Id AND IsDeleted=0",P("@Id",id));
+        if(rows.Count==0) return NotFound();
+        var items=await Db.QueryAsync("SELECT oi.OrderItemId,oi.ProductId,p.Name AS ProductName,oi.Quantity,oi.UnitPrice,oi.Notes FROM dbo.OrderItems oi INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId WHERE oi.OrderId=@Id ORDER BY oi.OrderItemId",P("@Id",id));
+        return Success(new {order=rows[0],items});
+    }
+
     [HttpGet("orders")] public async Task<IActionResult> Orders([FromQuery] string? status, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25)
     {
         var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
@@ -75,7 +84,7 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
     {
         if(r.Items is null||r.Items.Count==0||r.Items.Count>100||r.Items.Any(x=>x.Quantity<1||x.Quantity>1000))
             return BadRequest(new {success=false,message="An order must contain 1 to 100 lines, each with quantity from 1 to 1000."});
-        if(string.IsNullOrWhiteSpace(r.OrderType)||!new[]{"DineIn","Dine-In","Takeaway","Take Away","Delivery"}.Contains(r.OrderType,StringComparer.OrdinalIgnoreCase))
+        if(string.IsNullOrWhiteSpace(r.OrderType)||!new[]{"DineIn","Dine-In","Dine In","Takeaway","Take Away","Delivery"}.Contains(r.OrderType,StringComparer.OrdinalIgnoreCase))
             return BadRequest(new {success=false,message="Invalid order type."});
         if(string.IsNullOrWhiteSpace(r.PaymentMethod)||!new[]{"Cash","UPI","Card","Online","Unpaid"}.Contains(r.PaymentMethod,StringComparer.OrdinalIgnoreCase))
             return BadRequest(new {success=false,message="Invalid payment method."});
@@ -153,6 +162,13 @@ END CATCH;";
         return n==0?NotFound():Success(null,"Order status updated.");
     }
 
+    [HttpGet("reservations/{id:guid}")]
+    public async Task<IActionResult> Reservation(Guid id)
+    {
+        var rows=await Db.QueryAsync("SELECT ReservationId,GuestName,MobileNumber,ReservationDate,ReservationTime,GuestCount,TableId,Status,Notes,CreatedAt FROM dbo.Reservations WHERE ReservationId=@Id AND IsDeleted=0",P("@Id",id));
+        return rows.Count==0?NotFound():Success(rows[0]);
+    }
+
     [HttpGet("reservations")] public async Task<IActionResult> Reservations([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] DateTime? date = null, [FromQuery] string? status = null)
     {
         var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
@@ -194,6 +210,15 @@ END CATCH;";
         return n==0?NotFound():Success(null,"Reservation cancelled.");
     }
 
+    [HttpGet("kots/{id:guid}")]
+    public async Task<IActionResult> Kot(Guid id)
+    {
+        var rows=await Db.QueryAsync("SELECT k.TicketId,k.OrderId,o.OrderNumber,o.OrderType,o.TableId,k.Status,k.CreatedAt,k.UpdatedAt FROM dbo.KitchenTickets k INNER JOIN dbo.Orders o ON o.OrderId=k.OrderId WHERE k.TicketId=@Id",P("@Id",id));
+        if(rows.Count==0) return NotFound();
+        var items=await Db.QueryAsync("SELECT oi.ProductId,p.Name AS ProductName,oi.Quantity,oi.Notes FROM dbo.OrderItems oi INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId INNER JOIN dbo.KitchenTickets k ON k.OrderId=oi.OrderId WHERE k.TicketId=@Id ORDER BY p.Name",P("@Id",id));
+        return Success(new {ticket=rows[0],items});
+    }
+
     [HttpGet("kots")] public async Task<IActionResult> Kots([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] string? status = null)
     {
         var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
@@ -210,6 +235,13 @@ END CATCH;";
         return n==0?NotFound():Success(null,"Kitchen ticket updated.");
     }
 
+    [HttpGet("bills/{id:guid}")]
+    public async Task<IActionResult> Bill(Guid id)
+    {
+        var rows=await Db.QueryAsync("SELECT BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt FROM dbo.Bills WHERE BillId=@Id",P("@Id",id));
+        return rows.Count==0?NotFound():Success(rows[0]);
+    }
+
     [HttpGet("bills")] public async Task<IActionResult> Bills([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
     {
         var page = Math.Max(1, pageNumber); var size = Math.Clamp(pageSize, 1, 100);
@@ -220,7 +252,9 @@ END CATCH;";
     [HttpPost("bills")]
     public async Task<IActionResult> AddBill(CreateBillRequest r)
     {
-        if(string.IsNullOrWhiteSpace(r.CustomerName)||r.CustomerName.Trim().Length>150||r.Subtotal<0||r.Discount<0||r.Tax<0||r.Total<=0||r.AmountPaid<0||r.AmountPaid>r.Total||r.Discount>r.Subtotal||r.Total!=r.Subtotal-r.Discount+r.Tax)
+        if(string.IsNullOrWhiteSpace(r.CustomerName)||r.CustomerName.Trim().Length>150||r.Subtotal<0||r.Discount<0||r.Tax<0||r.Total<=0||r.AmountPaid<0||r.AmountPaid>r.Total||r.Discount>r.Subtotal||r.Total!=r.Subtotal-r.Discount+r.Tax||
+           !new[]{"DineIn","Dine-In","Dine In","Takeaway","Take Away","Delivery"}.Contains(r.OrderType,StringComparer.OrdinalIgnoreCase)||
+           !new[]{"Cash","UPI","Card","Online","Unpaid"}.Contains(r.PaymentMethod,StringComparer.OrdinalIgnoreCase))
             return BadRequest(new {success=false,message="Invalid bill details or totals. Total must equal subtotal minus discount plus tax."});
         if(r.OrderId.HasValue)
         {
