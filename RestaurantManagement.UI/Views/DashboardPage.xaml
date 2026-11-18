@@ -390,7 +390,7 @@
                                             </Grid>
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <Button Text="View Invoice" Clicked="ViewInvoiceClicked" FontSize="11" Padding="10,6" BackgroundColor="#EAF4F2" TextColor="#075B63"/>
-                                                <Button Grid.Column="1" Text="Mark Paid" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MarkBillPaidCommand}" CommandParameter="{Binding .}" FontSize="11" Padding="10,6" BackgroundColor="#E8F5EC" TextColor="#17804A"/>
+                                                <Button Grid.Column="1" Text="Mark Paid" Clicked="MarkBillPaidClicked" FontSize="11" Padding="10,6" BackgroundColor="#E8F5EC" TextColor="#17804A"/>
                                             </Grid>
                                         </VerticalStackLayout>
                                     </Border>
