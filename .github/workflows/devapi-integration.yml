@@ -58,6 +58,7 @@ jobs:
           sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/02_Performance_Indexes_Views_Procedures.txt
           sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/03_Multi_Restaurant_Tenancy.txt
           sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/04_Orders_POS_Billing.txt
+          sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/06_Auth_Stored_Procedures.txt
 
       - name: Run API and test register, login, restaurant creation, selection and dashboard
         shell: bash

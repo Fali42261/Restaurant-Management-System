@@ -60,6 +60,21 @@ public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSett
     }
 
     public static SqlParameter P(string name, object? value) => new(name, value ?? DBNull.Value);
+
+    public async Task<int> ExecuteProcedureAsync(string procedureName, params SqlParameter[] parameters)
+    {
+        if (string.IsNullOrWhiteSpace(procedureName) || procedureName.Any(c => !(char.IsLetterOrDigit(c) || c == '_' || c == '.')))
+            throw new ArgumentException("Invalid stored procedure name.", nameof(procedureName));
+        await using var connection = await OpenConnectionAsync();
+        await using var command = new SqlCommand(procedureName, connection)
+        {
+            CommandType = CommandType.StoredProcedure,
+            CommandTimeout = _timeout
+        };
+        if (parameters.Length > 0) command.Parameters.AddRange(parameters);
+        return await command.ExecuteNonQueryAsync();
+    }
+
     public async Task<List<Dictionary<string, object?>>> QueryProcedureAsync(string procedureName, params SqlParameter[] parameters)
     {
         if (string.IsNullOrWhiteSpace(procedureName) || procedureName.Any(c => !(char.IsLetterOrDigit(c) || c == '_' || c == '.')))

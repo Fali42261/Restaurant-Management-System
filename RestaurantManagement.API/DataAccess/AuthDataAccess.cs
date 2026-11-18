@@ -32,3 +32,4 @@ public sealed class AuthDataAccess(SqlDataAccess sqlDataAccess)
 }
 
 public sealed record AuthOwnerRegistrationDbResult(bool Success, string ErrorCode, Guid? UserId);
+public sealed record AuthOwnerRegistrationDbResult(bool Success);

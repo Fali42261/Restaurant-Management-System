@@ -1,0 +1,85 @@
+/*
+ swapDigit Auth stored procedures. Execute after scripts 01 through 05.
+ Safe to re-run; CREATE OR ALTER only updates procedures.
+*/
+USE swapDigitDb;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_LoginUser @Identifier NVARCHAR(256)
+AS BEGIN SET NOCOUNT ON; SELECT TOP(1) UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive FROM dbo.Users WHERE (Email=@Identifier OR MobileNumber=@Identifier) AND IsDeleted=0; END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_GetUserRestaurants @UserId UNIQUEIDENTIFIER
+AS BEGIN SET NOCOUNT ON; SELECT r.RestaurantId,r.Name,ur.Role FROM dbo.UserRestaurants ur INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId WHERE ur.UserId=@UserId AND ur.IsActive=1 AND r.IsActive=1 ORDER BY r.Name; END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_CreateRefreshToken @UserId UNIQUEIDENTIFIER,@RestaurantId UNIQUEIDENTIFIER=NULL,@TokenHash CHAR(64),@ExpiresAt DATETIME2
+AS BEGIN SET NOCOUNT ON; IF NOT EXISTS(SELECT 1 FROM dbo.Users WHERE UserId=@UserId AND IsActive=1 AND IsDeleted=0) THROW 51101,'Inactive account.',1; INSERT dbo.RefreshTokens(TokenId,UserId,RestaurantId,TokenHash,ExpiresAt,CreatedAt) VALUES(NEWID(),@UserId,@RestaurantId,@TokenHash,@ExpiresAt,SYSUTCDATETIME()); END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_GetPasswordRecord @UserId UNIQUEIDENTIFIER
+AS BEGIN SET NOCOUNT ON; SELECT PasswordHash FROM dbo.Users WHERE UserId=@UserId AND IsActive=1 AND IsDeleted=0; END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_ChangePassword @UserId UNIQUEIDENTIFIER,@PasswordHash NVARCHAR(500)
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON; BEGIN TRANSACTION;
+ UPDATE dbo.Users SET PasswordHash=@PasswordHash,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@UserId AND IsActive=1 AND IsDeleted=0;
+ IF @@ROWCOUNT<>1 BEGIN ROLLBACK; SELECT 0 AS RowsAffected; RETURN; END;
+ UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() WHERE UserId=@UserId AND RevokedAt IS NULL;
+ COMMIT; SELECT 1 AS RowsAffected;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_StartPasswordReset @Email NVARCHAR(256),@CodeHash CHAR(64)
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON; DECLARE @UserId UNIQUEIDENTIFIER;
+ SELECT TOP(1) @UserId=UserId FROM dbo.Users WHERE Email=@Email AND IsActive=1 AND IsDeleted=0;
+ IF @UserId IS NULL BEGIN SELECT CAST(0 AS BIT) Found,CAST(0 AS BIT) CanSend; RETURN; END;
+ IF EXISTS(SELECT 1 FROM dbo.PasswordResetCodes WHERE UserId=@UserId AND CreatedAt>DATEADD(MINUTE,-1,SYSUTCDATETIME())) BEGIN SELECT CAST(1 AS BIT) Found,CAST(0 AS BIT) CanSend; RETURN; END;
+ BEGIN TRANSACTION; DELETE dbo.PasswordResetCodes WHERE UserId=@UserId;
+ INSERT dbo.PasswordResetCodes(UserId,CodeHash,ExpiresAt,CreatedAt,AttemptCount) VALUES(@UserId,@CodeHash,DATEADD(MINUTE,10,SYSUTCDATETIME()),SYSUTCDATETIME(),0);
+ COMMIT; SELECT CAST(1 AS BIT) Found,CAST(1 AS BIT) CanSend;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_ResetPassword @Email NVARCHAR(256),@CodeHash CHAR(64),@PasswordHash NVARCHAR(500)
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON; DECLARE @UserId UNIQUEIDENTIFIER;
+ SELECT TOP(1) @UserId=UserId FROM dbo.Users WHERE Email=@Email AND IsActive=1 AND IsDeleted=0;
+ IF @UserId IS NULL BEGIN SELECT CAST(0 AS BIT) Success; RETURN; END;
+ BEGIN TRANSACTION; DECLARE @Consumed TABLE(UserId UNIQUEIDENTIFIER);
+ DELETE dbo.PasswordResetCodes OUTPUT deleted.UserId INTO @Consumed(UserId) WHERE UserId=@UserId AND CodeHash=@CodeHash AND ExpiresAt>SYSUTCDATETIME() AND AttemptCount<5;
+ IF NOT EXISTS(SELECT 1 FROM @Consumed)
+ BEGIN UPDATE dbo.PasswordResetCodes SET AttemptCount=AttemptCount+1 WHERE UserId=@UserId AND ExpiresAt>SYSUTCDATETIME(); DELETE dbo.PasswordResetCodes WHERE UserId=@UserId AND AttemptCount>=5; COMMIT; SELECT CAST(0 AS BIT) Success; RETURN; END;
+ UPDATE dbo.Users SET PasswordHash=@PasswordHash,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@UserId AND IsActive=1 AND IsDeleted=0;
+ IF @@ROWCOUNT<>1 BEGIN ROLLBACK; SELECT CAST(0 AS BIT) Success; RETURN; END;
+ UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() WHERE UserId=@UserId AND RevokedAt IS NULL;
+ COMMIT; SELECT CAST(1 AS BIT) Success;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_RotateRefreshToken @OldTokenHash CHAR(64),@NewTokenHash CHAR(64),@ExpiresAt DATETIME2
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
+ DECLARE @Session TABLE(TokenId UNIQUEIDENTIFIER,UserId UNIQUEIDENTIFIER,RestaurantId UNIQUEIDENTIFIER);
+ BEGIN TRANSACTION;
+ UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() OUTPUT deleted.TokenId,deleted.UserId,deleted.RestaurantId INTO @Session(TokenId,UserId,RestaurantId)
+ WHERE TokenHash=@OldTokenHash AND RevokedAt IS NULL AND ExpiresAt>SYSUTCDATETIME();
+ IF NOT EXISTS(SELECT 1 FROM @Session) BEGIN ROLLBACK; SELECT CAST(0 AS BIT) Success; RETURN; END;
+ DECLARE @UserId UNIQUEIDENTIFIER,@RestaurantId UNIQUEIDENTIFIER; SELECT @UserId=UserId,@RestaurantId=RestaurantId FROM @Session;
+ DECLARE @User TABLE(FullName NVARCHAR(150),Email NVARCHAR(256),Role NVARCHAR(30));
+ INSERT @User SELECT FullName,Email,Role FROM dbo.Users WHERE UserId=@UserId AND IsDeleted=0 AND IsActive=1;
+ IF NOT EXISTS(SELECT 1 FROM @User) BEGIN ROLLBACK; SELECT CAST(0 AS BIT) Success; RETURN; END;
+ DECLARE @EffectiveRole NVARCHAR(30),@RestaurantName NVARCHAR(160); SELECT @EffectiveRole=Role FROM @User;
+ IF @RestaurantId IS NOT NULL
+ BEGIN
+  SELECT TOP(1) @EffectiveRole=ur.Role,@RestaurantName=r.Name FROM dbo.UserRestaurants ur INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId
+  WHERE ur.UserId=@UserId AND ur.RestaurantId=@RestaurantId AND ur.IsActive=1 AND r.IsActive=1;
+  IF @EffectiveRole IS NULL BEGIN ROLLBACK; SELECT CAST(0 AS BIT) Success; RETURN; END;
+ END;
+ INSERT dbo.RefreshTokens(TokenId,UserId,RestaurantId,TokenHash,ExpiresAt,CreatedAt) VALUES(NEWID(),@UserId,@RestaurantId,@NewTokenHash,@ExpiresAt,SYSUTCDATETIME());
+ COMMIT;
+ SELECT CAST(1 AS BIT) Success,@UserId UserId,@RestaurantId RestaurantId,@RestaurantName RestaurantName,@EffectiveRole Role,u.FullName,u.Email FROM @User u;
+END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_GetMe @UserId UNIQUEIDENTIFIER
+AS BEGIN SET NOCOUNT ON; SELECT UserId,FullName,Email,MobileNumber,Role,IsActive FROM dbo.Users WHERE UserId=@UserId AND IsDeleted=0; END;
+GO
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_Logout @UserId UNIQUEIDENTIFIER
+AS BEGIN SET NOCOUNT ON; UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() WHERE UserId=@UserId AND RevokedAt IS NULL; SELECT @@ROWCOUNT RevokedSessions; END;
+GO
+PRINT 'swapDigit Auth stored procedures are ready.';
+GO
