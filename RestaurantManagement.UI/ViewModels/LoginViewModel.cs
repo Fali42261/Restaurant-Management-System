@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Windows.Input;
+using RestaurantManagement.UI.Models;
 using RestaurantManagement.UI.Services;
 using RestaurantManagement.UI.Services.Interfaces;
 using RestaurantManagement.UI.Views;
