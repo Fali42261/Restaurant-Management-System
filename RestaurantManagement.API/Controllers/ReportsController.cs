@@ -4,14 +4,22 @@ using RestaurantManagement.API.Infrastructure;
 
 namespace RestaurantManagement.API.Controllers;
 
-[Authorize(Roles="Owner,Manager"), Route("api/v1/reports")]
+[Authorize(Roles="Owner,Manager,Staff"), Route("api/v1/reports")]
 public sealed class ReportsController(SqlDataAccess db) : ApiControllerBase(db)
 {
     [HttpGet("dashboard")]
     public async Task<IActionResult> Dashboard()
     {
         if(CurrentRestaurantId==Guid.Empty) return BadRequest(new {success=false,message="Select a restaurant first."});
-        var rows=await Db.QueryAsync("SELECT (SELECT COUNT(1) FROM dbo.Orders WHERE CAST(CreatedAt AS date)=CAST(SYSUTCDATETIME() AS date) AND IsDeleted=0) AS TodayOrders,(SELECT ISNULL(SUM(Total),0) FROM dbo.Bills WHERE CAST(CreatedAt AS date)=CAST(SYSUTCDATETIME() AS date)) AS TodaySales,(SELECT COUNT(1) FROM dbo.Reservations WHERE ReservationDate=CAST(SYSUTCDATETIME() AS date) AND IsDeleted=0) AS TodayReservations,(SELECT COUNT(1) FROM dbo.RestaurantTables WHERE Status='Available' AND IsDeleted=0) AS AvailableTables,(SELECT COUNT(1) FROM dbo.Orders WHERE Status NOT IN('Completed','Cancelled') AND IsDeleted=0) AS ActiveOrders");
+        var rows=await Db.QueryAsync(@"SELECT
+            (SELECT COUNT(1) FROM dbo.Orders WHERE CAST(CreatedAt AS date)=CAST(SYSUTCDATETIME() AS date) AND IsDeleted=0) AS TodayOrders,
+            (SELECT ISNULL(SUM(Total),0) FROM dbo.Bills WHERE CAST(CreatedAt AS date)=CAST(SYSUTCDATETIME() AS date)) AS TodaySales,
+            (SELECT COUNT(1) FROM dbo.Reservations WHERE ReservationDate=CAST(SYSUTCDATETIME() AS date) AND IsDeleted=0) AS TodayReservations,
+            (SELECT COUNT(1) FROM dbo.RestaurantTables WHERE Status='Available' AND IsDeleted=0) AS AvailableTables,
+            (SELECT COUNT(1) FROM dbo.Orders WHERE Status NOT IN('Completed','Cancelled') AND IsDeleted=0) AS ActiveOrders,
+            (SELECT COUNT(1) FROM dbo.RestaurantTables WHERE IsDeleted=0) AS TotalTables,
+            (SELECT COUNT(1) FROM dbo.RestaurantTables WHERE Status='Occupied' AND IsDeleted=0) AS OccupiedTables,
+            (SELECT ISNULL(SUM(GuestCount),0) FROM dbo.Reservations WHERE ReservationDate>=CAST(SYSUTCDATETIME() AS date) AND Status IN('Pending','Confirmed') AND IsDeleted=0) AS UpcomingGuests");
         return Success(rows.FirstOrDefault());
     }
 
