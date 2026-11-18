@@ -889,7 +889,8 @@ public sealed class BillRecord : BaseViewModel
     public decimal CashReceived { get; }
     public decimal Change { get; }
     public string Items { get; }
-    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) OnPropertyChanged(nameof(StatusColor)); } }
-    public string StatusColor => Status == "Paid" ? "#17804A" : "#B7791F";
+    public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(StatusColor)); OnPropertyChanged(nameof(CanMarkPaid)); } } }
+    public bool CanMarkPaid => Status.Equals("Unpaid", StringComparison.OrdinalIgnoreCase);
+    public string StatusColor => Status switch { "Paid" => "#17804A", "Cancelled" => "#B94B45", _ => "#B7791F" };
     public void SetStatus(string status) => Status = status;
 }
