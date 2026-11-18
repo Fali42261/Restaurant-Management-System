@@ -1,4 +1,5 @@
 using System.Data;
+using System.Security.Claims;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using RestaurantManagement.API.Configuration;
@@ -11,11 +12,17 @@ public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSett
     {
         var connection = factory.Create();
         await connection.OpenAsync();
-        var restaurantId = httpContextAccessor.HttpContext?.User.FindFirst("restaurant_id")?.Value;
+        var principal = httpContextAccessor.HttpContext?.User;
+        var restaurantId = principal?.FindFirst("restaurant_id")?.Value;
+        var userId = principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? principal?.FindFirst("sub")?.Value;
         await using var contextCommand = new SqlCommand("sys.sp_set_session_context", connection) { CommandType = CommandType.StoredProcedure, CommandTimeout = _timeout };
         contextCommand.Parameters.Add(new SqlParameter("@key", "RestaurantId"));
-        contextCommand.Parameters.Add(new SqlParameter("@value", Guid.TryParse(restaurantId, out var id) ? id : DBNull.Value));
+        contextCommand.Parameters.Add(new SqlParameter("@value", Guid.TryParse(restaurantId, out var restaurantGuid) ? restaurantGuid : DBNull.Value));
         await contextCommand.ExecuteNonQueryAsync();
+        await using var userContextCommand = new SqlCommand("sys.sp_set_session_context", connection) { CommandType = CommandType.StoredProcedure, CommandTimeout = _timeout };
+        userContextCommand.Parameters.Add(new SqlParameter("@key", "UserId"));
+        userContextCommand.Parameters.Add(new SqlParameter("@value", Guid.TryParse(userId, out var userGuid) ? userGuid : DBNull.Value));
+        await userContextCommand.ExecuteNonQueryAsync();
         return connection;
     }
     private readonly int _timeout = options.Value.Database.CommandTimeoutSeconds;

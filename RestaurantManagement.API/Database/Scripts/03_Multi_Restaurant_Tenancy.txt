@@ -119,58 +119,71 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Active')
  CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions(RestaurantId,IsCurrentSubscription) WHERE IsCurrentSubscription=1;
 GO
-IF OBJECT_ID(N'dbo.fn_TenantAccess',N'IF') IS NULL
- EXEC(N'CREATE FUNCTION dbo.fn_TenantAccess(@RestaurantId UNIQUEIDENTIFIER)
+IF OBJECT_ID(N'dbo.fn_TenantMembershipAccess',N'IF') IS NULL
+ EXEC(N'CREATE FUNCTION dbo.fn_TenantMembershipAccess(@RestaurantId UNIQUEIDENTIFIER)
  RETURNS TABLE WITH SCHEMABINDING
  AS
  RETURN SELECT 1 AS access_result
- WHERE @RestaurantId=TRY_CONVERT(UNIQUEIDENTIFIER,SESSION_CONTEXT(N''RestaurantId''));');
+ WHERE @RestaurantId=TRY_CONVERT(UNIQUEIDENTIFIER,SESSION_CONTEXT(N''RestaurantId''))
+ AND EXISTS
+ (
+  SELECT 1
+  FROM dbo.UserRestaurants ur
+  INNER JOIN dbo.Users u ON u.UserId=ur.UserId
+  INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId
+  WHERE ur.UserId=TRY_CONVERT(UNIQUEIDENTIFIER,SESSION_CONTEXT(N''UserId''))
+    AND ur.RestaurantId=@RestaurantId AND ur.IsActive=1
+    AND u.IsActive=1 AND u.IsDeleted=0 AND r.IsActive=1
+ );');
+GO
+IF EXISTS(SELECT 1 FROM sys.security_policies WHERE name='TenantIsolationPolicy')
+ DROP SECURITY POLICY dbo.TenantIsolationPolicy;
 GO
 IF NOT EXISTS(SELECT 1 FROM sys.security_policies WHERE name='TenantIsolationPolicy')
 BEGIN
  EXEC(N'CREATE SECURITY POLICY dbo.TenantIsolationPolicy
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Categories,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Categories AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Categories AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Products,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Products AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Products AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Floors,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Floors AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Floors AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantTables,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantTables AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantTables AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Orders,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Orders AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Orders AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.OrderItems,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.OrderItems AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.OrderItems AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.KitchenTickets,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.KitchenTickets AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.KitchenTickets AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Reservations,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Reservations AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Reservations AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Bills,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Bills AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Bills AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.InventoryItems,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.InventoryItems AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.InventoryItems AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.StockMovements,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.StockMovements AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.StockMovements AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantSettings,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantSettings AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantSettings AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Subscriptions,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Subscriptions AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Subscriptions AFTER UPDATE,
- ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.SupportTickets,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.SupportTickets AFTER INSERT,
- ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.SupportTickets AFTER UPDATE
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Categories,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Categories AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Categories AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Products,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Products AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Products AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Floors,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Floors AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Floors AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantTables,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantTables AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantTables AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Orders,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Orders AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Orders AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.OrderItems,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.OrderItems AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.OrderItems AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.KitchenTickets,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.KitchenTickets AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.KitchenTickets AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Reservations,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Reservations AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Reservations AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Bills,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Bills AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Bills AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.InventoryItems,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.InventoryItems AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.InventoryItems AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.StockMovements,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.StockMovements AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.StockMovements AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantSettings,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantSettings AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.RestaurantSettings AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Subscriptions,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Subscriptions AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.Subscriptions AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.SupportTickets,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.SupportTickets AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantMembershipAccess(RestaurantId) ON dbo.SupportTickets AFTER UPDATE
  WITH (STATE=ON);');
 END
 GO
