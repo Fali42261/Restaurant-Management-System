@@ -35,22 +35,19 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
         if (Convert.ToInt32(duplicate) > 0)
             return Conflict(new { success=false, message="Email or mobile number is already registered." });
         var id = Guid.NewGuid();
-        var restaurantId = Guid.NewGuid();
         var hash = hasher.HashPassword(id.ToString(), request.Password);
         await Db.ExecuteAsync(@"SET XACT_ABORT ON;
 BEGIN TRANSACTION;
 BEGIN TRY
  INSERT dbo.Users(UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive,CreatedAt) VALUES(@Id,@Name,@Email,@Mobile,@Hash,'Owner',1,SYSUTCDATETIME());
- INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,IsActive,CreatedAt) VALUES(@RestaurantId,@Id,N'My Restaurant',1,SYSUTCDATETIME());
- INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt) VALUES(@Id,@RestaurantId,'Owner',1,SYSUTCDATETIME());
  COMMIT TRANSACTION;
 END TRY
 BEGIN CATCH
  IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
  THROW;
 END CATCH",
-            P("@Id", id), P("@RestaurantId", restaurantId), P("@Name", request.FullName.Trim()), P("@Email", email), P("@Mobile", mobile), P("@Hash", hash));
-        return CreatedResult(new { userId = id, role = "Owner", restaurantId, restaurantName = "My Restaurant" }, "Owner account and first restaurant created.");
+            P("@Id", id), P("@Name", request.FullName.Trim()), P("@Email", email), P("@Mobile", mobile), P("@Hash", hash));
+        return CreatedResult(new { userId = id, role = "Owner" }, "Owner account created. Add your first restaurant after signing in.");
     }
 
     [AllowAnonymous, HttpPost("login")]
