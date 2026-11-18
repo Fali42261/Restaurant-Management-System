@@ -76,13 +76,15 @@
         <!-- Main content -->
         <Grid Grid.Column="1" RowDefinitions="58,52,*" RowSpacing="0">
             <Grid Grid.Row="0" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Padding="12,6"
-                  ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                  ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
                 <Label x:Name="WelcomeLabel" Text="Welcome back, Here's what's happening today."
                        FontSize="15" TextColor="#7A8580" VerticalTextAlignment="Center" />
-                <Button x:Name="NotificationButton" Grid.Column="1" Text="🔔" Clicked="ToggleNotificationPopup"
+                <Label x:Name="RestaurantSingleName" Grid.Column="1" Text="Restaurant" FontSize="13" FontAttributes="Bold" TextColor="#075B63" VerticalTextAlignment="Center" IsVisible="False" />
+                <Picker x:Name="RestaurantPicker" Grid.Column="1" Title="Select restaurant" WidthRequest="190" FontSize="13" TextColor="#075B63" VerticalOptions="Center" IsVisible="False" SelectedIndexChanged="RestaurantPickerChanged" />
+                <Button x:Name="NotificationButton" Grid.Column="2" Text="🔔" Clicked="ToggleNotificationPopup"
                         BackgroundColor="Transparent" TextColor="#53635A" FontSize="19"
                         Padding="7,0" VerticalOptions="Center" />
-                <Border x:Name="ProfilePanel" Grid.Column="2" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#F1F5F1, Dark=#26383D}" StrokeShape="RoundRectangle 11" Padding="6,4" VerticalOptions="Center">
+                <Border x:Name="ProfilePanel" Grid.Column="3" StrokeThickness="0" BackgroundColor="{AppThemeBinding Light=#F1F5F1, Dark=#26383D}" StrokeShape="RoundRectangle 11" Padding="6,4" VerticalOptions="Center">
                     <Border.GestureRecognizers><TapGestureRecognizer Tapped="ToggleUserMenu" /></Border.GestureRecognizers>
                     <HorizontalStackLayout Spacing="7" VerticalOptions="Center">
                         <Border BackgroundColor="#DDEBD6" StrokeThickness="0" StrokeShape="RoundRectangle 16" WidthRequest="32" HeightRequest="32">
