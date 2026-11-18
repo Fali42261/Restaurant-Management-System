@@ -148,17 +148,19 @@ BEGIN
 END;
 GO
 CREATE OR ALTER PROCEDURE dbo.usp_Staff_ListPaged
- @PageNumber int=1,@PageSize int=26,@Search nvarchar(160)=NULL
+ @PageNumber int=1,@PageSize int=26,@Search nvarchar(160)=NULL,@RestaurantId uniqueidentifier
 AS
 BEGIN
  SET NOCOUNT ON;
  SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
  SET @PageSize=CASE WHEN @PageSize<1 THEN 26 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
- SELECT UserId,FullName,Email,MobileNumber,Role,IsActive,CreatedAt
- FROM dbo.Users
- WHERE Role IN('Manager','Staff') AND IsDeleted=0
-   AND (@Search IS NULL OR FullName LIKE @Search+N'%' OR Email LIKE @Search+N'%')
- ORDER BY FullName,UserId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+ SELECT u.UserId,u.FullName,u.Email,u.MobileNumber,ur.Role,u.IsActive,u.CreatedAt
+ FROM dbo.Users u
+ INNER JOIN dbo.UserRestaurants ur ON ur.UserId=u.UserId
+ WHERE ur.RestaurantId=@RestaurantId AND ur.IsActive=1
+   AND ur.Role IN('Manager','Staff') AND u.IsDeleted=0
+   AND (@Search IS NULL OR u.FullName LIKE @Search+N'%' OR u.Email LIKE @Search+N'%')
+ ORDER BY u.FullName,u.UserId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
 END;
 GO
 CREATE OR ALTER PROCEDURE dbo.usp_SupportTickets_ListPaged

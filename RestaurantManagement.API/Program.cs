@@ -60,7 +60,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateIssuer = true, ValidIssuer = appSettings.Jwt.Issuer,
         ValidateAudience = true, ValidAudience = appSettings.Jwt.Audience,
         ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appSettings.Jwt.SigningKey)),
-        ValidateLifetime = true, ClockSkew = TimeSpan.FromSeconds(30)
+        ValidateLifetime = true, ClockSkew = TimeSpan.Zero
     };
 });
 builder.Services.AddAuthorization();

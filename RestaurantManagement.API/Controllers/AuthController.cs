@@ -23,15 +23,23 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     [HttpPost("register-owner")]
     public async Task<IActionResult> RegisterOwner(OwnerRegistration request)
     {
-        if (string.IsNullOrWhiteSpace(request.FullName) || !request.Email.Contains('@') || request.MobileNumber.Length < 10 || request.Password.Length < _settings.Business.PasswordMinimumLength)
-            return BadRequest(new { success = false, message = "Enter valid owner details and a strong password." });
-        var ownerExists = Convert.ToInt32(await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Users WHERE Role='Owner' AND IsDeleted=0")) > 0;
-        if (ownerExists) return Conflict(new { success = false, message = "An owner account already exists. Ask the owner to create staff accounts." });
+        if (string.IsNullOrWhiteSpace(request.FullName) || request.FullName.Trim().Length > 150 ||
+            !System.Net.Mail.MailAddress.TryCreate(request.Email, out _) ||
+            string.IsNullOrWhiteSpace(request.MobileNumber) || request.MobileNumber.Trim().Length < 10 ||
+            !IsStrongPassword(request.Password))
+            return BadRequest(new { success = false, message = "Enter a valid name, email, mobile number and a strong password (8+ characters with upper/lowercase, number and symbol)." });
+        var email = request.Email.Trim().ToLowerInvariant();
+        var mobile = request.MobileNumber.Trim();
+        var duplicate = await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Users WHERE IsDeleted=0 AND (Email=@Email OR MobileNumber=@Mobile)",
+            P("@Email", email), P("@Mobile", mobile));
+        if (Convert.ToInt32(duplicate) > 0)
+            return Conflict(new { success=false, message="Email or mobile number is already registered." });
         var id = Guid.NewGuid();
+        var restaurantId = Guid.NewGuid();
         var hash = hasher.HashPassword(id.ToString(), request.Password);
-        await Db.ExecuteAsync("INSERT dbo.Users(UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive,CreatedAt) VALUES(@Id,@Name,@Email,@Mobile,@Hash,'Owner',1,SYSUTCDATETIME())",
-            P("@Id", id), P("@Name", request.FullName.Trim()), P("@Email", request.Email.Trim().ToLowerInvariant()), P("@Mobile", request.MobileNumber.Trim()), P("@Hash", hash));
-        return CreatedResult(new { userId = id, role = "Owner" }, "Owner account created.");
+        await Db.ExecuteAsync("INSERT dbo.Users(UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive,CreatedAt) VALUES(@Id,@Name,@Email,@Mobile,@Hash,'Owner',1,SYSUTCDATETIME()); INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,IsActive,CreatedAt) VALUES(@RestaurantId,@Id,N'My Restaurant',1,SYSUTCDATETIME()); INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt) VALUES(@Id,@RestaurantId,'Owner',1,SYSUTCDATETIME())",
+            P("@Id", id), P("@RestaurantId", restaurantId), P("@Name", request.FullName.Trim()), P("@Email", email), P("@Mobile", mobile), P("@Hash", hash));
+        return CreatedResult(new { userId = id, role = "Owner", restaurantId, restaurantName = "My Restaurant" }, "Owner account and first restaurant created.");
     }
 
     [AllowAnonymous, HttpPost("login")]
@@ -44,6 +52,7 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
             return Unauthorized(new { success = false, message = "Invalid login details." });
         var user = rows[0];
         var userId = Guid.Parse(user["UserId"]!.ToString()!);
+        var restaurants = await Db.QueryAsync("SELECT r.RestaurantId,r.Name,ur.Role FROM dbo.UserRestaurants ur INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId WHERE ur.UserId=@UserId AND ur.IsActive=1 AND r.IsActive=1 ORDER BY r.Name", P("@UserId", userId));
         var now = DateTime.UtcNow;
         var claims = new[] { new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()), new Claim(JwtRegisteredClaimNames.Email, user["Email"]!.ToString()!), new Claim(ClaimTypes.Name, user["FullName"]!.ToString()!), new Claim(ClaimTypes.Role, user["Role"]!.ToString()!) };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Jwt.SigningKey));
@@ -52,7 +61,7 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
         var refreshHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(refresh)));
         await Db.ExecuteAsync("INSERT dbo.RefreshTokens(TokenId,UserId,TokenHash,ExpiresAt,CreatedAt) VALUES(NEWID(),@UserId,@Hash,@Expires,SYSUTCDATETIME())",
             P("@UserId", userId), P("@Hash", refreshHash), P("@Expires", now.AddDays(_settings.Jwt.RefreshTokenDays)));
-        return Success(new { accessToken = new JwtSecurityTokenHandler().WriteToken(token), refreshToken = refresh, expiresIn = _settings.Jwt.AccessTokenMinutes * 60, user = new { userId, fullName = user["FullName"], email = user["Email"], mobileNumber = user["MobileNumber"], role = user["Role"] } }, "Login successful.");
+        return Success(new { accessToken = new JwtSecurityTokenHandler().WriteToken(token), refreshToken = refresh, expiresIn = _settings.Jwt.AccessTokenMinutes * 60, user = new { userId, fullName = user["FullName"], email = user["Email"], mobileNumber = user["MobileNumber"], role = user["Role"] }, restaurants }, "Login successful.");
     }
 
     [Authorize, HttpPost("change-password")]
@@ -61,7 +70,7 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
         var rows = await Db.QueryAsync("SELECT PasswordHash FROM dbo.Users WHERE UserId=@Id AND IsDeleted=0", P("@Id", CurrentUserId));
         if (rows.Count == 0 || hasher.VerifyHashedPassword(CurrentUserId.ToString(), rows[0]["PasswordHash"]!.ToString()!, request.CurrentPassword) == PasswordVerificationResult.Failed)
             return BadRequest(new { success = false, message = "Current password is incorrect." });
-        if (request.NewPassword.Length < _settings.Business.PasswordMinimumLength) return BadRequest(new { success = false, message = "New password is too short." });
+        if (!IsStrongPassword(request.NewPassword)) return BadRequest(new { success = false, message = "Password must be 8+ characters with upper/lowercase, number and symbol." });
         var hash = hasher.HashPassword(CurrentUserId.ToString(), request.NewPassword);
         await Db.ExecuteAsync("UPDATE dbo.Users SET PasswordHash=@Hash,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@Id", P("@Hash", hash), P("@Id", CurrentUserId));
         return Success(null, "Password changed.");
@@ -87,7 +96,7 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
         var rows = await Db.QueryAsync("SELECT TOP 1 r.UserId FROM dbo.PasswordResetCodes r INNER JOIN dbo.Users u ON u.UserId=r.UserId WHERE u.Email=@Email AND r.CodeHash=@Hash AND r.ExpiresAt>SYSUTCDATETIME()", P("@Email", request.Email.Trim().ToLowerInvariant()), P("@Hash", hash));
         if (rows.Count == 0) return BadRequest(new { success = false, message = "Reset code is invalid or expired." });
         var id = Guid.Parse(rows[0]["UserId"]!.ToString()!);
-        if (request.NewPassword.Length < _settings.Business.PasswordMinimumLength) return BadRequest(new { success = false, message = "Password is too short." });
+        if (!IsStrongPassword(request.NewPassword)) return BadRequest(new { success = false, message = "Password must be 8+ characters with upper/lowercase, number and symbol." });
         await Db.ExecuteAsync("UPDATE dbo.Users SET PasswordHash=@Hash,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@Id; DELETE dbo.PasswordResetCodes WHERE UserId=@Id",
             P("@Hash", hasher.HashPassword(id.ToString(), request.NewPassword)), P("@Id", id));
         return Success(null, "Password reset successful.");
@@ -145,6 +154,12 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
         var rows = await Db.QueryAsync("SELECT UserId,FullName,Email,MobileNumber,Role,IsActive FROM dbo.Users WHERE UserId=@Id AND IsDeleted=0", P("@Id", CurrentUserId));
         return rows.Count == 0 ? NotFound() : Success(rows[0]);
     }
+
+    private bool IsStrongPassword(string? value) =>
+        !string.IsNullOrWhiteSpace(value) &&
+        value.Length >= Math.Max(8, _settings.Business.PasswordMinimumLength) &&
+        value.Any(char.IsUpper) && value.Any(char.IsLower) &&
+        value.Any(char.IsDigit) && value.Any(c => !char.IsLetterOrDigit(c));
 
     [Authorize, HttpPost("logout")]
     [HttpPost("sign-out")]
