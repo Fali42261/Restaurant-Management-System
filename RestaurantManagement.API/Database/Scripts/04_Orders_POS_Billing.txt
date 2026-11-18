@@ -109,7 +109,7 @@ BEGIN
  SET XACT_ABORT ON;
  UPDATE dbo.Bills
  SET AmountPaid=Total,Status='Paid'
- WHERE BillId=@BillId AND Status<>'Paid';
+ WHERE BillId=@BillId AND Status='Unpaid';
  SELECT @@ROWCOUNT AS Updated;
 END;
 GO
