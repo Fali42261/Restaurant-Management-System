@@ -126,11 +126,45 @@ GO
 )
 UPDATE s SET Status='Expired' FROM dbo.Subscriptions s INNER JOIN ranked r ON r.SubscriptionId=s.SubscriptionId WHERE r.rn>1;
 GO
+/* Use a physical flag: SQL Server does not allow a computed column in a filtered-index predicate. */
+IF EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Active')
+ DROP INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions;
+GO
+IF COL_LENGTH('dbo.Subscriptions','IsCurrentSubscription') IS NOT NULL
+   AND COLUMNPROPERTY(OBJECT_ID('dbo.Subscriptions'),'IsCurrentSubscription','IsComputed')=1
+ ALTER TABLE dbo.Subscriptions DROP COLUMN IsCurrentSubscription;
+GO
 IF COL_LENGTH('dbo.Subscriptions','IsCurrentSubscription') IS NULL
- ALTER TABLE dbo.Subscriptions ADD IsCurrentSubscription AS (CASE WHEN Status IN('Active','Trial') THEN CONVERT(bit,1) ELSE NULL END) PERSISTED;
+ ALTER TABLE dbo.Subscriptions ADD IsCurrentSubscription BIT NOT NULL CONSTRAINT DF_Subscriptions_IsCurrentSubscription DEFAULT(0);
+GO
+IF NOT EXISTS
+(
+ SELECT 1 FROM sys.default_constraints
+ WHERE parent_object_id=OBJECT_ID('dbo.Subscriptions')
+   AND parent_column_id=COLUMNPROPERTY(OBJECT_ID('dbo.Subscriptions'),'IsCurrentSubscription','ColumnId')
+)
+ ALTER TABLE dbo.Subscriptions ADD CONSTRAINT DF_Subscriptions_IsCurrentSubscription_2 DEFAULT(0) FOR IsCurrentSubscription;
+GO
+UPDATE dbo.Subscriptions
+SET IsCurrentSubscription=CASE WHEN Status IN('Active','Trial') THEN 1 ELSE 0 END
+WHERE IsCurrentSubscription<>CASE WHEN Status IN('Active','Trial') THEN 1 ELSE 0 END;
+GO
+CREATE OR ALTER TRIGGER dbo.trg_Subscriptions_CurrentFlag
+ON dbo.Subscriptions
+AFTER INSERT, UPDATE
+AS
+BEGIN
+ SET NOCOUNT ON;
+ IF TRIGGER_NESTLEVEL()>1 RETURN;
+ UPDATE s
+ SET IsCurrentSubscription=CASE WHEN s.Status IN('Active','Trial') THEN 1 ELSE 0 END
+ FROM dbo.Subscriptions s
+ INNER JOIN inserted i ON i.SubscriptionId=s.SubscriptionId
+ WHERE s.IsCurrentSubscription<>CASE WHEN s.Status IN('Active','Trial') THEN 1 ELSE 0 END;
+END
 GO
 IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Active')
- CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions(RestaurantId,IsCurrentSubscription) WHERE IsCurrentSubscription=1;
+ CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions(RestaurantId) WHERE IsCurrentSubscription=1;
 GO
 IF OBJECT_ID(N'dbo.fn_TenantMembershipAccess',N'IF') IS NULL
  EXEC(N'CREATE FUNCTION dbo.fn_TenantMembershipAccess(@RestaurantId UNIQUEIDENTIFIER)
