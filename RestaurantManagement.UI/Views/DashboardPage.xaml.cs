@@ -452,12 +452,12 @@ public partial class DashboardPage : ContentPage
 
     private async Task LoadProductsAsync(DashboardViewModel vm)
     {
+        _productIds.Clear();
+        vm.SelfServiceProducts.Clear();
         try
         {
             var page = await new OrdersPosApiService().GetProductsAsync();
             if (page is null) return;
-            _productIds.Clear();
-            vm.SelfServiceProducts.Clear();
             foreach (var product in page.Items.Where(x => x.IsAvailable))
             {
                 _productIds[product.Name] = product.ProductId;
@@ -474,6 +474,8 @@ public partial class DashboardPage : ContentPage
 
     private async Task LoadOrdersAsync(DashboardViewModel vm)
     {
+        _orderIds.Clear();
+        vm.Orders.Clear();
         try
         {
             var service = new OrdersPosApiService();
@@ -481,8 +483,6 @@ public partial class DashboardPage : ContentPage
             var tableRows = await service.GetTablesAsync();
             _tables.Clear();
             if (tableRows is not null) _tables.AddRange(tableRows);
-            _orderIds.Clear();
-            vm.Orders.Clear();
             foreach (var row in page?.Items ?? [])
             {
                 _orderIds[row.OrderNumber] = row.OrderId;
@@ -502,11 +502,11 @@ public partial class DashboardPage : ContentPage
 
     private async Task LoadBillsAsync(DashboardViewModel vm)
     {
+        _billIds.Clear();
+        vm.Bills.Clear();
         try
         {
             var page = await new OrdersPosApiService().GetBillsAsync();
-            _billIds.Clear();
-            vm.Bills.Clear();
             foreach (var row in page?.Items ?? [])
             {
                 _billIds[row.InvoiceNumber] = row.BillId;
