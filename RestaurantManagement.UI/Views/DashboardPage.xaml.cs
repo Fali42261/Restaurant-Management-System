@@ -15,16 +15,7 @@ public partial class DashboardPage : ContentPage
         InitializeComponent();
         var vm = new DashboardViewModel();
         BindingContext = vm;
-        vm.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(DashboardViewModel.SelectedSection))
-            {
-                UpdateTrialLock(vm);
-                UpdateNavigationSelection(vm.SelectedSection);
-                ((Border)FindByName("UserMenu")).IsVisible = false;
-                ((Border)FindByName("NotificationPopup")).IsVisible = false;
-            }
-        };
+        AttachViewModel(vm);
         Loaded += (_, _) =>
         {
             UpdateNavigationSelection(vm.SelectedSection);
@@ -37,7 +28,7 @@ public partial class DashboardPage : ContentPage
         };
         _tableTimer = Dispatcher.CreateTimer();
         _tableTimer.Interval = TimeSpan.FromSeconds(30);
-        _tableTimer.Tick += (_, _) => vm.RefreshTableTimers();
+        _tableTimer.Tick += (_, _) => { if (BindingContext is DashboardViewModel current) current.RefreshTableTimers(); };
         Unloaded += (_, _) => _tableTimer.Stop();
     }
 
@@ -106,6 +97,20 @@ public partial class DashboardPage : ContentPage
         }
     }
 
+    private void AttachViewModel(DashboardViewModel vm)
+    {
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DashboardViewModel.SelectedSection))
+            {
+                UpdateTrialLock(vm);
+                UpdateNavigationSelection(vm.SelectedSection);
+                ((Border)FindByName("UserMenu")).IsVisible = false;
+                ((Border)FindByName("NotificationPopup")).IsVisible = false;
+            }
+        };
+    }
+
     private void ConfigureRestaurantHeader()
     {
         var restaurants = RestaurantSession.Restaurants;
@@ -133,8 +138,10 @@ public partial class DashboardPage : ContentPage
             RestaurantSession.Select(selected);
             RestaurantSingleName.Text = selected.Name;
             // Reset the view model so stale values from the previous restaurant are not retained.
-            BindingContext = new DashboardViewModel();
-            UpdateNavigationSelection(((DashboardViewModel)BindingContext).SelectedSection);
+            var refreshed = new DashboardViewModel();
+            BindingContext = refreshed;
+            AttachViewModel(refreshed);
+            UpdateNavigationSelection(refreshed.SelectedSection);
         }
         catch (Exception ex)
         {
