@@ -38,8 +38,7 @@ public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSett
 
     public async Task<int> ExecuteAsync(string sql, params SqlParameter[] parameters)
     {
-        await using var connection = factory.Create();
-        await connection.OpenAsync();
+        await using var connection = await OpenConnectionAsync();
         await using var command = new SqlCommand(sql, connection) { CommandTimeout = _timeout };
         if (parameters.Length > 0) command.Parameters.AddRange(parameters);
         return await command.ExecuteNonQueryAsync();
@@ -47,8 +46,7 @@ public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSett
 
     public async Task<object?> ScalarAsync(string sql, params SqlParameter[] parameters)
     {
-        await using var connection = factory.Create();
-        await connection.OpenAsync();
+        await using var connection = await OpenConnectionAsync();
         await using var command = new SqlCommand(sql, connection) { CommandTimeout = _timeout };
         if (parameters.Length > 0) command.Parameters.AddRange(parameters);
         return await command.ExecuteScalarAsync();
@@ -60,8 +58,7 @@ public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSett
         if (string.IsNullOrWhiteSpace(procedureName) || procedureName.Any(c => !(char.IsLetterOrDigit(c) || c == '_' || c == '.')))
             throw new ArgumentException("Invalid stored procedure name.", nameof(procedureName));
 
-        await using var connection = factory.Create();
-        await connection.OpenAsync();
+        await using var connection = await OpenConnectionAsync();
         await using var command = new SqlCommand(procedureName, connection)
         {
             CommandType = CommandType.StoredProcedure,
