@@ -10,6 +10,8 @@ using RestaurantManagement.API.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]) && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
+    builder.WebHost.UseUrls("http://0.0.0.0:5080");
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection(AppSettings.SectionName));
 builder.Services.PostConfigure<AppSettings>(settings => settings.Jwt.AccessTokenMinutes = 60);
 var appSettings = builder.Configuration.GetSection(AppSettings.SectionName).Get<AppSettings>() ?? new AppSettings();
@@ -26,7 +28,8 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
     .Enrich.FromLogContext()
-    .Enrich.WithProperty("Application", "swapDigit.API")
+     .Enrich.WithProperty("Application", "swapDigit.API")
+    .WriteTo.Console()
     .WriteTo.File(
         path: Path.Combine(logDirectory, "swapDigit-.log"),
         rollingInterval: RollingInterval.Day,
