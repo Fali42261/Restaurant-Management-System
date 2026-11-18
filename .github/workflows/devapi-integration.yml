@@ -65,7 +65,7 @@ jobs:
           export App__Jwt__SigningKey="SwapDigit-CI-Only-Signing-Key-2026-Not-For-Production"
           export App__Jwt__Issuer="swapDigit"
           export App__Jwt__Audience="swapDigit.Clients"
-          dotnet run --project RestaurantManagement.API/RestaurantManagement.API.csproj --configuration Release --no-build --urls http://127.0.0.1:5080 > /tmp/swapdigit-api.log 2>&1 &
+          dotnet run --project RestaurantManagement.API/RestaurantManagement.API.csproj --configuration Release --no-build --no-launch-profile -- --urls http://127.0.0.1:5080 > /tmp/swapdigit-api.log 2>&1 &
           API_PID=$!
           trap 'kill "$API_PID" 2>/dev/null || true' EXIT
 
@@ -73,7 +73,7 @@ jobs:
             curl -fsS http://127.0.0.1:5080/health >/dev/null && break
             sleep 2
           done
-          curl -fsS http://127.0.0.1:5080/health | jq -e '.success == true' >/dev/null
+          if ! curl --max-time 10 -fsS http://127.0.0.1:5080/health | jq -e '.success == true' >/dev/null; then cat /tmp/swapdigit-api.log; exit 1; fi
 
           REGISTER=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/auth/register \
             -H 'Content-Type: application/json' \
