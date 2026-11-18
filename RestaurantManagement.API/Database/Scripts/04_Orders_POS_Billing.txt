@@ -1,0 +1,115 @@
+/*
+  swapDigit Orders + POS checkout migration
+  Execute after 01, 02 and 03 scripts.
+  Checkout is atomic: Orders, OrderItems, KitchenTickets and Bills commit together.
+*/
+USE swapDigitDb;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Pos_Checkout
+ @OrderId uniqueidentifier,
+ @OrderNumber nvarchar(40),
+ @InvoiceNumber nvarchar(40),
+ @CustomerName nvarchar(150)=NULL,
+ @OrderType nvarchar(30),
+ @TableId uniqueidentifier=NULL,
+ @Discount decimal(18,2)=0,
+ @Tax decimal(18,2)=0,
+ @PaymentMethod nvarchar(30),
+ @CashReceived decimal(18,2)=0,
+ @CreatedBy uniqueidentifier,
+ @ItemsJson nvarchar(max)
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET XACT_ABORT ON;
+
+ IF ISJSON(@ItemsJson)<>1 THROW 51001,'Order items must be valid JSON.',1;
+ IF @Discount<0 OR @Tax<0 OR @CashReceived<0 THROW 51002,'Discount, tax and cash received cannot be negative.',1;
+ IF @OrderType NOT IN('DineIn','Takeaway','Delivery') THROW 51003,'Invalid order type.',1;
+ IF @PaymentMethod NOT IN('Cash','UPI','Card','Online','Unpaid') THROW 51004,'Invalid payment method.',1;
+ IF @OrderType='DineIn' AND @TableId IS NULL THROW 51005,'A table is required for dine-in orders.',1;
+
+ DECLARE @Lines TABLE(ProductId uniqueidentifier NOT NULL,Quantity int NOT NULL,Notes nvarchar(300) NULL);
+ INSERT @Lines(ProductId,Quantity,Notes)
+ SELECT ProductId,Quantity,Notes
+ FROM OPENJSON(@ItemsJson)
+ WITH(ProductId uniqueidentifier '$.ProductId',Quantity int '$.Quantity',Notes nvarchar(300) '$.Notes');
+
+ IF NOT EXISTS(SELECT 1 FROM @Lines) OR (SELECT COUNT(1) FROM @Lines)>100
+  THROW 51006,'An order must contain 1 to 100 item lines.',1;
+ IF EXISTS(SELECT 1 FROM @Lines WHERE ProductId IS NULL OR Quantity<1 OR Quantity>1000)
+  THROW 51007,'Each item must have a valid product and quantity from 1 to 1000.',1;
+ IF EXISTS
+ (
+  SELECT 1 FROM @Lines l
+  LEFT JOIN dbo.Products p ON p.ProductId=l.ProductId AND p.IsDeleted=0 AND p.IsAvailable=1
+  WHERE p.ProductId IS NULL
+ )
+  THROW 51008,'One or more products are unavailable in this restaurant.',1;
+ IF @TableId IS NOT NULL AND NOT EXISTS
+ (
+  SELECT 1 FROM dbo.RestaurantTables WHERE TableId=@TableId AND IsDeleted=0 AND Status<>'OutOfService'
+ )
+  THROW 51009,'The selected table is unavailable in this restaurant.',1;
+
+ DECLARE @Subtotal decimal(18,2)=
+ (
+  SELECT SUM(p.Price*l.Quantity)
+  FROM @Lines l INNER JOIN dbo.Products p ON p.ProductId=l.ProductId
+ );
+ IF @Subtotal IS NULL OR @Discount>@Subtotal
+  THROW 51010,'Discount cannot exceed the order subtotal.',1;
+
+ DECLARE @Total decimal(18,2)=@Subtotal-@Discount+@Tax;
+ IF @Total<=0 THROW 51011,'The payable amount must be greater than zero.',1;
+
+ DECLARE @AmountPaid decimal(18,2)=
+  CASE WHEN @PaymentMethod='Cash' THEN CASE WHEN @CashReceived>@Total THEN @Total ELSE @CashReceived END
+       WHEN @PaymentMethod IN('UPI','Card','Online') THEN @Total ELSE 0 END;
+ DECLARE @BillStatus nvarchar(30)=CASE WHEN @AmountPaid>=@Total THEN 'Paid' ELSE 'Unpaid' END;
+ DECLARE @Guest nvarchar(150)=COALESCE(NULLIF(LTRIM(RTRIM(@CustomerName)),''),N'Walk-in Guest');
+
+ BEGIN TRANSACTION;
+ BEGIN TRY
+  INSERT dbo.Orders(OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,
+                    PaymentMethod,CashReceived,Status,CreatedBy,CreatedAt,IsDeleted)
+  VALUES(@OrderId,@OrderNumber,@Guest,@OrderType,@TableId,@Subtotal,@Discount,@Tax,@Total,
+         @PaymentMethod,@CashReceived,'Placed',@CreatedBy,SYSUTCDATETIME(),0);
+
+  INSERT dbo.OrderItems(OrderItemId,OrderId,ProductId,Quantity,UnitPrice,Notes)
+  SELECT NEWID(),@OrderId,l.ProductId,l.Quantity,p.Price,l.Notes
+  FROM @Lines l INNER JOIN dbo.Products p ON p.ProductId=l.ProductId;
+
+  INSERT dbo.KitchenTickets(TicketId,OrderId,Status,CreatedAt)
+  VALUES(NEWID(),@OrderId,'New',SYSUTCDATETIME());
+
+  INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,
+                   PaymentMethod,AmountPaid,Status,CreatedAt)
+  VALUES(NEWID(),@InvoiceNumber,@OrderId,@Guest,@OrderType,@Subtotal,@Discount,@Tax,@Total,
+         @PaymentMethod,@AmountPaid,@BillStatus,SYSUTCDATETIME());
+
+  COMMIT TRANSACTION;
+  SELECT @OrderId AS OrderId,@OrderNumber AS OrderNumber,@InvoiceNumber AS InvoiceNumber,
+         @Subtotal AS Subtotal,@Discount AS Discount,@Tax AS Tax,@Total AS Total,
+         @AmountPaid AS AmountPaid,@BillStatus AS Status;
+ END TRY
+ BEGIN CATCH
+  IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+  THROW;
+ END CATCH
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Bill_MarkPaid
+ @BillId uniqueidentifier
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SET XACT_ABORT ON;
+ UPDATE dbo.Bills
+ SET AmountPaid=Total,Status='Paid'
+ WHERE BillId=@BillId AND Status<>'Paid';
+ SELECT @@ROWCOUNT AS Updated;
+END;
+GO
