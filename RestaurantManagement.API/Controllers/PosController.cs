@@ -9,6 +9,19 @@ namespace RestaurantManagement.API.Controllers;
 [Authorize, Route("api/v1/pos")]
 public sealed class PosController(SqlDataAccess db) : ApiControllerBase(db)
 {
+    private static string? Normalize(string? value, string[] allowed)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var match = allowed.FirstOrDefault(x => x.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (match is not null) return match;
+        return value.Trim().Replace(" ", "").Replace("-", "") switch
+        {
+            "Dinein" => "DineIn",
+            "Takeaway" => "Takeaway",
+            _ => null
+        };
+    }
+
     [HttpPost("checkout")]
     public async Task<IActionResult> Checkout(PosCheckoutRequest request)
     {
@@ -53,15 +66,3 @@ public sealed record PosCheckoutRequest(
 
 public sealed record PosCheckoutItemRequest(Guid ProductId, int Quantity, string? Notes);
 
-static string? Normalize(string? value, string[] allowed)
-{
-    if (string.IsNullOrWhiteSpace(value)) return null;
-    var match = allowed.FirstOrDefault(x => x.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
-    if (match is not null) return match;
-    return value.Trim().Replace(" ", "").Replace("-", "") switch
-    {
-        "Dinein" => "DineIn",
-        "Takeaway" => "Takeaway",
-        _ => null
-    };
-}
