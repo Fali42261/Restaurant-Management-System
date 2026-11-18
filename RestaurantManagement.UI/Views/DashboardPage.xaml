@@ -283,7 +283,7 @@
                                                 <Label Grid.Column="1" Text="{Binding AgeText}" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                                             </Grid>
                                             <Label Text="{Binding Items}" FontSize="13" TextColor="{AppThemeBinding Light=#536159, Dark=#B9C5BF}" />
-                                            <Button Text="{Binding ActionText}" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AdvanceKotCommand}" CommandParameter="{Binding .}" BackgroundColor="#075B63" TextColor="White" FontSize="12" />
+                                            <Button Text="{Binding ActionText}" IsEnabled="{Binding CanAdvance}" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.AdvanceKotCommand}" CommandParameter="{Binding .}" BackgroundColor="#075B63" TextColor="White" FontSize="12" />
                                         </VerticalStackLayout>
                                     </Border>
                                 </DataTemplate>
