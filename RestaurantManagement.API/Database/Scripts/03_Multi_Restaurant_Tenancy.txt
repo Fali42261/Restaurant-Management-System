@@ -180,3 +180,8 @@ IF COL_LENGTH('dbo.Subscriptions','BillingCycle') IS NULL ALTER TABLE dbo.Subscr
 IF COL_LENGTH('dbo.Subscriptions','Amount') IS NULL ALTER TABLE dbo.Subscriptions ADD Amount DECIMAL(18,2) NULL;
 IF COL_LENGTH('dbo.Subscriptions','PaymentReference') IS NULL ALTER TABLE dbo.Subscriptions ADD PaymentReference NVARCHAR(120) NULL;
 GO
+
+/* Password reset OTP abuse protection. */
+IF COL_LENGTH('dbo.PasswordResetCodes','AttemptCount') IS NULL
+ ALTER TABLE dbo.PasswordResetCodes ADD AttemptCount INT NOT NULL CONSTRAINT DF_PasswordResetCodes_AttemptCount DEFAULT(0);
+GO

@@ -72,17 +72,22 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
             return BadRequest(new { success = false, message = "Current password is incorrect." });
         if (!IsStrongPassword(request.NewPassword)) return BadRequest(new { success = false, message = "Password must be 8+ characters with upper/lowercase, number and symbol." });
         var hash = hasher.HashPassword(CurrentUserId.ToString(), request.NewPassword);
-        await Db.ExecuteAsync("UPDATE dbo.Users SET PasswordHash=@Hash,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@Id", P("@Hash", hash), P("@Id", CurrentUserId));
+        await Db.ExecuteAsync("UPDATE dbo.Users SET PasswordHash=@Hash,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@Id; UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() WHERE UserId=@Id AND RevokedAt IS NULL", P("@Hash", hash), P("@Id", CurrentUserId));
         return Success(null, "Password changed.");
     }
 
     [AllowAnonymous, HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
     {
-        var rows = await Db.QueryAsync("SELECT UserId FROM dbo.Users WHERE Email=@Email AND IsActive=1 AND IsDeleted=0", P("@Email", request.Email.Trim().ToLowerInvariant()));
+        var emailAddress=request.Email?.Trim().ToLowerInvariant();
+        if(string.IsNullOrWhiteSpace(emailAddress)||!System.Net.Mail.MailAddress.TryCreate(emailAddress,out _))
+            return Success(null,"If the account exists, a reset code will be sent.");
+        var rows = await Db.QueryAsync("SELECT UserId FROM dbo.Users WHERE Email=@Email AND IsActive=1 AND IsDeleted=0", P("@Email", emailAddress));
         if (rows.Count == 0) return Success(null, "If the account exists, a reset code will be sent.");
         var userId = rows[0]["UserId"]!;
-        var code = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+        var recent=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.PasswordResetCodes WHERE UserId=@Id AND CreatedAt>DATEADD(MINUTE,-1,SYSUTCDATETIME())",P("@Id",userId));
+        if(Convert.ToInt32(recent)>0) return Success(null,"If the account exists, a reset code will be sent.");
+        var code = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(code)));
         await Db.ExecuteAsync("DELETE dbo.PasswordResetCodes WHERE UserId=@Id; INSERT dbo.PasswordResetCodes(UserId,CodeHash,ExpiresAt,CreatedAt) VALUES(@Id,@Hash,DATEADD(MINUTE,10,SYSUTCDATETIME()),SYSUTCDATETIME())", P("@Id", userId), P("@Hash", hash));
         await email.SendAsync(request.Email, "swapDigit password reset", $"Your password reset code is {code}. It expires in 10 minutes.");
@@ -92,14 +97,44 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     [AllowAnonymous, HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
     {
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(request.Code)));
-        var rows = await Db.QueryAsync("SELECT TOP 1 r.UserId FROM dbo.PasswordResetCodes r INNER JOIN dbo.Users u ON u.UserId=r.UserId WHERE u.Email=@Email AND r.CodeHash=@Hash AND r.ExpiresAt>SYSUTCDATETIME()", P("@Email", request.Email.Trim().ToLowerInvariant()), P("@Hash", hash));
-        if (rows.Count == 0) return BadRequest(new { success = false, message = "Reset code is invalid or expired." });
-        var id = Guid.Parse(rows[0]["UserId"]!.ToString()!);
-        if (!IsStrongPassword(request.NewPassword)) return BadRequest(new { success = false, message = "Password must be 8+ characters with upper/lowercase, number and symbol." });
-        await Db.ExecuteAsync("UPDATE dbo.Users SET PasswordHash=@Hash,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@Id; DELETE dbo.PasswordResetCodes WHERE UserId=@Id",
-            P("@Hash", hasher.HashPassword(id.ToString(), request.NewPassword)), P("@Id", id));
-        return Success(null, "Password reset successful.");
+        var emailAddress=request.Email?.Trim().ToLowerInvariant();
+        if(string.IsNullOrWhiteSpace(emailAddress)||!System.Net.Mail.MailAddress.TryCreate(emailAddress,out _)||string.IsNullOrWhiteSpace(request.Code)||!IsStrongPassword(request.NewPassword))
+            return BadRequest(new {success=false,message="Reset code is invalid or expired, or the new password does not meet policy."});
+        var users=await Db.QueryAsync("SELECT TOP(1) UserId FROM dbo.Users WHERE Email=@Email AND IsActive=1 AND IsDeleted=0",P("@Email",emailAddress));
+        if(users.Count==0) return BadRequest(new {success=false,message="Reset code is invalid or expired."});
+        var id=Guid.Parse(users[0]["UserId"]!.ToString()!);
+        var codeHash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(request.Code.Trim())));
+        var passwordHash=hasher.HashPassword(id.ToString(),request.NewPassword);
+        var result=await Db.QueryAsync(@"
+SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+DECLARE @Consumed TABLE(UserId UNIQUEIDENTIFIER);
+DELETE dbo.PasswordResetCodes
+ OUTPUT deleted.UserId INTO @Consumed(UserId)
+ WHERE UserId=@Id AND CodeHash=@CodeHash AND ExpiresAt>SYSUTCDATETIME() AND AttemptCount<5;
+IF NOT EXISTS(SELECT 1 FROM @Consumed)
+BEGIN
+ ROLLBACK TRANSACTION;
+ SELECT CAST(0 AS bit) AS Success;
+ RETURN;
+END;
+UPDATE dbo.Users SET PasswordHash=@PasswordHash,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@Id AND IsActive=1 AND IsDeleted=0;
+IF @@ROWCOUNT<>1
+BEGIN
+ ROLLBACK TRANSACTION;
+ SELECT CAST(0 AS bit) AS Success;
+ RETURN;
+END;
+UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() WHERE UserId=@Id AND RevokedAt IS NULL;
+COMMIT TRANSACTION;
+SELECT CAST(1 AS bit) AS Success;",
+            P("@Id",id),P("@CodeHash",codeHash),P("@PasswordHash",passwordHash));
+        if(result.Count==0||!(bool)result[0]["Success"]!)
+        {
+            await Db.ExecuteAsync("UPDATE dbo.PasswordResetCodes SET AttemptCount=AttemptCount+1 WHERE UserId=@Id AND ExpiresAt>SYSUTCDATETIME(); DELETE dbo.PasswordResetCodes WHERE UserId=@Id AND AttemptCount>=5",P("@Id",id));
+            return BadRequest(new {success=false,message="Reset code is invalid or expired."});
+        }
+        return Success(null,"Password reset successful. Please sign in again.");
     }
 
     [AllowAnonymous, HttpPost("refresh")]
