@@ -38,6 +38,9 @@ public sealed class OrdersPosApiService
     public Task<CheckoutResult?> CheckoutAsync(PosCheckoutRequest request, CancellationToken ct = default) =>
         SendAsync<CheckoutResult>(HttpMethod.Post, "api/v1/pos/checkout", request, ct);
 
+    public Task<object?> CreateBillAsync(CreateBillApiRequest request, CancellationToken ct = default) =>
+        SendAsync<object>(HttpMethod.Post, "api/v1/bills", request, ct);
+
     public Task ReplaceOrderItemsAsync(Guid orderId, List<ReplaceOrderItem> items, CancellationToken ct = default) =>
         SendAsync<object>(HttpMethod.Put, $"api/v1/orders/{orderId}/items", new { Items = items }, ct);
 
@@ -120,6 +123,8 @@ public sealed class OrderDto
     public Guid? TableId { get; set; }
     public decimal Total { get; set; }
     public string Status { get; set; } = "";
+    public string ItemSummary { get; set; } = "";
+    public int Quantity { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 
@@ -174,3 +179,5 @@ public sealed class CheckoutResult
 }
 
 public sealed record ReplaceOrderItem(Guid ProductId, int Quantity, string? Notes = null);
+
+public sealed record CreateBillApiRequest(Guid? OrderId, string CustomerName, string OrderType, decimal Subtotal, decimal Discount, decimal Tax, decimal Total, string PaymentMethod, decimal AmountPaid);
