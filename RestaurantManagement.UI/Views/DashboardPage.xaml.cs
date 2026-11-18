@@ -512,7 +512,7 @@ public partial class DashboardPage : ContentPage
                 _billIds[row.InvoiceNumber] = row.BillId;
                 vm.Bills.Add(new BillRecord(row.InvoiceNumber, row.CustomerName, row.OrderType,
                     row.Total, row.Status, row.CreatedAt, row.PaymentMethod, row.Subtotal,
-                    row.Discount, row.Tax, row.AmountPaid, Math.Max(0m, row.AmountPaid - row.Total)));
+                    row.Discount, row.Tax, row.AmountPaid, Math.Max(0m, row.AmountPaid - row.Total), row.ItemSummary));
             }
         }
         catch (Exception ex)
