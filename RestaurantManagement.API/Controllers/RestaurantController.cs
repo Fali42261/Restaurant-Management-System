@@ -70,22 +70,61 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
         var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
         return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
     }
-    [HttpPost("orders")] public async Task<IActionResult> CreateOrder(CreateOrderRequest r)
+    [HttpPost("orders")]
+    public async Task<IActionResult> CreateOrder(CreateOrderRequest r)
     {
-        if(r.Items.Count==0) return BadRequest(new {success=false,message="Add at least one item."});
-        var id=Guid.NewGuid(); var number="ORD-"+DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-        var subtotal=r.Items.Sum(x=>x.Quantity*x.UnitPrice); var total=subtotal-r.Discount+r.Tax;
-        await Db.ExecuteAsync("INSERT dbo.Orders(OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,PaymentMethod,CashReceived,Status,CreatedBy,CreatedAt,IsDeleted) VALUES(@Id,@No,@Customer,@Type,@Table,@Sub,@Discount,@Tax,@Total,@Payment,@Cash,'Placed',@User,SYSUTCDATETIME(),0)",
-            P("@Id",id),P("@No",number),P("@Customer",r.CustomerName),P("@Type",r.OrderType),P("@Table",r.TableId),P("@Sub",subtotal),P("@Discount",r.Discount),P("@Tax",r.Tax),P("@Total",total),P("@Payment",r.PaymentMethod),P("@Cash",r.CashReceived),P("@User",CurrentUserId));
-        foreach(var item in r.Items) await Db.ExecuteAsync("INSERT dbo.OrderItems(OrderItemId,OrderId,ProductId,Quantity,UnitPrice,Notes) VALUES(NEWID(),@Order,@Product,@Qty,@Price,@Notes)",P("@Order",id),P("@Product",item.ProductId),P("@Qty",item.Quantity),P("@Price",item.UnitPrice),P("@Notes",item.Notes));
-        await Db.ExecuteAsync("INSERT dbo.KitchenTickets(TicketId,OrderId,Status,CreatedAt) VALUES(NEWID(),@Order,'New',SYSUTCDATETIME())",P("@Order",id));
-        var invoice = "INV-" + DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
-        var paid = r.PaymentMethod.Equals("Cash",StringComparison.OrdinalIgnoreCase) ? Math.Min(r.CashReceived,total) :
-                   r.PaymentMethod.Equals("UPI",StringComparison.OrdinalIgnoreCase) || r.PaymentMethod.Equals("Card",StringComparison.OrdinalIgnoreCase) ? total : 0m;
-        await Db.ExecuteAsync("INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt) VALUES(NEWID(),@Invoice,@Order,@Customer,@Type,@Sub,@Discount,@Tax,@Total,@Method,@Paid,@Status,SYSUTCDATETIME())",
-            P("@Invoice",invoice),P("@Order",id),P("@Customer",r.CustomerName ?? "Walk-in Guest"),P("@Type",r.OrderType),P("@Sub",subtotal),P("@Discount",r.Discount),P("@Tax",r.Tax),P("@Total",total),P("@Method",r.PaymentMethod),P("@Paid",paid),P("@Status",paid>=total?"Paid":"Unpaid"));
-        return CreatedResult(new { orderId=id,orderNumber=number,invoiceNumber=invoice,total });
+        if(r.Items is null||r.Items.Count==0||r.Items.Count>100||r.Items.Any(x=>x.Quantity<1||x.Quantity>1000))
+            return BadRequest(new {success=false,message="An order must contain 1 to 100 lines, each with quantity from 1 to 1000."});
+        if(string.IsNullOrWhiteSpace(r.OrderType)||!new[]{"DineIn","Dine-In","Takeaway","Take Away","Delivery"}.Contains(r.OrderType,StringComparer.OrdinalIgnoreCase))
+            return BadRequest(new {success=false,message="Invalid order type."});
+        if(string.IsNullOrWhiteSpace(r.PaymentMethod)||!new[]{"Cash","UPI","Card","Online","Unpaid"}.Contains(r.PaymentMethod,StringComparer.OrdinalIgnoreCase))
+            return BadRequest(new {success=false,message="Invalid payment method."});
+        if(r.Discount<0||r.Tax<0||r.CashReceived<0)
+            return BadRequest(new {success=false,message="Discount, tax and cash received cannot be negative."});
+        if(r.TableId.HasValue)
+        {
+            var table=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.RestaurantTables WHERE TableId=@Id AND IsDeleted=0",P("@Id",r.TableId.Value));
+            if(Convert.ToInt32(table)==0) return BadRequest(new {success=false,message="Selected table does not belong to this restaurant or is inactive."});
+        }
+        var ids=r.Items.Select(x=>x.ProductId).Distinct().ToArray();
+        var parameters=ids.Select((id,index)=>P("@Product"+index,id)).ToArray();
+        var sql="SELECT ProductId,Price FROM dbo.Products WHERE IsDeleted=0 AND IsAvailable=1 AND ProductId IN ("+string.Join(",",ids.Select((_,index)=>"@Product"+index))+")";
+        var products=await Db.QueryAsync(sql,parameters);
+        if(products.Count!=ids.Length) return BadRequest(new {success=false,message="One or more products do not exist, are unavailable, or belong to another restaurant."});
+        var prices=products.ToDictionary(x=>Guid.Parse(x["ProductId"]!.ToString()!),x=>Convert.ToDecimal(x["Price"]));
+        var subtotal=r.Items.Sum(x=>prices[x.ProductId]*x.Quantity);
+        if(r.Discount>subtotal) return BadRequest(new {success=false,message="Discount cannot exceed the order subtotal."});
+        var total=subtotal-r.Discount+r.Tax;
+        var orderId=Guid.NewGuid();
+        var number="ORD-"+orderId.ToString("N")[..16].ToUpperInvariant();
+        var invoice="INV-"+orderId.ToString("N").ToUpperInvariant();
+        var paid=r.PaymentMethod.Equals("Cash",StringComparison.OrdinalIgnoreCase)?Math.Min(r.CashReceived,total):
+            r.PaymentMethod.Equals("UPI",StringComparison.OrdinalIgnoreCase)||r.PaymentMethod.Equals("Card",StringComparison.OrdinalIgnoreCase)||r.PaymentMethod.Equals("Online",StringComparison.OrdinalIgnoreCase)?total:0m;
+        var billStatus=paid>=total?"Paid":"Unpaid";
+        var itemsJson=System.Text.Json.JsonSerializer.Serialize(r.Items.Select(x=>new {x.ProductId,x.Quantity,UnitPrice=prices[x.ProductId],x.Notes}));
+        var batch=@"
+BEGIN TRANSACTION;
+BEGIN TRY
+ INSERT dbo.Orders(OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,PaymentMethod,CashReceived,Status,CreatedBy,CreatedAt,IsDeleted)
+ VALUES(@Id,@No,@Customer,@Type,@Table,@Sub,@Discount,@Tax,@Total,@Payment,@Cash,'Placed',@User,SYSUTCDATETIME(),0);
+ INSERT dbo.OrderItems(OrderItemId,OrderId,ProductId,Quantity,UnitPrice,Notes)
+ SELECT NEWID(),@Id,j.ProductId,j.Quantity,j.UnitPrice,j.Notes
+ FROM OPENJSON(@ItemsJson) WITH(ProductId uniqueidentifier '$.ProductId',Quantity int '$.Quantity',UnitPrice decimal(18,2) '$.UnitPrice',Notes nvarchar(300) '$.Notes') j;
+ INSERT dbo.KitchenTickets(TicketId,OrderId,Status,CreatedAt) VALUES(NEWID(),@Id,'New',SYSUTCDATETIME());
+ INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt)
+ VALUES(NEWID(),@Invoice,@Id,COALESCE(@Customer,N'Walk-in Guest'),@Type,@Sub,@Discount,@Tax,@Total,@Payment,@Paid,@BillStatus,SYSUTCDATETIME());
+ COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+ THROW;
+END CATCH;";
+        await Db.ExecuteAsync(batch,P("@Id",orderId),P("@No",number),P("@Customer",r.CustomerName),P("@Type",r.OrderType),P("@Table",r.TableId),
+            P("@Sub",subtotal),P("@Discount",r.Discount),P("@Tax",r.Tax),P("@Total",total),P("@Payment",r.PaymentMethod),P("@Cash",r.CashReceived),
+            P("@User",CurrentUserId),P("@Invoice",invoice),P("@Paid",paid),P("@BillStatus",billStatus),P("@ItemsJson",itemsJson));
+        return CreatedResult(new {orderId,orderNumber=number,invoiceNumber=invoice,subtotal,discount=r.Discount,tax=r.Tax,total,amountPaid=paid,status=billStatus});
     }
+
     [HttpPut("orders/{id:guid}")] public async Task<IActionResult> UpdateOrder(Guid id, UpdateOrderRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET CustomerName=@Customer,OrderType=@Type,TableId=@Table,Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",P("@Customer",r.CustomerName),P("@Type",r.OrderType),P("@Table",r.TableId),P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Order updated."); }
     [HttpDelete("orders/{id:guid}")] public async Task<IActionResult> DeleteOrder(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET IsDeleted=1,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Order deleted."); }
     [HttpPut("orders/{id:guid}/status")] public async Task<IActionResult> OrderStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Order status updated."); }
@@ -97,8 +136,39 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
         var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
         return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
     }
-    [HttpPost("reservations")] public async Task<IActionResult> AddReservation(CreateReservationRequest r) { var id=Guid.NewGuid(); await Db.ExecuteAsync("INSERT dbo.Reservations(ReservationId,GuestName,MobileNumber,ReservationDate,ReservationTime,GuestCount,TableId,Status,Notes,CreatedAt,IsDeleted) VALUES(@Id,@Guest,@Mobile,@Date,@Time,@Count,@Table,'Pending',@Notes,SYSUTCDATETIME(),0)",P("@Id",id),P("@Guest",r.GuestName),P("@Mobile",r.MobileNumber),P("@Date",r.ReservationDate.Date),P("@Time",r.ReservationTime),P("@Count",r.GuestCount),P("@Table",r.TableId),P("@Notes",r.Notes)); return CreatedResult(new { reservationId=id }); }
-    [HttpPut("reservations/{id:guid}/status")] public async Task<IActionResult> ReservationStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Reservations SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE ReservationId=@Id AND IsDeleted=0",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Reservation updated."); }
+    [HttpPost("reservations")]
+    public async Task<IActionResult> AddReservation(CreateReservationRequest r)
+    {
+        if(string.IsNullOrWhiteSpace(r.GuestName)||r.GuestName.Trim().Length>150||string.IsNullOrWhiteSpace(r.MobileNumber)||r.MobileNumber.Trim().Length<10||r.GuestCount<1||r.GuestCount>100||r.ReservationDate.Date<DateTime.UtcNow.Date||r.ReservationDate.Date>DateTime.UtcNow.Date.AddYears(1))
+            return BadRequest(new {success=false,message="Enter valid guest details, guest count and a reservation date within the next year."});
+        if(r.TableId.HasValue)
+        {
+            var tables=await Db.QueryAsync("SELECT Seats FROM dbo.RestaurantTables WHERE TableId=@Id AND IsDeleted=0 AND Status<>'OutOfService'",P("@Id",r.TableId.Value));
+            if(tables.Count==0) return BadRequest(new {success=false,message="Selected table is not available in this restaurant."});
+            if(r.GuestCount>Convert.ToInt32(tables[0]["Seats"])) return BadRequest(new {success=false,message="Guest count exceeds the selected table capacity."});
+            var conflict=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Reservations WHERE TableId=@Table AND ReservationDate=@Date AND ReservationTime=@Time AND IsDeleted=0 AND Status IN('Pending','Confirmed')",P("@Table",r.TableId.Value),P("@Date",r.ReservationDate.Date),P("@Time",r.ReservationTime));
+            if(Convert.ToInt32(conflict)>0) return Conflict(new {success=false,message="This table already has a reservation at the selected time."});
+        }
+        var id=Guid.NewGuid();
+        await Db.ExecuteAsync("INSERT dbo.Reservations(ReservationId,GuestName,MobileNumber,ReservationDate,ReservationTime,GuestCount,TableId,Status,Notes,CreatedAt,IsDeleted) VALUES(@Id,@Guest,@Mobile,@Date,@Time,@Count,@Table,'Pending',@Notes,SYSUTCDATETIME(),0)",
+            P("@Id",id),P("@Guest",r.GuestName.Trim()),P("@Mobile",r.MobileNumber.Trim()),P("@Date",r.ReservationDate.Date),P("@Time",r.ReservationTime),P("@Count",r.GuestCount),P("@Table",r.TableId),P("@Notes",r.Notes?.Trim()));
+        return CreatedResult(new {reservationId=id});
+    }
+    [HttpPut("reservations/{id:guid}/status")]
+    public async Task<IActionResult> ReservationStatus(Guid id,UpdateStatusRequest r)
+    {
+        var allowed=new[]{"Pending","Confirmed","Cancelled","Seated","NoShow"};
+        if(!allowed.Contains(r.Status,StringComparer.OrdinalIgnoreCase)) return BadRequest(new {success=false,message="Invalid reservation status."});
+        var status=allowed.First(x=>x.Equals(r.Status,StringComparison.OrdinalIgnoreCase));
+        var n=await Db.ExecuteAsync("UPDATE dbo.Reservations SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE ReservationId=@Id AND IsDeleted=0",P("@Status",status),P("@Id",id));
+        return n==0?NotFound():Success(null,"Reservation status updated.");
+    }
+    [HttpDelete("reservations/{id:guid}"),Authorize(Roles="Owner,Manager")]
+    public async Task<IActionResult> DeleteReservation(Guid id)
+    {
+        var n=await Db.ExecuteAsync("UPDATE dbo.Reservations SET IsDeleted=1,UpdatedAt=SYSUTCDATETIME() WHERE ReservationId=@Id AND IsDeleted=0",P("@Id",id));
+        return n==0?NotFound():Success(null,"Reservation cancelled.");
+    }
 
     [HttpGet("kots")] public async Task<IActionResult> Kots([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] string? status = null)
     {
