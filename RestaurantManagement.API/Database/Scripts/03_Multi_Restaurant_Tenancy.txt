@@ -109,7 +109,11 @@ IF NOT EXISTS
 BEGIN
  DECLARE @Pk SYSNAME;
  SELECT @Pk=kc.name FROM sys.key_constraints kc WHERE kc.parent_object_id=OBJECT_ID('dbo.RestaurantSettings') AND kc.type='PK';
- IF @Pk IS NOT NULL EXEC(N'ALTER TABLE dbo.RestaurantSettings DROP CONSTRAINT '+QUOTENAME(@Pk));
+ IF @Pk IS NOT NULL
+ BEGIN
+  DECLARE @DropPkSql NVARCHAR(MAX)=N'ALTER TABLE dbo.RestaurantSettings DROP CONSTRAINT '+QUOTENAME(@Pk);
+  EXEC sys.sp_executesql @DropPkSql;
+ END;
  ALTER TABLE dbo.RestaurantSettings ADD CONSTRAINT PK_RestaurantSettings PRIMARY KEY(RestaurantId,SettingKey);
 END
 GO
