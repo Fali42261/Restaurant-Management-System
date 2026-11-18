@@ -209,3 +209,8 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.InventoryItems') AND name='UX_InventoryItems_Restaurant_Name')
  CREATE UNIQUE INDEX UX_InventoryItems_Restaurant_Name ON dbo.InventoryItems(RestaurantId,Name) WHERE IsDeleted=0;
 GO
+
+/* A staff/manager identity is assigned to one active restaurant only. Owners may own many. */
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.UserRestaurants') AND name='UX_UserRestaurants_OneStaffRestaurant')
+ CREATE UNIQUE INDEX UX_UserRestaurants_OneStaffRestaurant ON dbo.UserRestaurants(UserId) WHERE IsActive=1 AND Role IN('Manager','Staff');
+GO
