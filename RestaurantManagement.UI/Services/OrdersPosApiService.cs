@@ -38,6 +38,9 @@ public sealed class OrdersPosApiService
     public Task<CheckoutResult?> CheckoutAsync(PosCheckoutRequest request, CancellationToken ct = default) =>
         SendAsync<CheckoutResult>(HttpMethod.Post, "api/v1/pos/checkout", request, ct);
 
+    public Task ReplaceOrderItemsAsync(Guid orderId, List<ReplaceOrderItem> items, CancellationToken ct = default) =>
+        SendAsync<object>(HttpMethod.Put, $"api/v1/orders/{orderId}/items", new { Items = items }, ct);
+
     public async Task MarkBillPaidAsync(Guid billId, CancellationToken ct = default)
     {
         if (billId == Guid.Empty) throw new ArgumentException("A valid bill is required.", nameof(billId));
@@ -169,3 +172,5 @@ public sealed class CheckoutResult
     public decimal AmountPaid { get; set; }
     public string Status { get; set; } = "";
 }
+
+public sealed record ReplaceOrderItem(Guid ProductId, int Quantity, string? Notes = null);
