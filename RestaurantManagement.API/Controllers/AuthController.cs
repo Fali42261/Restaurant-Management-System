@@ -37,7 +37,18 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
         var id = Guid.NewGuid();
         var restaurantId = Guid.NewGuid();
         var hash = hasher.HashPassword(id.ToString(), request.Password);
-        await Db.ExecuteAsync("INSERT dbo.Users(UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive,CreatedAt) VALUES(@Id,@Name,@Email,@Mobile,@Hash,'Owner',1,SYSUTCDATETIME()); INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,IsActive,CreatedAt) VALUES(@RestaurantId,@Id,N'My Restaurant',1,SYSUTCDATETIME()); INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt) VALUES(@Id,@RestaurantId,'Owner',1,SYSUTCDATETIME())",
+        await Db.ExecuteAsync(@"SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+BEGIN TRY
+ INSERT dbo.Users(UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive,CreatedAt) VALUES(@Id,@Name,@Email,@Mobile,@Hash,'Owner',1,SYSUTCDATETIME());
+ INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,IsActive,CreatedAt) VALUES(@RestaurantId,@Id,N'My Restaurant',1,SYSUTCDATETIME());
+ INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt) VALUES(@Id,@RestaurantId,'Owner',1,SYSUTCDATETIME());
+ COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+ THROW;
+END CATCH",
             P("@Id", id), P("@RestaurantId", restaurantId), P("@Name", request.FullName.Trim()), P("@Email", email), P("@Mobile", mobile), P("@Hash", hash));
         return CreatedResult(new { userId = id, role = "Owner", restaurantId, restaurantName = "My Restaurant" }, "Owner account and first restaurant created.");
     }
@@ -46,6 +57,8 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     [HttpPost("sign-in")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
+        if(string.IsNullOrWhiteSpace(request.EmailOrMobile)||string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest(new {success=false,message="Email/mobile and password are required."});
         var rows = await Db.QueryAsync("SELECT TOP 1 UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive FROM dbo.Users WHERE (Email=@Identifier OR MobileNumber=@Identifier) AND IsDeleted=0",
             P("@Identifier", request.EmailOrMobile.Trim()));
         if (rows.Count == 0 || !(bool)rows[0]["IsActive"]! || hasher.VerifyHashedPassword(rows[0]["UserId"]!.ToString()!, rows[0]["PasswordHash"]!.ToString()!, request.Password) == PasswordVerificationResult.Failed)
@@ -67,6 +80,8 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     [Authorize, HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
     {
+        if(string.IsNullOrWhiteSpace(request.CurrentPassword)||!IsStrongPassword(request.NewPassword))
+            return BadRequest(new {success=false,message="Current password is required and the new password must meet the password policy."});
         var rows = await Db.QueryAsync("SELECT PasswordHash FROM dbo.Users WHERE UserId=@Id AND IsDeleted=0", P("@Id", CurrentUserId));
         if (rows.Count == 0 || hasher.VerifyHashedPassword(CurrentUserId.ToString(), rows[0]["PasswordHash"]!.ToString()!, request.CurrentPassword) == PasswordVerificationResult.Failed)
             return BadRequest(new { success = false, message = "Current password is incorrect." });
