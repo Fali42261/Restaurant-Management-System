@@ -28,8 +28,11 @@ public sealed class PosController(SqlDataAccess db) : ApiControllerBase(db)
         var rows = await Db.QueryProcedureAsync("dbo.usp_Bill_MarkPaid", P("@BillId", id));
         if (rows.Count == 0 || Convert.ToInt32(rows[0]["Updated"]) == 0)
         {
-            var exists = await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Bills WHERE BillId=@Id", P("@Id", id));
-            return Convert.ToInt32(exists) == 0 ? NotFound() : Success(null, "Bill is already paid.");
+            var bill = await Db.QueryAsync("SELECT Status FROM dbo.Bills WHERE BillId=@Id", P("@Id", id));
+            if (bill.Count == 0) return NotFound();
+            return bill[0]["Status"]?.ToString() == "Paid"
+                ? Success(null, "Bill is already paid.")
+                : Conflict(new { success = false, message = "A cancelled invoice cannot be paid." });
         }
         return Success(null, "Bill marked as paid.");
     }
