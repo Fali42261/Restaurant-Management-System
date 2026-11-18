@@ -376,7 +376,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
     DECLARE @Rows TABLE(RestaurantId UNIQUEIDENTIFIER, Name NVARCHAR(160), UserId UNIQUEIDENTIFIER,
-        FullName NVARCHAR(150), Email NVARCHAR(254), Role NVARCHAR(30));
+        FullName NVARCHAR(150), Email NVARCHAR(256), Role NVARCHAR(30));
     INSERT @Rows
     SELECT TOP(1) r.RestaurantId,r.Name,u.UserId,u.FullName,u.Email,ur.Role
     FROM dbo.UserRestaurants ur
