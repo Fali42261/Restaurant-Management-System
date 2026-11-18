@@ -6,6 +6,7 @@ ASP.NET Core Web API (.NET 10), using **ADO.NET / Microsoft.Data.SqlClient** onl
 All database object definitions are plain-text SQL under `Database/Scripts`. Run these files manually in SQL Server Management Studio (SSMS), in order:
 1. `01_Tables_And_Seed_Data.txt` — database, tables, constraints and starter data.
 2. `02_Performance_Indexes_Views_Procedures.txt` — indexes, read views and bounded-page stored procedures.
+3. `03_Multi_Restaurant_Tenancy.txt` — owner/restaurant membership, per-restaurant data keys, subscription scoping and SQL Server row-level security. Existing records are assigned to a Legacy Restaurant; review this mapping before production.
 
 The API does not auto-run SQL scripts. Configure the connection string after running the scripts.
 
@@ -33,6 +34,14 @@ dotnet restore
 dotnet run --project RestaurantManagement.API
 ```
 Swagger: `/swagger`; health: `/health`.
+
+## Multi-restaurant flow
+- Owner registration creates the Owner account and its first restaurant.
+- Login returns the Owner's/Staff member's assigned restaurant list.
+- Call `GET /api/v1/restaurants`, then `POST /api/v1/restaurants/{restaurantId}/select` to receive a one-hour access token and refresh token scoped to that restaurant.
+- Owners can create additional restaurants with `POST /api/v1/restaurants` and rename them with `PUT /api/v1/restaurants/{restaurantId}`.
+- Every restaurant has its own subscription record. Subscription requests are saved as `PendingPayment`; no payment gateway or automatic activation is implemented.
+- SQL Server row-level security uses the selected restaurant claim for business tables. Staff membership and roles are restaurant-specific.
 
 ## API conventions
 GET reads, POST creates/actions, PUT updates, DELETE archives/removes. Payment method values may be stored against orders and bills, but **Razorpay and all live payment gateway integration are intentionally deferred**.

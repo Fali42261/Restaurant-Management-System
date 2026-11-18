@@ -89,12 +89,18 @@ END
 CLOSE c; DEALLOCATE c;
 GO
 /* Settings keys must be unique per restaurant, not globally. */
-DECLARE @Pk SYSNAME;
-SELECT @Pk=kc.name FROM sys.key_constraints kc
-WHERE kc.parent_object_id=OBJECT_ID('dbo.RestaurantSettings') AND kc.type='PK';
-IF @Pk IS NOT NULL
+IF NOT EXISTS
+(
+ SELECT 1 FROM sys.key_constraints kc
+ INNER JOIN sys.index_columns ic ON ic.object_id=kc.parent_object_id AND ic.index_id=kc.unique_index_id
+ INNER JOIN sys.columns col ON col.object_id=ic.object_id AND col.column_id=ic.column_id
+ WHERE kc.parent_object_id=OBJECT_ID('dbo.RestaurantSettings') AND kc.type='PK'
+ GROUP BY kc.name HAVING COUNT(1)=2 AND SUM(CASE WHEN col.name IN('RestaurantId','SettingKey') THEN 1 ELSE 0 END)=2
+)
 BEGIN
- EXEC(N'ALTER TABLE dbo.RestaurantSettings DROP CONSTRAINT '+QUOTENAME(@Pk));
+ DECLARE @Pk SYSNAME;
+ SELECT @Pk=kc.name FROM sys.key_constraints kc WHERE kc.parent_object_id=OBJECT_ID('dbo.RestaurantSettings') AND kc.type='PK';
+ IF @Pk IS NOT NULL EXEC(N'ALTER TABLE dbo.RestaurantSettings DROP CONSTRAINT '+QUOTENAME(@Pk));
  ALTER TABLE dbo.RestaurantSettings ADD CONSTRAINT PK_RestaurantSettings PRIMARY KEY(RestaurantId,SettingKey);
 END
 GO
@@ -110,11 +116,12 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Active')
  CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions(RestaurantId) WHERE Status IN('Active','Trial');
 GO
-CREATE OR ALTER FUNCTION dbo.fn_TenantAccess(@RestaurantId UNIQUEIDENTIFIER)
-RETURNS TABLE WITH SCHEMABINDING
-AS
-RETURN SELECT 1 AS access_result
-WHERE @RestaurantId=TRY_CONVERT(UNIQUEIDENTIFIER,SESSION_CONTEXT(N'RestaurantId'));
+IF OBJECT_ID(N'dbo.fn_TenantAccess',N'IF') IS NULL
+ EXEC(N'CREATE FUNCTION dbo.fn_TenantAccess(@RestaurantId UNIQUEIDENTIFIER)
+ RETURNS TABLE WITH SCHEMABINDING
+ AS
+ RETURN SELECT 1 AS access_result
+ WHERE @RestaurantId=TRY_CONVERT(UNIQUEIDENTIFIER,SESSION_CONTEXT(N''RestaurantId''));');
 GO
 IF NOT EXISTS(SELECT 1 FROM sys.security_policies WHERE name='TenantIsolationPolicy')
 BEGIN
