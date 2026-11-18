@@ -76,10 +76,11 @@ public sealed class CreateRestaurantPage : ContentPage
         if (_save.IsEnabled == false) return;
         var name = _name.Text?.Trim() ?? "";
         var mobile = _mobile.Text?.Trim() ?? "";
+        var normalizedMobile = mobile.StartsWith("+", StringComparison.Ordinal) ? mobile[1..] : mobile;
         var address = _address.Text?.Trim() ?? "";
         var days = _days.Where(x => x.Value.IsChecked).Select(x => x.Key).ToArray();
-        if (name.Length is < 2 or > 160 || mobile.TrimStart('+').Length is < 10 or > 15 ||
-            !mobile.TrimStart('+').All(char.IsDigit) || string.IsNullOrWhiteSpace(address) || days.Length == 0 ||
+        if (name.Length is < 2 or > 160 || normalizedMobile.Length is < 10 or > 15 ||
+            !normalizedMobile.All(char.IsDigit) || address.Length is 0 or > 500 || days.Length == 0 ||
             _opening.Time == _closing.Time)
         {
             await DisplayAlert("Check details", "Enter a valid restaurant name, mobile number, address, different opening/closing times and at least one operating day.", "OK");
