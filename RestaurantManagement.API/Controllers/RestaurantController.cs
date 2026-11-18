@@ -298,11 +298,20 @@ END CATCH",P("@Id",id),P("@ItemsJson",json),P("@Subtotal",subtotal),P("@Total",t
     }
     [HttpPut("kots/{id:guid}/status")] public async Task<IActionResult> KotStatus(Guid id,UpdateStatusRequest r)
     {
-        var allowed=new[]{"New","Preparing","Ready","Served","Cancelled"};
-        if(!allowed.Contains(r.Status,StringComparer.OrdinalIgnoreCase)) return BadRequest(new {success=false,message="Invalid kitchen ticket status."});
+        var allowed=new[]{"Preparing","Ready","Served","Cancelled"};
+        if(!allowed.Contains(r.Status,StringComparer.OrdinalIgnoreCase))
+            return BadRequest(new {success=false,message="Invalid kitchen ticket status."});
+
         var status=allowed.First(x=>x.Equals(r.Status,StringComparison.OrdinalIgnoreCase));
-        var n=await Db.ExecuteAsync("UPDATE dbo.KitchenTickets SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE TicketId=@Id",P("@Status",status),P("@Id",id));
-        return n==0?NotFound():Success(null,"Kitchen ticket updated.");
+        var rows=await Db.QueryProcedureAsync("dbo.usp_KitchenTicket_UpdateStatus",P("@TicketId",id),P("@Status",status));
+        if(rows.Count==0) return NotFound();
+        var outcome=rows[0]["Outcome"]?.ToString();
+        if(outcome=="NotFound") return NotFound();
+        if(outcome=="InvalidTransition")
+            return Conflict(new {success=false,message="Kitchen ticket status transition is not allowed."});
+        if(outcome!="Updated")
+            return Conflict(new {success=false,message="Kitchen ticket was changed by another request. Refresh and try again."});
+        return Success(null,"Kitchen ticket updated.");
     }
 
     [HttpGet("bills/{id:guid}")]
