@@ -1,3 +1,5 @@
+using Microsoft.Maui.Layouts;
+using Microsoft.Maui.Controls.Shapes;
 using RestaurantManagement.UI.Models;
 using RestaurantManagement.UI.Services;
 
@@ -88,7 +90,7 @@ public sealed class CreateRestaurantPage : ContentPage
         {
             _save.IsEnabled = false;
             _save.Text = "Creating...";
-            var restaurant = await _auth.CreateRestaurantAsync(new CreateRestaurantInput(name, mobile, address, _opening.Time, _closing.Time, days));
+            var restaurant = await _auth.CreateRestaurantAsync(new CreateRestaurantInput(name, mobile, address, _opening.Time ?? TimeSpan.Zero, _closing.Time ?? TimeSpan.Zero, days));
             await _auth.SelectRestaurantAsync(restaurant);
             RestaurantSession.Set(_user, [restaurant], restaurant);
             await Shell.Current.Navigation.PopModalAsync();
