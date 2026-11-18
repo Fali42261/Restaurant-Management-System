@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using RestaurantManagement.UI.Models;
+using RestaurantManagement.UI.Services;
 
 namespace RestaurantManagement.UI.ViewModels;
 
@@ -14,6 +16,14 @@ public sealed class DashboardViewModel : BaseViewModel
     private decimal _posTaxPercent = 5m;
     private decimal _posDiscountAmount;
     private decimal _posTaxAmount;
+    private string _todayRevenueText = "Loading...";
+    private string _activeOrdersText = "—";
+    private string _todayOrdersDetailText = "Loading live data";
+    private string _occupiedTablesText = "—";
+    private string _availableTablesText = "—";
+    private string _todayReservationsText = "—";
+    private string _upcomingGuestsText = "Loading live data";
+    private string _dashboardDataStatus = "Loading live restaurant data...";
 
     private static readonly Dictionary<string, string> Descriptions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -116,6 +126,37 @@ public sealed class DashboardViewModel : BaseViewModel
         PlaceSelfServiceOrderCommand = new Command(PlaceSelfServiceOrder);
         AdvanceKotCommand = new Command<KotTicket>(AdvanceKot);
         NotifyOrderCounts();
+        _ = LoadDashboardSummaryAsync();
+    }
+
+    public string TodayRevenueText { get => _todayRevenueText; private set => SetProperty(ref _todayRevenueText, value); }
+    public string ActiveOrdersText { get => _activeOrdersText; private set => SetProperty(ref _activeOrdersText, value); }
+    public string TodayOrdersDetailText { get => _todayOrdersDetailText; private set => SetProperty(ref _todayOrdersDetailText, value); }
+    public string OccupiedTablesText { get => _occupiedTablesText; private set => SetProperty(ref _occupiedTablesText, value); }
+    public string AvailableTablesText { get => _availableTablesText; private set => SetProperty(ref _availableTablesText, value); }
+    public string TodayReservationsText { get => _todayReservationsText; private set => SetProperty(ref _todayReservationsText, value); }
+    public string UpcomingGuestsText { get => _upcomingGuestsText; private set => SetProperty(ref _upcomingGuestsText, value); }
+    public string DashboardDataStatus { get => _dashboardDataStatus; private set => SetProperty(ref _dashboardDataStatus, value); }
+
+    private async Task LoadDashboardSummaryAsync()
+    {
+        try
+        {
+            var summary = await new AuthService().GetDashboardSummaryAsync();
+            if (summary is null) throw new InvalidOperationException("The dashboard API returned no data.");
+            TodayRevenueText = $"₹{summary.TodaySales:N0}";
+            ActiveOrdersText = summary.ActiveOrders.ToString();
+            TodayOrdersDetailText = $"{summary.TodayOrders} orders today";
+            OccupiedTablesText = $"{summary.OccupiedTables}/{summary.TotalTables}";
+            AvailableTablesText = $"{summary.AvailableTables} available";
+            TodayReservationsText = summary.TodayReservations.ToString();
+            UpcomingGuestsText = $"{summary.UpcomingGuests} upcoming guests";
+            DashboardDataStatus = "Live data connected";
+        }
+        catch (Exception ex)
+        {
+            DashboardDataStatus = $"Live dashboard data unavailable: {ex.Message}";
+        }
     }
 
     public ObservableCollection<TableRecord> Tables { get; }
