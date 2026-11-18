@@ -363,3 +363,44 @@ BEGIN
     FROM dbo.Restaurants WHERE RestaurantId=@RestaurantId;
 END
 GO
+
+
+/* Stored procedures for restaurant switching and profile updates. */
+CREATE OR ALTER PROCEDURE dbo.usp_Restaurant_SelectForUser
+    @UserId UNIQUEIDENTIFIER,
+    @RestaurantId UNIQUEIDENTIFIER,
+    @TokenHash NVARCHAR(128),
+    @ExpiresAt DATETIME2
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    DECLARE @Rows TABLE(RestaurantId UNIQUEIDENTIFIER, Name NVARCHAR(160), UserId UNIQUEIDENTIFIER,
+        FullName NVARCHAR(150), Email NVARCHAR(254), Role NVARCHAR(30));
+    INSERT @Rows
+    SELECT TOP(1) r.RestaurantId,r.Name,u.UserId,u.FullName,u.Email,ur.Role
+    FROM dbo.UserRestaurants ur
+    INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId
+    INNER JOIN dbo.Users u ON u.UserId=ur.UserId
+    WHERE ur.UserId=@UserId AND ur.RestaurantId=@RestaurantId AND ur.IsActive=1
+      AND r.IsActive=1 AND u.IsActive=1 AND u.IsDeleted=0;
+    IF NOT EXISTS(SELECT 1 FROM @Rows)
+        THROW 51002, 'Restaurant is not assigned to this account or is inactive.', 1;
+    INSERT dbo.RefreshTokens(TokenId,UserId,RestaurantId,TokenHash,ExpiresAt,CreatedAt)
+    VALUES(NEWID(),@UserId,@RestaurantId,@TokenHash,@ExpiresAt,SYSUTCDATETIME());
+    SELECT * FROM @Rows;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Restaurant_Rename
+    @UserId UNIQUEIDENTIFIER,
+    @RestaurantId UNIQUEIDENTIFIER,
+    @Name NVARCHAR(160)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.Restaurants SET Name=@Name,UpdatedAt=SYSUTCDATETIME()
+    WHERE RestaurantId=@RestaurantId AND OwnerUserId=@UserId AND IsActive=1;
+    SELECT @@ROWCOUNT AS RowsAffected;
+END
+GO
