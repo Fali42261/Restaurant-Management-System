@@ -242,3 +242,60 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Pending')
  CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Pending ON dbo.Subscriptions(RestaurantId) WHERE Status='PendingPayment';
 GO
+
+/* Composite keys prevent cross-restaurant foreign-key relationships even if an API query is changed later. */
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Categories') AND name='UX_Categories_Restaurant_CategoryId')
+ CREATE UNIQUE INDEX UX_Categories_Restaurant_CategoryId ON dbo.Categories(RestaurantId,CategoryId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Floors') AND name='UX_Floors_Restaurant_FloorId')
+ CREATE UNIQUE INDEX UX_Floors_Restaurant_FloorId ON dbo.Floors(RestaurantId,FloorId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.RestaurantTables') AND name='UX_Tables_Restaurant_TableId')
+ CREATE UNIQUE INDEX UX_Tables_Restaurant_TableId ON dbo.RestaurantTables(RestaurantId,TableId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Products') AND name='UX_Products_Restaurant_ProductId')
+ CREATE UNIQUE INDEX UX_Products_Restaurant_ProductId ON dbo.Products(RestaurantId,ProductId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Orders') AND name='UX_Orders_Restaurant_OrderId')
+ CREATE UNIQUE INDEX UX_Orders_Restaurant_OrderId ON dbo.Orders(RestaurantId,OrderId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.InventoryItems') AND name='UX_Inventory_Restaurant_ItemId')
+ CREATE UNIQUE INDEX UX_Inventory_Restaurant_ItemId ON dbo.InventoryItems(RestaurantId,ItemId);
+GO
+
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Products_Restaurant_Category')
+ ALTER TABLE dbo.Products WITH CHECK ADD CONSTRAINT FK_Products_Restaurant_Category FOREIGN KEY(RestaurantId,CategoryId) REFERENCES dbo.Categories(RestaurantId,CategoryId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Tables_Restaurant_Floor')
+ ALTER TABLE dbo.RestaurantTables WITH CHECK ADD CONSTRAINT FK_Tables_Restaurant_Floor FOREIGN KEY(RestaurantId,FloorId) REFERENCES dbo.Floors(RestaurantId,FloorId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Orders_Restaurant_Table')
+ ALTER TABLE dbo.Orders WITH CHECK ADD CONSTRAINT FK_Orders_Restaurant_Table FOREIGN KEY(RestaurantId,TableId) REFERENCES dbo.RestaurantTables(RestaurantId,TableId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_OrderItems_Restaurant_Order')
+ ALTER TABLE dbo.OrderItems WITH CHECK ADD CONSTRAINT FK_OrderItems_Restaurant_Order FOREIGN KEY(RestaurantId,OrderId) REFERENCES dbo.Orders(RestaurantId,OrderId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_OrderItems_Restaurant_Product')
+ ALTER TABLE dbo.OrderItems WITH CHECK ADD CONSTRAINT FK_OrderItems_Restaurant_Product FOREIGN KEY(RestaurantId,ProductId) REFERENCES dbo.Products(RestaurantId,ProductId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_KitchenTickets_Restaurant_Order')
+ ALTER TABLE dbo.KitchenTickets WITH CHECK ADD CONSTRAINT FK_KitchenTickets_Restaurant_Order FOREIGN KEY(RestaurantId,OrderId) REFERENCES dbo.Orders(RestaurantId,OrderId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Reservations_Restaurant_Table')
+ ALTER TABLE dbo.Reservations WITH CHECK ADD CONSTRAINT FK_Reservations_Restaurant_Table FOREIGN KEY(RestaurantId,TableId) REFERENCES dbo.RestaurantTables(RestaurantId,TableId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Bills_Restaurant_Order')
+ ALTER TABLE dbo.Bills WITH CHECK ADD CONSTRAINT FK_Bills_Restaurant_Order FOREIGN KEY(RestaurantId,OrderId) REFERENCES dbo.Orders(RestaurantId,OrderId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_StockMovements_Restaurant_Item')
+ ALTER TABLE dbo.StockMovements WITH CHECK ADD CONSTRAINT FK_StockMovements_Restaurant_Item FOREIGN KEY(RestaurantId,ItemId) REFERENCES dbo.InventoryItems(RestaurantId,ItemId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_Orders_Restaurant_Creator')
+ ALTER TABLE dbo.Orders WITH CHECK ADD CONSTRAINT FK_Orders_Restaurant_Creator FOREIGN KEY(CreatedBy,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_StockMovements_Restaurant_Creator')
+ ALTER TABLE dbo.StockMovements WITH CHECK ADD CONSTRAINT FK_StockMovements_Restaurant_Creator FOREIGN KEY(CreatedBy,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_SupportTickets_Restaurant_Creator')
+ ALTER TABLE dbo.SupportTickets WITH CHECK ADD CONSTRAINT FK_SupportTickets_Restaurant_Creator FOREIGN KEY(CreatedBy,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
+GO
