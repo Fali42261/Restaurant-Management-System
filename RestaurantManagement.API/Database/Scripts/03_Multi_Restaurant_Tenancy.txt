@@ -99,6 +99,14 @@ BEGIN
 END
 GO
 /* Subscriptions are restaurant-scoped. One restaurant can have only one current active subscription. */
+/* Preserve only the newest active subscription per legacy restaurant before enforcing the rule. */
+;WITH ranked AS
+(
+ SELECT SubscriptionId,ROW_NUMBER() OVER(PARTITION BY RestaurantId ORDER BY CreatedAt DESC,SubscriptionId DESC) AS rn
+ FROM dbo.Subscriptions WHERE Status IN('Active','Trial')
+)
+UPDATE s SET Status='Expired' FROM dbo.Subscriptions s INNER JOIN ranked r ON r.SubscriptionId=s.SubscriptionId WHERE r.rn>1;
+GO
 IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Active')
  CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions(RestaurantId) WHERE Status IN('Active','Trial');
 GO

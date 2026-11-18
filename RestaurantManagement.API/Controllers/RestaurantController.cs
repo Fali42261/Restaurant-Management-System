@@ -127,7 +127,14 @@ END CATCH;";
 
     [HttpPut("orders/{id:guid}")] public async Task<IActionResult> UpdateOrder(Guid id, UpdateOrderRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET CustomerName=@Customer,OrderType=@Type,TableId=@Table,Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",P("@Customer",r.CustomerName),P("@Type",r.OrderType),P("@Table",r.TableId),P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Order updated."); }
     [HttpDelete("orders/{id:guid}")] public async Task<IActionResult> DeleteOrder(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET IsDeleted=1,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Order deleted."); }
-    [HttpPut("orders/{id:guid}/status")] public async Task<IActionResult> OrderStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Order status updated."); }
+    [HttpPut("orders/{id:guid}/status")] public async Task<IActionResult> OrderStatus(Guid id,UpdateStatusRequest r)
+    {
+        var allowed=new[]{"Placed","Preparing","Ready","Completed","Cancelled"};
+        if(!allowed.Contains(r.Status,StringComparer.OrdinalIgnoreCase)) return BadRequest(new {success=false,message="Invalid order status."});
+        var status=allowed.First(x=>x.Equals(r.Status,StringComparison.OrdinalIgnoreCase));
+        var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",P("@Status",status),P("@Id",id));
+        return n==0?NotFound():Success(null,"Order status updated.");
+    }
 
     [HttpGet("reservations")] public async Task<IActionResult> Reservations([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] DateTime? date = null, [FromQuery] string? status = null)
     {
@@ -177,7 +184,14 @@ END CATCH;";
         var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
         return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
     }
-    [HttpPut("kots/{id:guid}/status")] public async Task<IActionResult> KotStatus(Guid id, UpdateStatusRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.KitchenTickets SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE TicketId=@Id",P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Kitchen ticket updated."); }
+    [HttpPut("kots/{id:guid}/status")] public async Task<IActionResult> KotStatus(Guid id,UpdateStatusRequest r)
+    {
+        var allowed=new[]{"New","Preparing","Ready","Served","Cancelled"};
+        if(!allowed.Contains(r.Status,StringComparer.OrdinalIgnoreCase)) return BadRequest(new {success=false,message="Invalid kitchen ticket status."});
+        var status=allowed.First(x=>x.Equals(r.Status,StringComparison.OrdinalIgnoreCase));
+        var n=await Db.ExecuteAsync("UPDATE dbo.KitchenTickets SET Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE TicketId=@Id",P("@Status",status),P("@Id",id));
+        return n==0?NotFound():Success(null,"Kitchen ticket updated.");
+    }
 
     [HttpGet("bills")] public async Task<IActionResult> Bills([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
     {
@@ -186,6 +200,21 @@ END CATCH;";
         var hasMore = rows.Count > size; if (hasMore) rows.RemoveAt(size);
         return Success(new { items = rows, pageNumber = page, pageSize = size, hasMore });
     }
-    [HttpPost("bills")] public async Task<IActionResult> AddBill(CreateBillRequest r) { var id=Guid.NewGuid(); var invoice="INV-"+DateTime.UtcNow.ToString("yyyyMMddHHmmss"); await Db.ExecuteAsync("INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt) VALUES(@Id,@Invoice,@Order,@Customer,@Type,@Sub,@Discount,@Tax,@Total,@Method,@Paid,@Status,SYSUTCDATETIME())",P("@Id",id),P("@Invoice",invoice),P("@Order",r.OrderId),P("@Customer",r.CustomerName),P("@Type",r.OrderType),P("@Sub",r.Subtotal),P("@Discount",r.Discount),P("@Tax",r.Tax),P("@Total",r.Total),P("@Method",r.PaymentMethod),P("@Paid",r.AmountPaid),P("@Status",r.AmountPaid>=r.Total?"Paid":"Unpaid")); return CreatedResult(new { billId=id,invoiceNumber=invoice }); }
+    [HttpPost("bills")]
+    public async Task<IActionResult> AddBill(CreateBillRequest r)
+    {
+        if(string.IsNullOrWhiteSpace(r.CustomerName)||r.CustomerName.Trim().Length>150||r.Subtotal<0||r.Discount<0||r.Tax<0||r.Total<=0||r.AmountPaid<0||r.AmountPaid>r.Total||r.Discount>r.Subtotal||r.Total!=r.Subtotal-r.Discount+r.Tax)
+            return BadRequest(new {success=false,message="Invalid bill details or totals. Total must equal subtotal minus discount plus tax."});
+        if(r.OrderId.HasValue)
+        {
+            var order=await Db.QueryAsync("SELECT Subtotal,Discount,Tax,Total FROM dbo.Orders WHERE OrderId=@Id AND IsDeleted=0",P("@Id",r.OrderId.Value));
+            if(order.Count==0) return BadRequest(new {success=false,message="Linked order does not exist in this restaurant."});
+            if(Convert.ToDecimal(order[0]["Total"])!=r.Total) return BadRequest(new {success=false,message="Bill total must match the linked order."});
+        }
+        var id=Guid.NewGuid(); var invoice="INV-"+id.ToString("N").ToUpperInvariant();
+        await Db.ExecuteAsync("INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt) VALUES(@Id,@Invoice,@Order,@Customer,@Type,@Sub,@Discount,@Tax,@Total,@Method,@Paid,@Status,SYSUTCDATETIME())",
+            P("@Id",id),P("@Invoice",invoice),P("@Order",r.OrderId),P("@Customer",r.CustomerName.Trim()),P("@Type",r.OrderType),P("@Sub",r.Subtotal),P("@Discount",r.Discount),P("@Tax",r.Tax),P("@Total",r.Total),P("@Method",r.PaymentMethod),P("@Paid",r.AmountPaid),P("@Status",r.AmountPaid>=r.Total?"Paid":"Unpaid"));
+        return CreatedResult(new {billId=id,invoiceNumber=invoice});
+    }
     [HttpPut("bills/{id:guid}/pay")] public async Task<IActionResult> MarkBillPaid(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.Bills SET AmountPaid=Total,Status='Paid' WHERE BillId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Bill marked paid."); }
 }

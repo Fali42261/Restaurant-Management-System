@@ -86,4 +86,3 @@ public sealed class InventoryController(SqlDataAccess db) : ApiControllerBase(db
         return null;
     }
 }
-public sealed record UpdateInventoryItemRequest(string Name,string Unit,decimal ReorderLevel,decimal CostPrice,bool IsActive);
