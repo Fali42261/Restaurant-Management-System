@@ -185,3 +185,20 @@ GO
 IF COL_LENGTH('dbo.PasswordResetCodes','AttemptCount') IS NULL
  ALTER TABLE dbo.PasswordResetCodes ADD AttemptCount INT NOT NULL CONSTRAINT DF_PasswordResetCodes_AttemptCount DEFAULT(0);
 GO
+
+/* Tenant-local natural-key uniqueness. */
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Categories') AND name='UX_Categories_Restaurant_Name')
+ CREATE UNIQUE INDEX UX_Categories_Restaurant_Name ON dbo.Categories(RestaurantId,Name) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Floors') AND name='UX_Floors_Restaurant_Name')
+ CREATE UNIQUE INDEX UX_Floors_Restaurant_Name ON dbo.Floors(RestaurantId,Name) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.RestaurantTables') AND name='UX_Tables_Restaurant_Floor_Name')
+ CREATE UNIQUE INDEX UX_Tables_Restaurant_Floor_Name ON dbo.RestaurantTables(RestaurantId,FloorId,Name) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Products') AND name='UX_Products_Restaurant_Name')
+ CREATE UNIQUE INDEX UX_Products_Restaurant_Name ON dbo.Products(RestaurantId,Name) WHERE IsDeleted=0;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.InventoryItems') AND name='UX_InventoryItems_Restaurant_Name')
+ CREATE UNIQUE INDEX UX_InventoryItems_Restaurant_Name ON dbo.InventoryItems(RestaurantId,Name) WHERE IsDeleted=0;
+GO

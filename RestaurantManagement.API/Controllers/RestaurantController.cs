@@ -125,7 +125,24 @@ END CATCH;";
         return CreatedResult(new {orderId,orderNumber=number,invoiceNumber=invoice,subtotal,discount=r.Discount,tax=r.Tax,total,amountPaid=paid,status=billStatus});
     }
 
-    [HttpPut("orders/{id:guid}")] public async Task<IActionResult> UpdateOrder(Guid id, UpdateOrderRequest r) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET CustomerName=@Customer,OrderType=@Type,TableId=@Table,Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",P("@Customer",r.CustomerName),P("@Type",r.OrderType),P("@Table",r.TableId),P("@Status",r.Status),P("@Id",id)); return n==0?NotFound():Success(null,"Order updated."); }
+    [HttpPut("orders/{id:guid}")]
+    public async Task<IActionResult> UpdateOrder(Guid id,UpdateOrderRequest r)
+    {
+        var orderTypes=new[]{"DineIn","Dine-In","Takeaway","Take Away","Delivery"};
+        var statuses=new[]{"Placed","Preparing","Ready","Completed","Cancelled"};
+        if(!orderTypes.Contains(r.OrderType,StringComparer.OrdinalIgnoreCase)||!statuses.Contains(r.Status,StringComparer.OrdinalIgnoreCase))
+            return BadRequest(new {success=false,message="Invalid order type or status."});
+        if(r.CustomerName?.Length>150) return BadRequest(new {success=false,message="Customer name cannot exceed 150 characters."});
+        if(r.TableId.HasValue)
+        {
+            var table=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.RestaurantTables WHERE TableId=@Id AND IsDeleted=0",P("@Id",r.TableId.Value));
+            if(Convert.ToInt32(table)==0) return BadRequest(new {success=false,message="Selected table does not belong to this restaurant."});
+        }
+        var status=statuses.First(x=>x.Equals(r.Status,StringComparison.OrdinalIgnoreCase));
+        var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET CustomerName=@Customer,OrderType=@Type,TableId=@Table,Status=@Status,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id AND IsDeleted=0",
+            P("@Customer",r.CustomerName?.Trim()),P("@Type",r.OrderType),P("@Table",r.TableId),P("@Status",status),P("@Id",id));
+        return n==0?NotFound():Success(null,"Order updated.");
+    }
     [HttpDelete("orders/{id:guid}")] public async Task<IActionResult> DeleteOrder(Guid id) { var n=await Db.ExecuteAsync("UPDATE dbo.Orders SET IsDeleted=1,UpdatedAt=SYSUTCDATETIME() WHERE OrderId=@Id",P("@Id",id)); return n==0?NotFound():Success(null,"Order deleted."); }
     [HttpPut("orders/{id:guid}/status")] public async Task<IActionResult> OrderStatus(Guid id,UpdateStatusRequest r)
     {
@@ -209,7 +226,8 @@ END CATCH;";
         {
             var order=await Db.QueryAsync("SELECT Subtotal,Discount,Tax,Total FROM dbo.Orders WHERE OrderId=@Id AND IsDeleted=0",P("@Id",r.OrderId.Value));
             if(order.Count==0) return BadRequest(new {success=false,message="Linked order does not exist in this restaurant."});
-            if(Convert.ToDecimal(order[0]["Total"])!=r.Total) return BadRequest(new {success=false,message="Bill total must match the linked order."});
+            if(Convert.ToDecimal(order[0]["Subtotal"])!=r.Subtotal||Convert.ToDecimal(order[0]["Discount"])!=r.Discount||Convert.ToDecimal(order[0]["Tax"])!=r.Tax||Convert.ToDecimal(order[0]["Total"])!=r.Total)
+                return BadRequest(new {success=false,message="Bill amounts must match the linked order."});
         }
         var id=Guid.NewGuid(); var invoice="INV-"+id.ToString("N").ToUpperInvariant();
         await Db.ExecuteAsync("INSERT dbo.Bills(BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt) VALUES(@Id,@Invoice,@Order,@Customer,@Type,@Sub,@Discount,@Tax,@Total,@Method,@Paid,@Status,SYSUTCDATETIME())",

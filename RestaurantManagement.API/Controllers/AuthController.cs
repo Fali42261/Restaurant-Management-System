@@ -90,7 +90,7 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
         var code = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(code)));
         await Db.ExecuteAsync("DELETE dbo.PasswordResetCodes WHERE UserId=@Id; INSERT dbo.PasswordResetCodes(UserId,CodeHash,ExpiresAt,CreatedAt) VALUES(@Id,@Hash,DATEADD(MINUTE,10,SYSUTCDATETIME()),SYSUTCDATETIME())", P("@Id", userId), P("@Hash", hash));
-        await email.SendAsync(request.Email, "swapDigit password reset", $"Your password reset code is {code}. It expires in 10 minutes.");
+        await email.SendAsync(emailAddress, "swapDigit password reset", $"Your password reset code is {code}. It expires in 10 minutes.");
         return Success(null, "If the account exists, a reset code will be sent.");
     }
 
