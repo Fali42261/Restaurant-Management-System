@@ -33,6 +33,18 @@ public sealed class RestaurantsController(SqlDataAccess db, IOptions<AppSettings
         return CreatedResult(new { restaurantId=id, name=request.Name.Trim(), subscriptionStatus="NotSubscribed" }, "Restaurant created. Each restaurant requires its own subscription.");
     }
 
+
+    [HttpPut("{restaurantId:guid}")]
+    [Authorize(Roles="Owner")]
+    public async Task<IActionResult> Rename(Guid restaurantId,UpdateRestaurantRequest request)
+    {
+        if(string.IsNullOrWhiteSpace(request.Name)||request.Name.Trim().Length>160)
+            return BadRequest(new {success=false,message="Restaurant name is required and must be 160 characters or fewer."});
+        var n=await Db.ExecuteAsync("UPDATE dbo.Restaurants SET Name=@Name,UpdatedAt=SYSUTCDATETIME() WHERE RestaurantId=@Id AND OwnerUserId=@Owner AND IsActive=1",
+            P("@Name",request.Name.Trim()),P("@Id",restaurantId),P("@Owner",CurrentUserId));
+        return n==0?NotFound():Success(null,"Restaurant name updated.");
+    }
+
     [HttpPost("{restaurantId:guid}/select")]
     public async Task<IActionResult> Select(Guid restaurantId)
     {
@@ -58,3 +70,5 @@ public sealed class RestaurantsController(SqlDataAccess db, IOptions<AppSettings
     }
 }
 public sealed record CreateRestaurantRequest(string Name);
+
+public sealed record UpdateRestaurantRequest(string Name);

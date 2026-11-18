@@ -166,3 +166,9 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_RefreshTokens_Restaurants')
  ALTER TABLE dbo.RefreshTokens ADD CONSTRAINT FK_RefreshTokens_Restaurants FOREIGN KEY(RestaurantId) REFERENCES dbo.Restaurants(RestaurantId);
 GO
+
+/* Subscription request metadata; activation remains a separate payment/admin action. */
+IF COL_LENGTH('dbo.Subscriptions','BillingCycle') IS NULL ALTER TABLE dbo.Subscriptions ADD BillingCycle NVARCHAR(20) NULL;
+IF COL_LENGTH('dbo.Subscriptions','Amount') IS NULL ALTER TABLE dbo.Subscriptions ADD Amount DECIMAL(18,2) NULL;
+IF COL_LENGTH('dbo.Subscriptions','PaymentReference') IS NULL ALTER TABLE dbo.Subscriptions ADD PaymentReference NVARCHAR(120) NULL;
+GO
