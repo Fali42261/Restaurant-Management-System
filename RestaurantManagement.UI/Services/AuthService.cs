@@ -105,6 +105,26 @@ public sealed class AuthService : IAuthService
         return envelope.Data;
     }
 
+    public async Task<List<KitchenTicketApiModel>> GetKitchenTicketsAsync(CancellationToken cancellationToken = default)
+    {
+        var page = await SendAuthorizedAsync<PagedApiResult<KitchenTicketApiModel>>(
+            HttpMethod.Get, "api/v1/kots?pageNumber=1&pageSize=100", null, cancellationToken);
+        return page?.Items ?? [];
+    }
+
+    public async Task UpdateKitchenTicketStatusAsync(Guid ticketId, string status, CancellationToken cancellationToken = default)
+    {
+        if (ticketId == Guid.Empty) throw new ArgumentException("A valid kitchen ticket is required.", nameof(ticketId));
+        var allowed = new[] { "New", "Preparing", "Ready", "Served", "Cancelled" };
+        if (!allowed.Contains(status, StringComparer.OrdinalIgnoreCase))
+            throw new ArgumentException("Invalid kitchen ticket status.", nameof(status));
+
+        await SendAuthorizedAsync<object>(
+            HttpMethod.Put, $"api/v1/kots/{ticketId}/status",
+            new { Status = allowed.First(x => x.Equals(status, StringComparison.OrdinalIgnoreCase)) },
+            cancellationToken);
+    }
+
     public async Task<DashboardSummary?> GetDashboardSummaryAsync(CancellationToken cancellationToken = default)
     {
         return await SendAuthorizedAsync<DashboardSummary>(HttpMethod.Get, "api/v1/reports/dashboard", null, cancellationToken);
