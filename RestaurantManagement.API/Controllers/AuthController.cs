@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using RestaurantManagement.API.BusinessLogic;
 using RestaurantManagement.API.Infrastructure;
 using RestaurantManagement.API.Models;
@@ -7,6 +8,7 @@ using RestaurantManagement.API.Models;
 namespace RestaurantManagement.API.Controllers;
 
 [Route("api/v1/auth")]
+[EnableRateLimiting("auth")]
 public sealed class AuthController(SqlDataAccess db,AuthBusinessLogic auth):ApiControllerBase(db)
 {
  [AllowAnonymous,HttpPost("register")][HttpPost("register-owner")]
