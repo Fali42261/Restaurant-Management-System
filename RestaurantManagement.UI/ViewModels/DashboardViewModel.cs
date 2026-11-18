@@ -151,7 +151,7 @@ public sealed class DashboardViewModel : BaseViewModel
             AvailableTablesText = $"{summary.AvailableTables} available";
             TodayReservationsText = summary.TodayReservations.ToString();
             UpcomingGuestsText = $"{summary.UpcomingGuests} upcoming guests";
-            DashboardDataStatus = "Live KPI data connected";
+            DashboardDataStatus = "Live KPI data connected; charts and lists are preview data.";
         }
         catch (Exception ex)
         {
