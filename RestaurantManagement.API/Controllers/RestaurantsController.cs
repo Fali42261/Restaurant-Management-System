@@ -29,7 +29,17 @@ public sealed class RestaurantsController(SqlDataAccess db, IOptions<AppSettings
         if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Trim().Length > 160)
             return BadRequest(new { success=false, message="Restaurant name is required and must be 160 characters or fewer." });
         var id = Guid.NewGuid();
-        await Db.ExecuteAsync("INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,IsActive,CreatedAt) VALUES(@Id,@Owner,@Name,1,SYSUTCDATETIME()); INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt) VALUES(@Owner,@Id,'Owner',1,SYSUTCDATETIME())", P("@Id", id), P("@Owner", CurrentUserId), P("@Name", request.Name.Trim()));
+        await Db.ExecuteAsync(@"SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+BEGIN TRY
+ INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,IsActive,CreatedAt) VALUES(@Id,@Owner,@Name,1,SYSUTCDATETIME());
+ INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt) VALUES(@Owner,@Id,'Owner',1,SYSUTCDATETIME());
+ COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+ THROW;
+END CATCH", P("@Id", id), P("@Owner", CurrentUserId), P("@Name", request.Name.Trim()));
         return CreatedResult(new { restaurantId=id, name=request.Name.Trim(), subscriptionStatus="NotSubscribed" }, "Restaurant created. Each restaurant requires its own subscription.");
     }
 

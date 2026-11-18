@@ -33,7 +33,17 @@ public sealed class InventoryController(SqlDataAccess db) : ApiControllerBase(db
         var duplicate=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.InventoryItems WHERE Name=@Name AND IsDeleted=0",P("@Name",name));
         if(Convert.ToInt32(duplicate)>0) return Conflict(new {success=false,message="An inventory item with this name already exists."});
         var id=Guid.NewGuid();
-        await Db.ExecuteAsync("INSERT dbo.InventoryItems(ItemId,Name,Unit,CurrentStock,ReorderLevel,CostPrice,IsDeleted,IsActive) VALUES(@Id,@Name,@Unit,@Stock,@Reorder,@Cost,0,1); IF @Stock>0 INSERT dbo.StockMovements(MovementId,ItemId,MovementType,Quantity,Reference,Notes,CreatedBy,CreatedAt) VALUES(NEWID(),@Id,'IN',@Stock,N'Opening Stock',N'Initial stock',@User,SYSUTCDATETIME())",
+        await Db.ExecuteAsync(@"SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+BEGIN TRY
+ INSERT dbo.InventoryItems(ItemId,Name,Unit,CurrentStock,ReorderLevel,CostPrice,IsDeleted,IsActive) VALUES(@Id,@Name,@Unit,@Stock,@Reorder,@Cost,0,1);
+ IF @Stock>0 INSERT dbo.StockMovements(MovementId,ItemId,MovementType,Quantity,Reference,Notes,CreatedBy,CreatedAt) VALUES(NEWID(),@Id,'IN',@Stock,N'Opening Stock',N'Initial stock',@User,SYSUTCDATETIME());
+ COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+ THROW;
+END CATCH",
             P("@Id",id),P("@Name",name),P("@Unit",r.Unit.Trim()),P("@Stock",r.OpeningStock),P("@Reorder",r.ReorderLevel),P("@Cost",r.CostPrice),P("@User",CurrentUserId));
         return CreatedResult(new {itemId=id});
     }
@@ -64,7 +74,22 @@ public sealed class InventoryController(SqlDataAccess db) : ApiControllerBase(db
         if(r.Quantity<=0||r.Quantity>1000000000m||(type!="IN"&&type!="OUT")||r.Reference?.Length>100||r.Notes?.Length>500)
             return BadRequest(new {success=false,message="Movement must be IN or OUT with a positive quantity; reference and notes are limited to 100 and 500 characters."});
         var change=type=="IN"?r.Quantity:-r.Quantity;
-        var n=await Db.ExecuteAsync("UPDATE dbo.InventoryItems SET CurrentStock=CurrentStock+@Change WHERE ItemId=@Id AND IsDeleted=0 AND IsActive=1 AND CurrentStock+@Change>=0; IF @@ROWCOUNT=1 INSERT dbo.StockMovements(MovementId,ItemId,MovementType,Quantity,Reference,Notes,CreatedBy,CreatedAt) VALUES(NEWID(),@Id,@Type,@Qty,@Reference,@Notes,@User,SYSUTCDATETIME())",
+        var n=await Db.ExecuteAsync(@"SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+BEGIN TRY
+ UPDATE dbo.InventoryItems SET CurrentStock=CurrentStock+@Change WHERE ItemId=@Id AND IsDeleted=0 AND IsActive=1 AND CurrentStock+@Change>=0;
+ IF @@ROWCOUNT=0
+ BEGIN
+  ROLLBACK TRANSACTION;
+  RETURN;
+ END;
+ INSERT dbo.StockMovements(MovementId,ItemId,MovementType,Quantity,Reference,Notes,CreatedBy,CreatedAt) VALUES(NEWID(),@Id,@Type,@Qty,@Reference,@Notes,@User,SYSUTCDATETIME());
+ COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
+ THROW;
+END CATCH",
             P("@Change",change),P("@Id",r.ItemId),P("@Type",type),P("@Qty",r.Quantity),P("@Reference",r.Reference?.Trim()),P("@Notes",r.Notes?.Trim()),P("@User",CurrentUserId));
         return n==0?BadRequest(new {success=false,message="Item not found, inactive, or insufficient stock."}):Success(null,"Stock updated.");
     }

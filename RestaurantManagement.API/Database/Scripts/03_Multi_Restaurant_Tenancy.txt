@@ -214,3 +214,15 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.UserRestaurants') AND name='UX_UserRestaurants_OneStaffRestaurant')
  CREATE UNIQUE INDEX UX_UserRestaurants_OneStaffRestaurant ON dbo.UserRestaurants(UserId) WHERE IsActive=1 AND Role IN('Manager','Staff');
 GO
+
+/* One pending payment request per restaurant at a time. */
+;WITH pending AS
+(
+ SELECT SubscriptionId,ROW_NUMBER() OVER(PARTITION BY RestaurantId ORDER BY CreatedAt DESC,SubscriptionId DESC) AS rn
+ FROM dbo.Subscriptions WHERE Status='PendingPayment'
+)
+UPDATE s SET Status='Cancelled' FROM dbo.Subscriptions s INNER JOIN pending p ON p.SubscriptionId=s.SubscriptionId WHERE p.rn>1;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Pending')
+ CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Pending ON dbo.Subscriptions(RestaurantId) WHERE Status='PendingPayment';
+GO

@@ -179,14 +179,14 @@ END CATCH;";
     [HttpPost("reservations")]
     public async Task<IActionResult> AddReservation(CreateReservationRequest r)
     {
-        if(string.IsNullOrWhiteSpace(r.GuestName)||r.GuestName.Trim().Length>150||string.IsNullOrWhiteSpace(r.MobileNumber)||r.MobileNumber.Trim().Length<10||r.GuestCount<1||r.GuestCount>100||r.ReservationDate.Date<DateTime.UtcNow.Date||r.ReservationDate.Date>DateTime.UtcNow.Date.AddYears(1))
+        if(string.IsNullOrWhiteSpace(r.GuestName)||r.GuestName.Trim().Length>150||string.IsNullOrWhiteSpace(r.MobileNumber)||r.MobileNumber.Trim().Length<10||r.GuestCount<1||r.GuestCount>100||r.ReservationDate.Date>DateTime.UtcNow.Date.AddYears(1)||r.ReservationTime<TimeSpan.Zero||r.ReservationTime>=TimeSpan.FromDays(1))
             return BadRequest(new {success=false,message="Enter valid guest details, guest count and a reservation date within the next year."});
         if(r.TableId.HasValue)
         {
             var tables=await Db.QueryAsync("SELECT Seats FROM dbo.RestaurantTables WHERE TableId=@Id AND IsDeleted=0 AND Status<>'OutOfService'",P("@Id",r.TableId.Value));
             if(tables.Count==0) return BadRequest(new {success=false,message="Selected table is not available in this restaurant."});
             if(r.GuestCount>Convert.ToInt32(tables[0]["Seats"])) return BadRequest(new {success=false,message="Guest count exceeds the selected table capacity."});
-            var conflict=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Reservations WHERE TableId=@Table AND ReservationDate=@Date AND ReservationTime=@Time AND IsDeleted=0 AND Status IN('Pending','Confirmed')",P("@Table",r.TableId.Value),P("@Date",r.ReservationDate.Date),P("@Time",r.ReservationTime));
+            var conflict=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Reservations WHERE TableId=@Table AND ReservationDate=@Date AND ABS(DATEDIFF(MINUTE,CAST(ReservationTime AS datetime2),CAST(@Time AS datetime2)))<90 AND IsDeleted=0 AND Status IN('Pending','Confirmed')",P("@Table",r.TableId.Value),P("@Date",r.ReservationDate.Date),P("@Time",r.ReservationTime));
             if(Convert.ToInt32(conflict)>0) return Conflict(new {success=false,message="This table already has a reservation at the selected time."});
         }
         var id=Guid.NewGuid();
