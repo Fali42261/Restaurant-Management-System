@@ -105,6 +105,18 @@ public sealed class AuthService : IAuthService
         return envelope.Data;
     }
 
+    public async Task<List<DashboardSalesPoint>> GetDashboardSalesAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        var route = $"api/v1/reports/sales?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+        return await SendAuthorizedAsync<List<DashboardSalesPoint>>(HttpMethod.Get, route, null, cancellationToken) ?? [];
+    }
+
+    public async Task<List<DashboardTopProduct>> GetDashboardTopProductsAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        var route = $"api/v1/reports/top-products?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+        return await SendAuthorizedAsync<List<DashboardTopProduct>>(HttpMethod.Get, route, null, cancellationToken) ?? [];
+    }
+
     public async Task<List<KitchenTicketApiModel>> GetKitchenTicketsAsync(CancellationToken cancellationToken = default)
     {
         var page = await SendAuthorizedAsync<PagedApiResult<KitchenTicketApiModel>>(
