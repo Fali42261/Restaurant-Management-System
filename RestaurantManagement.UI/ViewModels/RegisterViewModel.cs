@@ -88,7 +88,7 @@ public sealed class RegisterViewModel : BaseViewModel
             return "Enter a valid mobile number with 10 to 15 digits.";
         if (Password.Length < 8 || !Password.Any(char.IsUpper) || !Password.Any(char.IsLower) ||
             !Password.Any(char.IsDigit) || !Password.Any(c => !char.IsLetterOrDigit(c)))
-            return "Password must contain at least 8 characters with uppercase, lowercase, number and symbol."); 
+            return "Password must contain at least 8 characters with uppercase, lowercase, number and symbol."; 
 
         if (!string.Equals(Password, ConfirmPassword, StringComparison.Ordinal))
             return "Password and confirm password do not match.";
