@@ -91,7 +91,7 @@ public sealed class CreateRestaurantPage : ContentPage
             var restaurant = await _auth.CreateRestaurantAsync(new CreateRestaurantInput(name, mobile, address, _opening.Time, _closing.Time, days));
             await _auth.SelectRestaurantAsync(restaurant);
             RestaurantSession.Set(_user, [restaurant], restaurant);
-            await Navigation.PopModalAsync();
+            await Shell.Current.Navigation.PopModalAsync();
             await Shell.Current.GoToAsync(nameof(DashboardPage));
         }
         catch (Exception ex)
