@@ -47,8 +47,7 @@ public sealed class LoginViewModel : BaseViewModel
         {
             IsBusy = true;
             var user = await _authService.SignInAsync(EmailOrMobile, Password);
-            var restaurantService = (AuthService)_authService;
-            var restaurants = await restaurantService.GetRestaurantsAsync(user.Id);
+            var restaurants = await _authService.GetRestaurantsAsync(user.Id);
             if (restaurants.Count == 0)
             {
                 if (!string.Equals(user.Role, "Owner", StringComparison.OrdinalIgnoreCase))
@@ -63,7 +62,7 @@ public sealed class LoginViewModel : BaseViewModel
 
             // API response ordering is authoritative: the first restaurant is selected by default.
             var selected = restaurants[0];
-            await restaurantService.SelectRestaurantAsync(selected);
+            await _authService.SelectRestaurantAsync(selected);
             RestaurantSession.Set(user, restaurants, selected);
             TrialAccessService.StartTrialIfNeeded();
             await Shell.Current.GoToAsync(nameof(DashboardPage));
