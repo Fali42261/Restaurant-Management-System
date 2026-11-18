@@ -9,5 +9,6 @@ public interface IAuthService
     Task<List<RestaurantInfo>> GetRestaurantsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<RestaurantInfo> CreateRestaurantAsync(CreateRestaurantInput input, CancellationToken cancellationToken = default);
     Task SelectRestaurantAsync(RestaurantInfo restaurant, CancellationToken cancellationToken = default);
+    Task<DashboardSummary?> GetDashboardSummaryAsync(CancellationToken cancellationToken = default);
     Task SignOutAsync(CancellationToken cancellationToken = default);
 }
