@@ -25,3 +25,5 @@ public sealed record UpdateStaffRequest(string FullName, string Email, string Mo
 public sealed record UpdateInventoryItemRequest(string Name,string Unit,decimal ReorderLevel,decimal CostPrice,bool IsActive);
 
 public sealed record ReplaceOrderItemsRequest(List<OrderItemRequest> Items);
+
+public sealed record CreateRestaurantRequest(string Name, string MobileNumber, string Address, TimeSpan OpeningTime, TimeSpan ClosingTime, string[] OperatingDays);
