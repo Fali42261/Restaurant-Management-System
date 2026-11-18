@@ -22,6 +22,18 @@ public sealed class PosController(SqlDataAccess db) : ApiControllerBase(db)
         };
     }
 
+    [HttpPut("bills/{id:guid}/pay")]
+    public async Task<IActionResult> MarkBillPaid(Guid id)
+    {
+        var rows = await Db.QueryProcedureAsync("dbo.usp_Bill_MarkPaid", P("@BillId", id));
+        if (rows.Count == 0 || Convert.ToInt32(rows[0]["Updated"]) == 0)
+        {
+            var exists = await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Bills WHERE BillId=@Id", P("@Id", id));
+            return Convert.ToInt32(exists) == 0 ? NotFound() : Success(null, "Bill is already paid.");
+        }
+        return Success(null, "Bill marked as paid.");
+    }
+
     [HttpPost("checkout")]
     public async Task<IActionResult> Checkout(PosCheckoutRequest request)
     {
