@@ -60,11 +60,11 @@ BEGIN
  SET NOCOUNT ON;
  SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
  SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
- SELECT ProductId,CategoryId,Name,Description,Price,ImageUrl,IsAvailable
- FROM dbo.Products
- WHERE IsDeleted=0 AND (@CategoryId IS NULL OR CategoryId=@CategoryId)
-   AND (@Search IS NULL OR Name LIKE @Search+N'%')
- ORDER BY Name,ProductId
+ SELECT p.ProductId,p.CategoryId,c.Name AS CategoryName,p.Name,p.Description,p.Price,p.ImageUrl,p.IsAvailable
+ FROM dbo.Products p LEFT JOIN dbo.Categories c ON c.CategoryId=p.CategoryId
+ WHERE p.IsDeleted=0 AND (@CategoryId IS NULL OR p.CategoryId=@CategoryId)
+   AND (@Search IS NULL OR p.Name LIKE @Search+N'%')
+ ORDER BY p.Name,p.ProductId
  OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
 END;
 GO
