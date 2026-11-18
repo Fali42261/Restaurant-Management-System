@@ -109,6 +109,8 @@ BEGIN
     SET XACT_ABORT ON;
 
     BEGIN TRY
+
+    BEGIN TRY
         BEGIN TRANSACTION;
 
         IF EXISTS
@@ -148,6 +150,13 @@ BEGIN
         END;
         THROW;
     END CATCH;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -160,12 +169,21 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    BEGIN TRY
+
     SELECT TOP(1)
         UserId, FullName, Email, MobileNumber, PasswordHash, Role, IsActive
     FROM dbo.Users
     WHERE (Email=@Identifier OR MobileNumber=@Identifier)
       AND IsActive=1
       AND IsDeleted=0;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -174,6 +192,8 @@ CREATE OR ALTER PROCEDURE dbo.usp_Auth_GetUserRestaurants
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    BEGIN TRY
 
     SELECT r.RestaurantId, r.Name, ur.Role
     FROM dbo.UserRestaurants ur
@@ -185,6 +205,13 @@ BEGIN
       AND u.IsActive=1
       AND u.IsDeleted=0
     ORDER BY r.Name;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -200,6 +227,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    BEGIN TRY
 
     IF NOT EXISTS
     (
@@ -220,6 +249,13 @@ BEGIN
 
     INSERT dbo.RefreshTokens(TokenId,UserId,RestaurantId,TokenHash,ExpiresAt,CreatedAt)
     VALUES(NEWID(),@UserId,@RestaurantId,@TokenHash,@ExpiresAt,SYSUTCDATETIME());
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -229,9 +265,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    BEGIN TRY
+
     SELECT PasswordHash
     FROM dbo.Users
     WHERE UserId=@UserId AND IsActive=1 AND IsDeleted=0;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -245,6 +290,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    BEGIN TRY
 
     BEGIN TRANSACTION;
 
@@ -265,6 +312,13 @@ BEGIN
 
     COMMIT TRANSACTION;
     SELECT 1 AS RowsAffected;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -277,9 +331,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    BEGIN TRY
+
     SELECT TOP(1) UserId
     FROM dbo.Users
     WHERE Email=@Email AND IsActive=1 AND IsDeleted=0;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -290,6 +353,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    BEGIN TRY
 
     DECLARE @UserId UNIQUEIDENTIFIER;
 
@@ -324,6 +389,13 @@ BEGIN
     COMMIT TRANSACTION;
 
     SELECT CAST(1 AS BIT) AS Found, CAST(1 AS BIT) AS CanSend;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -335,6 +407,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    BEGIN TRY
 
     DECLARE @UserId UNIQUEIDENTIFIER;
     DECLARE @Consumed TABLE(UserId UNIQUEIDENTIFIER);
@@ -390,6 +464,13 @@ BEGIN
 
     COMMIT TRANSACTION;
     SELECT CAST(1 AS BIT) AS Success;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -404,6 +485,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    BEGIN TRY
 
     DECLARE @Session TABLE
     (
@@ -492,6 +575,13 @@ BEGIN
         u.FullName,
         u.Email
     FROM @User u;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -504,9 +594,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    BEGIN TRY
+
     SELECT UserId,FullName,Email,MobileNumber,Role,IsActive
     FROM dbo.Users
     WHERE UserId=@UserId AND IsActive=1 AND IsDeleted=0;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
@@ -516,11 +615,20 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    BEGIN TRY
+
     UPDATE dbo.RefreshTokens
     SET RevokedAt=SYSUTCDATETIME()
     WHERE UserId=@UserId AND RevokedAt IS NULL;
 
     SELECT @@ROWCOUNT AS RevokedSessions;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+    END CATCH;
 END;
 GO
 
