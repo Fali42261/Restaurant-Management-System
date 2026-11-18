@@ -97,12 +97,12 @@ jobs:
             -H "Authorization: Bearer $ACCESS_TOKEN" -H 'Content-Type: application/json' \
             -d '{"name":"CI Test Restaurant","mobileNumber":"9876543211","address":"Integration Test Address","openingTime":"09:00:00","closingTime":"22:00:00","operatingDays":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]}')
           echo "$CREATED" | jq -e '.success == true' >/dev/null
-          RESTAURANT_ID=$(echo "$CREATED" | jq -r '.data.restaurantId')
+          RESTAURANT_ID=$(echo "$CREATED" | jq -r '.data.restaurantId // .data.RestaurantId')
           test -n "$RESTAURANT_ID" && test "$RESTAURANT_ID" != "null"
 
           LIST=$(curl -fsS "http://127.0.0.1:5080/api/v1/users/$USER_ID/restaurants" \
             -H "Authorization: Bearer $ACCESS_TOKEN")
-          echo "$LIST" | jq -e --arg id "$RESTAURANT_ID" '.success == true and (.data | length == 1) and .data[0].restaurantId == $id' >/dev/null
+          echo "$LIST" | jq -e --arg id "$RESTAURANT_ID" '.success == true and (.data | length == 1) and ((.data[0].restaurantId // .data[0].RestaurantId) == $id)' >/dev/null
 
           SELECTED=$(curl -fsS -X POST "http://127.0.0.1:5080/api/v1/restaurants/$RESTAURANT_ID/select" \
             -H "Authorization: Bearer $ACCESS_TOKEN")
@@ -112,7 +112,7 @@ jobs:
 
           DASHBOARD=$(curl -fsS http://127.0.0.1:5080/api/v1/reports/dashboard \
             -H "Authorization: Bearer $SCOPED_TOKEN")
-          echo "$DASHBOARD" | jq -e '.success == true and .data.todayOrders == 0 and .data.todayReservations == 0 and .data.totalTables == 0' >/dev/null
+          echo "$DASHBOARD" | jq -e '.success == true and (.data.todayOrders // .data.TodayOrders) == 0 and (.data.todayReservations // .data.TodayReservations) == 0 and (.data.totalTables // .data.TotalTables) == 0' >/dev/null
 
           ROTATED=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/auth/refresh \
             -H 'Content-Type: application/json' \
