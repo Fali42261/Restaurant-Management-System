@@ -23,3 +23,5 @@ public sealed record CreateSupportTicketRequest(string Subject, string Message, 
 public sealed record UpdateStaffRequest(string FullName, string Email, string MobileNumber, string Role, bool IsActive);
 
 public sealed record UpdateInventoryItemRequest(string Name,string Unit,decimal ReorderLevel,decimal CostPrice,bool IsActive);
+
+public sealed record ReplaceOrderItemsRequest(List<OrderItemRequest> Items);
