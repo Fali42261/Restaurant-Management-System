@@ -215,3 +215,42 @@ END;
 GO
 PRINT 'swapDigit dashboard summary procedure created.';
 GO
+
+
+/* Dashboard analytics: date-bounded sales trend and top products. */
+CREATE OR ALTER PROCEDURE dbo.usp_Dashboard_Sales
+ @FromUtc datetime2,
+ @ToUtcExclusive datetime2
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SELECT CONVERT(date,CreatedAt) AS SaleDate,
+        COUNT(1) AS BillCount,
+        COALESCE(SUM(Total),0) AS GrossSales,
+        COALESCE(SUM(Discount),0) AS Discounts,
+        COALESCE(SUM(Tax),0) AS Tax
+ FROM dbo.Bills
+ WHERE CreatedAt>=@FromUtc AND CreatedAt<@ToUtcExclusive
+ GROUP BY CONVERT(date,CreatedAt)
+ ORDER BY SaleDate;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Dashboard_TopProducts
+ @FromUtc datetime2,
+ @ToUtcExclusive datetime2
+AS
+BEGIN
+ SET NOCOUNT ON;
+ SELECT TOP(10) p.Name,
+        SUM(oi.Quantity) AS QuantitySold,
+        SUM(oi.Quantity*oi.UnitPrice) AS Sales
+ FROM dbo.OrderItems oi
+ INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId
+ INNER JOIN dbo.Orders o ON o.OrderId=oi.OrderId
+ WHERE o.IsDeleted=0
+   AND o.CreatedAt>=@FromUtc AND o.CreatedAt<@ToUtcExclusive
+ GROUP BY p.Name
+ ORDER BY QuantitySold DESC,p.Name;
+END;
+GO
