@@ -1,0 +1,160 @@
+/*
+  swapDigit multi-restaurant tenant migration.
+  Run AFTER 01_Tables_And_Seed_Data.txt and 02_Performance_Indexes_Views_Procedures.txt.
+  Existing records are assigned to one Legacy Restaurant. Review that mapping before production.
+*/
+USE swapDigitDb;
+GO
+IF OBJECT_ID('dbo.Restaurants','U') IS NULL
+BEGIN
+ CREATE TABLE dbo.Restaurants(
+  RestaurantId UNIQUEIDENTIFIER NOT NULL CONSTRAINT PK_Restaurants PRIMARY KEY,
+  OwnerUserId UNIQUEIDENTIFIER NULL,
+  Name NVARCHAR(160) NOT NULL,
+  IsActive BIT NOT NULL CONSTRAINT DF_Restaurants_IsActive DEFAULT(1),
+  CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Restaurants_CreatedAt DEFAULT(SYSUTCDATETIME()),
+  UpdatedAt DATETIME2 NULL,
+  CONSTRAINT FK_Restaurants_Owner FOREIGN KEY(OwnerUserId) REFERENCES dbo.Users(UserId)
+ );
+END
+GO
+IF OBJECT_ID('dbo.UserRestaurants','U') IS NULL
+BEGIN
+ CREATE TABLE dbo.UserRestaurants(
+  UserId UNIQUEIDENTIFIER NOT NULL,
+  RestaurantId UNIQUEIDENTIFIER NOT NULL,
+  Role NVARCHAR(30) NOT NULL,
+  IsActive BIT NOT NULL CONSTRAINT DF_UserRestaurants_IsActive DEFAULT(1),
+  CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_UserRestaurants_CreatedAt DEFAULT(SYSUTCDATETIME()),
+  CONSTRAINT PK_UserRestaurants PRIMARY KEY(UserId,RestaurantId),
+  CONSTRAINT FK_UserRestaurants_User FOREIGN KEY(UserId) REFERENCES dbo.Users(UserId),
+  CONSTRAINT FK_UserRestaurants_Restaurant FOREIGN KEY(RestaurantId) REFERENCES dbo.Restaurants(RestaurantId)
+ );
+ CREATE INDEX IX_UserRestaurants_Restaurant ON dbo.UserRestaurants(RestaurantId,IsActive) INCLUDE(UserId,Role);
+END
+GO
+/* A legacy container preserves existing data; new owners create their own restaurants. */
+IF NOT EXISTS(SELECT 1 FROM dbo.Restaurants)
+BEGIN
+ DECLARE @LegacyOwner UNIQUEIDENTIFIER=(SELECT TOP(1) UserId FROM dbo.Users WHERE Role='Owner' AND IsDeleted=0 ORDER BY CreatedAt);
+ INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name)
+ VALUES(NEWID(),@LegacyOwner,N'Legacy Restaurant');
+END
+GO
+INSERT dbo.UserRestaurants(UserId,RestaurantId,Role)
+SELECT u.UserId,r.RestaurantId,u.Role
+FROM dbo.Users u CROSS JOIN (SELECT TOP(1) RestaurantId FROM dbo.Restaurants ORDER BY CreatedAt) r
+WHERE u.Role IN('Owner','Manager','Staff')
+ AND NOT EXISTS(SELECT 1 FROM dbo.UserRestaurants ur WHERE ur.UserId=u.UserId AND ur.RestaurantId=r.RestaurantId);
+GO
+/* Add tenant keys to every restaurant-owned business table. */
+DECLARE @Tables TABLE(TableName SYSNAME PRIMARY KEY);
+INSERT @Tables VALUES
+('Categories'),('Products'),('Floors'),('RestaurantTables'),('Orders'),('OrderItems'),
+('KitchenTickets'),('Reservations'),('Bills'),('InventoryItems'),('StockMovements'),
+('RestaurantSettings'),('Subscriptions'),('SupportTickets');
+DECLARE @Table SYSNAME,@Sql NVARCHAR(MAX);
+DECLARE c CURSOR LOCAL FAST_FORWARD FOR SELECT TableName FROM @Tables;
+OPEN c; FETCH NEXT FROM c INTO @Table;
+WHILE @@FETCH_STATUS=0
+BEGIN
+ IF COL_LENGTH('dbo.'+@Table,'RestaurantId') IS NULL
+ BEGIN
+  SET @Sql=N'ALTER TABLE dbo.'+QUOTENAME(@Table)+N' ADD RestaurantId UNIQUEIDENTIFIER NULL;';
+  EXEC sys.sp_executesql @Sql;
+ END;
+ SET @Sql=N'UPDATE dbo.'+QUOTENAME(@Table)+N' SET RestaurantId=(SELECT TOP(1) RestaurantId FROM dbo.Restaurants ORDER BY CreatedAt) WHERE RestaurantId IS NULL;';
+ EXEC sys.sp_executesql @Sql;
+ IF NOT EXISTS(SELECT 1 FROM sys.default_constraints WHERE parent_object_id=OBJECT_ID('dbo.'+@Table) AND name='DF_'+@Table+'_RestaurantId')
+ BEGIN
+  SET @Sql=N'ALTER TABLE dbo.'+QUOTENAME(@Table)+N' ADD CONSTRAINT '+QUOTENAME('DF_'+@Table+'_RestaurantId')+
+    N' DEFAULT(TRY_CONVERT(uniqueidentifier,SESSION_CONTEXT(N''RestaurantId''))) FOR RestaurantId;';
+  EXEC sys.sp_executesql @Sql;
+ END;
+ SET @Sql=N'ALTER TABLE dbo.'+QUOTENAME(@Table)+N' ALTER COLUMN RestaurantId UNIQUEIDENTIFIER NOT NULL;';
+ EXEC sys.sp_executesql @Sql;
+ IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_'+@Table+'_Restaurants')
+ BEGIN
+  SET @Sql=N'ALTER TABLE dbo.'+QUOTENAME(@Table)+N' WITH CHECK ADD CONSTRAINT '+QUOTENAME('FK_'+@Table+'_Restaurants')+
+   N' FOREIGN KEY(RestaurantId) REFERENCES dbo.Restaurants(RestaurantId);';
+  EXEC sys.sp_executesql @Sql;
+ END;
+ IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.'+@Table) AND name='IX_'+@Table+'_RestaurantId')
+ BEGIN
+  SET @Sql=N'CREATE INDEX '+QUOTENAME('IX_'+@Table+'_RestaurantId')+N' ON dbo.'+QUOTENAME(@Table)+N'(RestaurantId);';
+  EXEC sys.sp_executesql @Sql;
+ END;
+ FETCH NEXT FROM c INTO @Table;
+END
+CLOSE c; DEALLOCATE c;
+GO
+/* Settings keys must be unique per restaurant, not globally. */
+DECLARE @Pk SYSNAME;
+SELECT @Pk=kc.name FROM sys.key_constraints kc
+WHERE kc.parent_object_id=OBJECT_ID('dbo.RestaurantSettings') AND kc.type='PK';
+IF @Pk IS NOT NULL
+BEGIN
+ EXEC(N'ALTER TABLE dbo.RestaurantSettings DROP CONSTRAINT '+QUOTENAME(@Pk));
+ ALTER TABLE dbo.RestaurantSettings ADD CONSTRAINT PK_RestaurantSettings PRIMARY KEY(RestaurantId,SettingKey);
+END
+GO
+/* Subscriptions are restaurant-scoped. One restaurant can have only one current active subscription. */
+IF NOT EXISTS(SELECT 1 FROM sys.indexes WHERE object_id=OBJECT_ID('dbo.Subscriptions') AND name='UX_Subscriptions_Restaurant_Active')
+ CREATE UNIQUE INDEX UX_Subscriptions_Restaurant_Active ON dbo.Subscriptions(RestaurantId) WHERE Status IN('Active','Trial');
+GO
+CREATE OR ALTER FUNCTION dbo.fn_TenantAccess(@RestaurantId UNIQUEIDENTIFIER)
+RETURNS TABLE WITH SCHEMABINDING
+AS
+RETURN SELECT 1 AS access_result
+WHERE @RestaurantId=TRY_CONVERT(UNIQUEIDENTIFIER,SESSION_CONTEXT(N'RestaurantId'));
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.security_policies WHERE name='TenantIsolationPolicy')
+BEGIN
+ EXEC(N'CREATE SECURITY POLICY dbo.TenantIsolationPolicy
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Categories,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Categories AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Categories AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Products,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Products AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Products AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Floors,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Floors AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Floors AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantTables,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantTables AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantTables AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Orders,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Orders AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Orders AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.OrderItems,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.OrderItems AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.OrderItems AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.KitchenTickets,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.KitchenTickets AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.KitchenTickets AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Reservations,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Reservations AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Reservations AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Bills,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Bills AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Bills AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.InventoryItems,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.InventoryItems AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.InventoryItems AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.StockMovements,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.StockMovements AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.StockMovements AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantSettings,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantSettings AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.RestaurantSettings AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Subscriptions,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Subscriptions AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.Subscriptions AFTER UPDATE,
+ ADD FILTER PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.SupportTickets,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.SupportTickets AFTER INSERT,
+ ADD BLOCK PREDICATE dbo.fn_TenantAccess(RestaurantId) ON dbo.SupportTickets AFTER UPDATE
+ WITH (STATE=ON);');
+END
+GO
+PRINT 'swapDigit multi-restaurant tenant schema and row-level isolation are ready.';
+GO

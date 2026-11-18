@@ -5,14 +5,24 @@ using RestaurantManagement.API.Configuration;
 
 namespace RestaurantManagement.API.Infrastructure;
 
-public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSettings> options)
+public sealed class SqlDataAccess(SqlConnectionFactory factory, IOptions<AppSettings> options, IHttpContextAccessor httpContextAccessor)
 {
+    private async Task<SqlConnection> OpenConnectionAsync()
+    {
+        var connection = factory.Create();
+        await connection.OpenAsync();
+        var restaurantId = httpContextAccessor.HttpContext?.User.FindFirst("restaurant_id")?.Value;
+        await using var contextCommand = new SqlCommand("sys.sp_set_session_context", connection) { CommandType = CommandType.StoredProcedure, CommandTimeout = _timeout };
+        contextCommand.Parameters.Add(new SqlParameter("@key", "RestaurantId"));
+        contextCommand.Parameters.Add(new SqlParameter("@value", Guid.TryParse(restaurantId, out var id) ? id : DBNull.Value));
+        await contextCommand.ExecuteNonQueryAsync();
+        return connection;
+    }
     private readonly int _timeout = options.Value.Database.CommandTimeoutSeconds;
 
     public async Task<List<Dictionary<string, object?>>> QueryAsync(string sql, params SqlParameter[] parameters)
     {
-        await using var connection = factory.Create();
-        await connection.OpenAsync();
+        await using var connection = await OpenConnectionAsync();
         await using var command = new SqlCommand(sql, connection) { CommandTimeout = _timeout };
         if (parameters.Length > 0) command.Parameters.AddRange(parameters);
         await using var reader = await command.ExecuteReaderAsync();

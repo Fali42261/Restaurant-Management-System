@@ -12,6 +12,8 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection(AppSettings.SectionName));
 var appSettings = builder.Configuration.GetSection(AppSettings.SectionName).Get<AppSettings>() ?? new AppSettings();
+// Product requirement: access tokens always expire after exactly one hour.
+appSettings.Jwt.AccessTokenMinutes = 60;
 if (string.IsNullOrWhiteSpace(appSettings.Database.ConnectionString))
     throw new InvalidOperationException("Configure App:Database:ConnectionString using user-secrets or environment variables.");
 if (appSettings.Jwt.SigningKey.Length < 32)
@@ -34,6 +36,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
         shared: true,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [Trace:{TraceId}] {Message:lj}{NewLine}{Exception}"));
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<SqlConnectionFactory>();
 builder.Services.AddScoped<SqlDataAccess>();
 builder.Services.AddScoped<EmailService>();
