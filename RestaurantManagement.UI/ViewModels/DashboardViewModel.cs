@@ -155,7 +155,7 @@ public sealed class DashboardViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            DashboardDataStatus = $"Live dashboard data unavailable: {ex.Message}";
+            DashboardDataStatus = "Live dashboard data unavailable. Check API/database connection.";
         }
     }
 
