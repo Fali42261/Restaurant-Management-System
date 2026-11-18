@@ -1,0 +1,71 @@
+/*
+  swapDigit owner registration procedure.
+  Execute AFTER 01_Tables_And_Seed_Data.txt and 03_Multi_Restaurant_Tenancy.txt.
+  Safe to re-run: CREATE OR ALTER updates the procedure without changing existing data.
+*/
+USE swapDigitDb;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Auth_RegisterOwner
+    @UserId UNIQUEIDENTIFIER,
+    @FullName NVARCHAR(150),
+    @Email NVARCHAR(256),
+    @MobileNumber NVARCHAR(25),
+    @PasswordHash NVARCHAR(500)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF EXISTS
+        (
+            SELECT 1
+            FROM dbo.Users WITH (UPDLOCK, HOLDLOCK)
+            WHERE IsDeleted = 0
+              AND (Email = @Email OR MobileNumber = @MobileNumber)
+        )
+        BEGIN
+            ROLLBACK TRANSACTION;
+            SELECT CAST(0 AS BIT) AS Success,
+                   CAST('Duplicate' AS NVARCHAR(30)) AS ErrorCode,
+                   CAST(NULL AS UNIQUEIDENTIFIER) AS UserId;
+            RETURN;
+        END;
+
+        INSERT dbo.Users
+        (
+            UserId, FullName, Email, MobileNumber, PasswordHash,
+            Role, IsActive, IsDeleted, CreatedAt
+        )
+        VALUES
+        (
+            @UserId, @FullName, @Email, @MobileNumber, @PasswordHash,
+            N'Owner', 1, 0, SYSUTCDATETIME()
+        );
+
+        COMMIT TRANSACTION;
+        SELECT CAST(1 AS BIT) AS Success,
+               CAST('Created' AS NVARCHAR(30)) AS ErrorCode,
+               @UserId AS UserId;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+
+        IF ERROR_NUMBER() IN (2601, 2627)
+        BEGIN
+            SELECT CAST(0 AS BIT) AS Success,
+                   CAST('Duplicate' AS NVARCHAR(30)) AS ErrorCode,
+                   CAST(NULL AS UNIQUEIDENTIFIER) AS UserId;
+            RETURN;
+        END;
+
+        THROW;
+    END CATCH;
+END;
+GO
+
+PRINT 'swapDigit owner registration stored procedure is ready.';
+GO

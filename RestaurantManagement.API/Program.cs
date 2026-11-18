@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RestaurantManagement.API.Configuration;
+using RestaurantManagement.API.BusinessLogic;
+using RestaurantManagement.API.DataAccess;
 using RestaurantManagement.API.Infrastructure;
 using RestaurantManagement.API.Models;
 using RestaurantManagement.API.Services;
@@ -45,6 +47,8 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<SqlConnectionFactory>();
 builder.Services.AddScoped<SqlDataAccess>();
+builder.Services.AddScoped<AuthDataAccess>();
+builder.Services.AddScoped<AuthBusinessLogic>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<IPasswordHasher<string>, PasswordHasher<string>>();
 builder.Services.AddControllers();

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RestaurantManagement.API.Configuration;
+using RestaurantManagement.API.BusinessLogic;
 using RestaurantManagement.API.Infrastructure;
 using RestaurantManagement.API.Models;
 using RestaurantManagement.API.Services;
@@ -15,7 +16,7 @@ using RestaurantManagement.API.Services;
 namespace RestaurantManagement.API.Controllers;
 
 [Route("api/v1/auth")]
-public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> hasher, IOptions<AppSettings> options, EmailService email) : ApiControllerBase(db)
+public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> hasher, IOptions<AppSettings> options, EmailService email, AuthBusinessLogic registrationBusinessLogic) : ApiControllerBase(db)
 {
     private readonly AppSettings _settings = options.Value;
 
@@ -23,31 +24,15 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     [HttpPost("register-owner")]
     public async Task<IActionResult> RegisterOwner(OwnerRegistration request)
     {
-        if (string.IsNullOrWhiteSpace(request.FullName) || request.FullName.Trim().Length > 150 ||
-            !System.Net.Mail.MailAddress.TryCreate(request.Email, out _) ||
-            !ValidMobile(request.MobileNumber) ||
-            !IsStrongPassword(request.Password))
-            return BadRequest(new { success = false, message = "Enter a valid name, email, mobile number and a strong password (8+ characters with upper/lowercase, number and symbol)." });
-        var email = request.Email.Trim().ToLowerInvariant();
-        var mobile = request.MobileNumber.Trim();
-        var duplicate = await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Users WHERE IsDeleted=0 AND (Email=@Email OR MobileNumber=@Mobile)",
-            P("@Email", email), P("@Mobile", mobile));
-        if (Convert.ToInt32(duplicate) > 0)
-            return Conflict(new { success=false, message="Email or mobile number is already registered." });
-        var id = Guid.NewGuid();
-        var hash = hasher.HashPassword(id.ToString(), request.Password);
-        await Db.ExecuteAsync(@"SET XACT_ABORT ON;
-BEGIN TRANSACTION;
-BEGIN TRY
- INSERT dbo.Users(UserId,FullName,Email,MobileNumber,PasswordHash,Role,IsActive,CreatedAt) VALUES(@Id,@Name,@Email,@Mobile,@Hash,'Owner',1,SYSUTCDATETIME());
- COMMIT TRANSACTION;
-END TRY
-BEGIN CATCH
- IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
- THROW;
-END CATCH",
-            P("@Id", id), P("@Name", request.FullName.Trim()), P("@Email", email), P("@Mobile", mobile), P("@Hash", hash));
-        return CreatedResult(new { userId = id, role = "Owner" }, "Owner account created. Add your first restaurant after signing in.");
+        var result = await registrationBusinessLogic.RegisterOwnerAsync(request);
+        if (result.IsConflict)
+            return Conflict(new { success = false, message = result.Message });
+        if (!result.Success)
+            return BadRequest(new { success = false, message = result.Message });
+
+        return CreatedResult(
+            new { userId = result.UserId, role = "Owner" },
+            result.Message);
     }
 
     [AllowAnonymous, HttpPost("login")]
