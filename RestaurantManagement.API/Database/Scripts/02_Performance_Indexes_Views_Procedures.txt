@@ -75,11 +75,20 @@ BEGIN
  SET NOCOUNT ON;
  SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
  SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
- SELECT OrderId,OrderNumber,CustomerName,OrderType,TableId,Subtotal,Discount,Tax,Total,PaymentMethod,Status,CreatedAt
- FROM dbo.Orders
- WHERE IsDeleted=0 AND (@Status IS NULL OR Status=@Status)
-   AND (@FromUtc IS NULL OR CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR CreatedAt<@ToUtc)
- ORDER BY CreatedAt DESC,OrderId
+ SELECT o.OrderId,o.OrderNumber,o.CustomerName,o.OrderType,o.TableId,o.Subtotal,o.Discount,o.Tax,o.Total,o.PaymentMethod,o.Status,o.CreatedAt,
+        COALESCE(items.ItemSummary,N'') AS ItemSummary,COALESCE(items.Quantity,0) AS Quantity
+ FROM dbo.Orders o
+ OUTER APPLY
+ (
+  SELECT STRING_AGG(CONVERT(nvarchar(max),CONCAT(p.Name,N' × ',oi.Quantity)),N', ')
+           WITHIN GROUP (ORDER BY p.Name) AS ItemSummary,
+         SUM(oi.Quantity) AS Quantity
+  FROM dbo.OrderItems oi INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId
+  WHERE oi.OrderId=o.OrderId
+ ) items
+ WHERE o.IsDeleted=0 AND (@Status IS NULL OR o.Status=@Status)
+   AND (@FromUtc IS NULL OR o.CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR o.CreatedAt<@ToUtc)
+ ORDER BY o.CreatedAt DESC,o.OrderId
  OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
 END;
 GO
