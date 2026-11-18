@@ -1,3 +1,4 @@
+using RestaurantManagement.UI.Services;
 using RestaurantManagement.UI.ViewModels;
 
 namespace RestaurantManagement.UI.Views;
@@ -7,7 +8,7 @@ public partial class RegisterPage : ContentPage
     public RegisterPage()
     {
         InitializeComponent();
-        BindingContext = new RegisterViewModel();
+        BindingContext = new RegisterViewModel(new AuthService());
     }
 
     private void TogglePasswordVisibility(object sender, EventArgs e)
