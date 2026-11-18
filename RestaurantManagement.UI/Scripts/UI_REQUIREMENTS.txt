@@ -1,0 +1,237 @@
+SWAPDIGIT - UI LOGIC & FUNCTIONAL REQUIREMENTS
+================================================
+Document: UI_REQUIREMENTS.txt
+Branch: DevUI
+Purpose: Review document only. This file does not implement UI or API changes.
+
+1. CORE ACCOUNT AND RESTAURANT MODEL
+-----------------------------------
+1.1 One Owner account can manage multiple restaurants.
+1.2 Each restaurant must have its own unique RestaurantId.
+1.3 Owner login is performed once. The Owner can then choose which restaurant to open.
+1.4 The selected restaurant becomes the active restaurant context for the UI.
+1.5 All restaurant-specific screens must clearly show the active restaurant name.
+1.6 Owner can switch between only the restaurants belonging to that Owner.
+1.7 Owner can add/create another restaurant from the restaurant selector or restaurant management screen, subject to the API's allowed workflow.
+1.8 Do not create a separate Owner login for every restaurant unless the API contract later explicitly requires it.
+
+2. LOGIN AND SESSION FLOW
+-------------------------
+2.1 Login screen is available to Owner and Staff.
+2.2 Create Account / Owner Registration is for Owner only. Staff must not see a Create Account option.
+2.3 After successful Owner login:
+    - Load the restaurants assigned to that Owner.
+    - If there is one restaurant, it may be selected automatically.
+    - If there are multiple restaurants, show a restaurant selection screen/list.
+    - If there are no restaurants yet, show the Add/Create Restaurant flow if permitted by the API.
+2.4 After successful Staff login:
+    - Load the staff member's assigned RestaurantId.
+    - Open that restaurant directly.
+    - Do not show the multi-restaurant selector.
+    - Do not allow Staff to switch to another restaurant.
+2.5 Keep access token and refresh token in secure platform storage. Never store passwords.
+2.6 Access token lifetime is 60 minutes. When it expires, use the refresh-token flow and retry the original request only when safe.
+2.7 If refresh fails or the session is revoked, clear local session data and return to Login.
+2.8 Logout must clear tokens, active restaurant context, and cached restaurant-specific data.
+2.9 Password reset flow: request email OTP/code, enter code, set new password, show success/error result.
+2.10 Password change flow must validate current password and new password according to API rules.
+
+3. RESTAURANT SELECTOR AND ACTIVE CONTEXT
+-----------------------------------------
+3.1 Owner's restaurant list should show, at minimum:
+    - Restaurant name
+    - Address or location (if available)
+    - Subscription status
+    - Plan name / renewal or expiry information (if supplied by API)
+3.2 Selecting a restaurant sets it as ActiveRestaurant.
+3.3 The app must refresh/load dashboard and module data for the newly selected restaurant.
+3.4 Clear old restaurant data from UI state/cache before showing the newly selected restaurant's data.
+3.5 Do not mix lists, totals, charts, orders, or cached records between restaurants.
+3.6 Keep the active restaurant visible in the app header or navigation area.
+3.7 Provide a clear Switch Restaurant action for Owner only.
+3.8 If an API request returns an authorization/tenant access error, do not show stale data. Show a safe error and refresh the permitted restaurant list/context.
+
+4. SUBSCRIPTION RULES - VERY IMPORTANT
+-------------------------------------
+4.1 Subscription is per restaurant, not per Owner account.
+4.2 One subscription covers exactly one restaurant only.
+4.3 If one Owner has 4 restaurants, each restaurant requires its own separate subscription.
+4.4 Never show wording or behavior suggesting one subscription covers 3-4 restaurants.
+4.5 Each restaurant card/detail should show its own subscription plan and status.
+4.6 Subscription states should be displayed from API data, for example: Trial, Active, Expiring Soon, Expired, Cancelled, or Payment Pending. Do not invent a status if API does not return it.
+4.7 If a restaurant subscription is expired/inactive, show a clear renewal/upgrade message and follow API-provided access rules.
+4.8 Do not silently switch the user to another restaurant's subscription.
+4.9 Do not implement Razorpay/payment gateway UI or payment processing in this phase. Gateway integration is postponed.
+4.10 Subscription screens must make it clear which restaurant the plan belongs to.
+
+5. STAFF EXPERIENCE AND PERMISSIONS
+-----------------------------------
+5.1 Staff login opens only the assigned restaurant.
+5.2 Staff cannot see Owner's other restaurants, restaurant selector, or other restaurant data.
+5.3 Show only menu items/actions allowed by the Staff role/permissions returned by API.
+5.4 Hide or disable unauthorized actions consistently. API remains the final authority for permissions.
+5.5 Staff management screens are Owner/authorized-admin features only.
+5.6 Staff creation/edit form should capture required name, email, mobile, role and restaurant assignment as supported by API.
+5.7 UI should show clear validation for duplicate email/mobile responses from API.
+5.8 Do not implement the 3-month password reminder now; it is deferred for a later phase.
+
+6. MAIN APP SHELL AND NAVIGATION
+--------------------------------
+6.1 Keep the app header visible on every authenticated menu/page.
+6.2 Header should show active restaurant, current user/profile area, and relevant actions.
+6.3 Menu selection must load the selected screen in the same main content/navigation area.
+6.4 Do not open Table Dashboard or other menu screens in a new tab/window.
+6.5 Active menu item must have a clear selected state.
+6.6 Preserve navigation state sensibly when moving between modules.
+6.7 Provide loading, empty, error, and retry states for screens that call APIs.
+6.8 Keep layouts responsive for phone, tablet, and desktop/laptop widths.
+6.9 Use consistent spacing, readable typography, aligned tables/forms, and accessible tap targets.
+
+7. RESTAURANT-SCOPED MODULE SCREENS
+-----------------------------------
+Every module below must operate only on the currently selected restaurant for Owner, or the assigned restaurant for Staff.
+
+7.1 Dashboard and Reports
+    - Show selected restaurant name/context.
+    - Load KPIs, sales, charts and summaries for that restaurant only.
+    - Refresh data when active restaurant changes.
+    - Do not display stale dashboard values from the previous restaurant.
+    - Use responsive charts and readable axis labels.
+
+7.2 Products and Categories
+    - List, search, view, add, edit and delete categories/products according to permissions.
+    - Show field-level validation and API error messages.
+    - Prevent duplicate/invalid submissions while a save is in progress.
+
+7.3 Floors and Tables
+    - Show floors and tables belonging to the active restaurant only.
+    - Table create/edit must select a floor from the active restaurant.
+    - Do not allow a table to be assigned to a floor from another restaurant.
+    - Display table status clearly and refresh after changes.
+
+7.4 Orders and POS
+    - Create and view orders for the active restaurant.
+    - Show order items, quantities, totals, taxes, discounts and payment state as returned by API.
+    - Prevent duplicate checkout submission.
+    - Show success/failure confirmation and order reference.
+
+7.5 Reservations
+    - List/create/update/cancel reservations for the active restaurant.
+    - Validate date, time, guest count and table availability based on API response.
+    - Show reservation status consistently.
+
+7.6 KOT / Kitchen
+    - Show kitchen tickets/orders for the active restaurant only.
+    - Display preparation status and allowed status actions.
+    - Refresh or update ticket state without mixing restaurant data.
+
+7.7 Sales and Bills
+    - Show sales and bills for the active restaurant only.
+    - Support search/filter/date range and bounded paging where API supports it.
+    - Display totals and bill details from API responses.
+
+7.8 Inventory and Stock Movements
+    - Show inventory items and movements for the active restaurant only.
+    - Add stock/movement only with valid item, quantity and reason as required by API.
+    - Display low-stock/validation states from API data.
+
+7.9 Restaurant Settings
+    - Owner can view/edit settings for the currently selected restaurant, subject to permissions.
+    - Make the restaurant context explicit before saving settings.
+
+7.10 Subscription
+    - Show the selected restaurant's own subscription only.
+    - Show plan, status, start/renewal/expiry details when supplied by API.
+    - Never aggregate subscriptions as one Owner-wide subscription.
+
+7.11 Help and Support
+    - Show/create tickets under the correct user and active restaurant context as required by API.
+    - Display ticket status and conversation/history returned by API.
+
+8. API INTEGRATION RULES
+------------------------
+8.1 Use the API response as the source of truth. Do not hardcode live business data.
+8.2 Use typed request/response models and a centralized API service/client.
+8.3 Attach the current access token to authorized requests.
+8.4 Send the active RestaurantId only where the API contract requires it; never treat a UI-supplied ID as authorization.
+8.5 API must validate Owner-to-Restaurant ownership and Staff-to-Restaurant assignment on every protected request.
+8.6 Never rely only on hiding UI controls for security.
+8.7 Handle standard success, validation, unauthorized, forbidden, not-found, conflict and server-error responses.
+8.8 Show user-friendly messages; do not expose stack traces, SQL details, tokens or secrets.
+8.9 Use cancellation/loading handling to avoid old requests overwriting data after the user switches restaurants.
+8.10 Avoid loading unbounded records. Use server-side paging/search/filtering where available.
+8.11 Do not log passwords, OTP values, access tokens, refresh tokens or sensitive request bodies.
+
+9. VALIDATION AND USER FEEDBACK
+-------------------------------
+9.1 Validate required fields before submitting.
+9.2 Show field-level messages for invalid email, mobile, password, amount, quantity, date and other typed values.
+9.3 Show duplicate email/mobile messages returned by API.
+9.4 Disable submit buttons while a request is in progress to prevent double submission.
+9.5 Show success/error toast or inline feedback consistently.
+9.6 Confirm destructive actions such as delete/cancel where appropriate.
+9.7 Empty lists should show a helpful empty state and an allowed next action.
+9.8 Network failures should show retry guidance without clearing valid user input unnecessarily.
+
+10. CACHE, SWITCHING AND DATA SAFETY
+------------------------------------
+10.1 Cache keys for restaurant-specific data must include RestaurantId.
+10.2 On restaurant switch, cancel or ignore requests started for the previous restaurant.
+10.3 Clear restaurant-specific in-memory state and reload the newly selected restaurant's data.
+10.4 On logout, clear all private cached data and secure tokens.
+10.5 Never display one restaurant's data while another restaurant is active, even temporarily.
+10.6 If active restaurant is no longer accessible, return to the restaurant selector or login as appropriate.
+
+11. KNOWN UI REQUIREMENTS TO PRESERVE
+-------------------------------------
+11.1 App/product name is swapDigit.
+11.2 Create Account is Owner-only; Staff uses Login only.
+11.3 Password and Confirm Password visibility controls use an eye icon only; no Show/Hide text.
+11.4 Login and Create Account inputs should use a single clean baseline, not duplicate underline/border lines.
+11.5 Login error toast should appear near the top-center.
+11.6 Remove duplicate Sign In heading and previously requested unwanted top-left labels/icons from auth screens.
+11.7 Header must remain visible across all authenticated pages, including the right-side user/profile area.
+11.8 Menu pages, including Table Dashboard, open in the same content area, never a new tab/window.
+11.9 Keep typography readable and moderate; avoid oversized text.
+11.10 Dashboard charts must resize correctly and keep labels/values aligned.
+11.11 Do not reintroduce Dashboard sections the user previously asked to remove without confirmation.
+11.12 Replace old preview/sample footer wording with swapDigit wording. Official website URL has not yet been provided; do not invent one.
+
+12. ACCEPTANCE TEST CHECKLIST
+-----------------------------
+[ ] Owner can log in once and see all restaurants belonging to that Owner.
+[ ] Owner with one restaurant can enter it without unnecessary selection steps.
+[ ] Owner with multiple restaurants can select and switch restaurants.
+[ ] Active restaurant name is visible throughout authenticated navigation.
+[ ] Each restaurant displays its own subscription and renewal/expiry information.
+[ ] A subscription for Restaurant A does not unlock Restaurant B.
+[ ] Staff login opens only the assigned restaurant.
+[ ] Staff cannot switch restaurants or access another restaurant's data.
+[ ] Switching restaurants refreshes dashboard, products, tables, orders and all other module data.
+[ ] Previous restaurant data is not visible after switching.
+[ ] Unauthorized API responses do not leave stale private data on screen.
+[ ] All menu screens load in the same app content area.
+[ ] Header and user/profile area remain visible on every authenticated screen.
+[ ] Forms show validation, loading, success and failure states.
+[ ] Logout clears tokens and private cached data.
+[ ] Access-token refresh and expired-session behavior work with the API.
+[ ] UI never claims one subscription covers multiple restaurants.
+[ ] No Razorpay/payment gateway implementation is included in this phase.
+
+13. IMPLEMENTATION ORDER (AFTER THIS DOCUMENT IS REVIEWED)
+---------------------------------------------------------
+Phase 1: Confirm API contract and account/restaurant response models.
+Phase 2: Implement Owner restaurant list, create/add restaurant flow and restaurant selector.
+Phase 3: Implement active restaurant context and secure restaurant-aware navigation/cache.
+Phase 4: Implement per-restaurant subscription display and access states.
+Phase 5: Complete module screens and API bindings one module at a time.
+Phase 6: Complete Staff restrictions and role-based UI visibility.
+Phase 7: Run UI/API integration tests for Owner with multiple restaurants and Staff with one assigned restaurant.
+Phase 8: Test restaurant switching, token refresh, offline/error states and responsive layouts.
+
+IMPORTANT NOTES
+---------------
+- This is a UI behavior/requirements document, not an API implementation specification.
+- The API must enforce authorization and restaurant isolation. UI filtering alone is never sufficient.
+- Do not start UI implementation based only on assumptions where the API contract is not finalized.
+- Keep DevUI and DevApi branches separate. Do not merge branches unless explicitly requested.
