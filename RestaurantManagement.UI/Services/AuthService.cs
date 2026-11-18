@@ -50,7 +50,7 @@ public sealed class AuthService : IAuthService
         if (!string.IsNullOrWhiteSpace(result.RefreshToken))
             await SecureStorage.Default.SetAsync("swapDigit.refreshToken", result.RefreshToken);
 
-        return new User
+        var user = new User
         {
             Id = result.User.UserId,
             FullName = result.User.FullName,
@@ -59,6 +59,50 @@ public sealed class AuthService : IAuthService
             Role = result.User.Role,
             IsActive = true
         };
+        return user;
+    }
+
+    public async Task<List<RestaurantInfo>> GetRestaurantsAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var result = await SendAuthorizedAsync<List<RestaurantInfo>>(HttpMethod.Get, $"api/v1/users/{userId}/restaurants", null, cancellationToken);
+        return result ?? [];
+    }
+
+    public async Task<RestaurantInfo> CreateRestaurantAsync(CreateRestaurantInput input, CancellationToken cancellationToken = default)
+    {
+        var result = await SendAuthorizedAsync<RestaurantInfo>(HttpMethod.Post, "api/v1/restaurants", input, cancellationToken);
+        return result ?? throw new AuthApiException("The API did not return the created restaurant.", HttpStatusCode.BadGateway);
+    }
+
+    public async Task SelectRestaurantAsync(RestaurantInfo restaurant, CancellationToken cancellationToken = default)
+    {
+        var result = await SendAuthorizedAsync<RestaurantSelectionData>(HttpMethod.Post, $"api/v1/restaurants/{restaurant.RestaurantId}/select", null, cancellationToken);
+        if (result is null || string.IsNullOrWhiteSpace(result.AccessToken))
+            throw new AuthApiException("The API did not return a restaurant-scoped access token.", HttpStatusCode.BadGateway);
+        await SecureStorage.Default.SetAsync("swapDigit.accessToken", result.AccessToken);
+        if (!string.IsNullOrWhiteSpace(result.RefreshToken))
+            await SecureStorage.Default.SetAsync("swapDigit.refreshToken", result.RefreshToken);
+        RestaurantSession.Select(restaurant);
+    }
+
+    private static async Task<T?> SendAuthorizedAsync<T>(HttpMethod method, string route, object? payload, CancellationToken cancellationToken)
+    {
+        var token = await SecureStorage.Default.GetAsync("swapDigit.accessToken");
+        if (string.IsNullOrWhiteSpace(token)) throw new AuthApiException("Please sign in again.", HttpStatusCode.Unauthorized);
+        using var request = new HttpRequestMessage(method, route);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (payload is not null) request.Content = JsonContent.Create(payload, options: JsonOptions);
+        using var response = await Client.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        ApiEnvelope<T>? envelope = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try { envelope = JsonSerializer.Deserialize<ApiEnvelope<T>>(body, JsonOptions); }
+            catch (JsonException) { }
+        }
+        if (!response.IsSuccessStatusCode || envelope?.Success != true)
+            throw new AuthApiException(envelope?.Message ?? $"API request failed ({(int)response.StatusCode}).", response.StatusCode);
+        return envelope.Data;
     }
 
     public async Task SignOutAsync(CancellationToken cancellationToken = default)
@@ -124,6 +168,13 @@ public sealed class AuthService : IAuthService
     }
 
     private sealed record LoginRequest(string EmailOrMobile, string Password);
+
+    private sealed class RestaurantSelectionData
+    {
+        public string AccessToken { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
+        public int ExpiresIn { get; set; }
+    }
 
     private sealed class LoginData
     {
