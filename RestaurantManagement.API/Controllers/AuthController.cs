@@ -25,7 +25,7 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     {
         if (string.IsNullOrWhiteSpace(request.FullName) || request.FullName.Trim().Length > 150 ||
             !System.Net.Mail.MailAddress.TryCreate(request.Email, out _) ||
-            string.IsNullOrWhiteSpace(request.MobileNumber) || request.MobileNumber.Trim().Length < 10 ||
+            !ValidMobile(request.MobileNumber) ||
             !IsStrongPassword(request.Password))
             return BadRequest(new { success = false, message = "Enter a valid name, email, mobile number and a strong password (8+ characters with upper/lowercase, number and symbol)." });
         var email = request.Email.Trim().ToLowerInvariant();
@@ -203,6 +203,14 @@ SELECT CAST(1 AS bit) AS Success;",
     {
         var rows = await Db.QueryAsync("SELECT UserId,FullName,Email,MobileNumber,Role,IsActive FROM dbo.Users WHERE UserId=@Id AND IsDeleted=0", P("@Id", CurrentUserId));
         return rows.Count == 0 ? NotFound() : Success(rows[0]);
+    }
+
+    private static bool ValidMobile(string? value)
+    {
+        if(string.IsNullOrWhiteSpace(value)) return false;
+        var normalized=value.Trim();
+        if(normalized.StartsWith("+")) normalized=normalized[1..];
+        return normalized.Length is >=10 and <=15 && normalized.All(char.IsDigit);
     }
 
     private bool IsStrongPassword(string? value) =>

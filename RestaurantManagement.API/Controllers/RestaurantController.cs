@@ -88,7 +88,7 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
             return BadRequest(new {success=false,message="Invalid order type."});
         if(string.IsNullOrWhiteSpace(r.PaymentMethod)||!new[]{"Cash","UPI","Card","Online","Unpaid"}.Contains(r.PaymentMethod,StringComparer.OrdinalIgnoreCase))
             return BadRequest(new {success=false,message="Invalid payment method."});
-        if(r.Discount<0||r.Tax<0||r.CashReceived<0)
+        if(r.Discount<0||r.Tax<0||r.CashReceived<0||r.CashReceived>9999999999999999m)
             return BadRequest(new {success=false,message="Discount, tax and cash received cannot be negative."});
         if(r.TableId.HasValue)
         {
@@ -104,6 +104,9 @@ public sealed class RestaurantController(SqlDataAccess db) : ApiControllerBase(d
         var subtotal=r.Items.Sum(x=>prices[x.ProductId]*x.Quantity);
         if(r.Discount>subtotal) return BadRequest(new {success=false,message="Discount cannot exceed the order subtotal."});
         var total=subtotal-r.Discount+r.Tax;
+        if(total<=0||total>9999999999999999m) return BadRequest(new {success=false,message="Order total must be greater than zero and within the supported amount range."});
+        if(r.OrderType.Equals("DineIn",StringComparison.OrdinalIgnoreCase)||r.OrderType.Equals("Dine-In",StringComparison.OrdinalIgnoreCase)||r.OrderType.Equals("Dine In",StringComparison.OrdinalIgnoreCase))
+            if(!r.TableId.HasValue) return BadRequest(new {success=false,message="A table must be selected for dine-in orders."});
         var orderId=Guid.NewGuid();
         var number="ORD-"+orderId.ToString("N")[..16].ToUpperInvariant();
         var invoice="INV-"+orderId.ToString("N").ToUpperInvariant();

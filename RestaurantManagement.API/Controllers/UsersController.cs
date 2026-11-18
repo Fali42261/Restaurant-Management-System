@@ -24,7 +24,7 @@ public sealed class UsersController(SqlDataAccess db, IPasswordHasher<string> ha
     {
         if(CurrentRestaurantId==Guid.Empty) return BadRequest(new {success=false,message="Select a restaurant first."});
         if(string.IsNullOrWhiteSpace(r.FullName)||r.FullName.Trim().Length>150||!System.Net.Mail.MailAddress.TryCreate(r.Email,out _)||
-           string.IsNullOrWhiteSpace(r.MobileNumber)||r.MobileNumber.Trim().Length<10||!Strong(r.Password))
+           !ValidMobile(r.MobileNumber)||!Strong(r.Password))
             return BadRequest(new {success=false,message="Enter valid staff details and a strong password."});
         var email=r.Email.Trim().ToLowerInvariant(); var mobile=r.MobileNumber.Trim();
         var duplicate=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Users WHERE IsDeleted=0 AND (Email=@Email OR MobileNumber=@Mobile)",P("@Email",email),P("@Mobile",mobile));
@@ -48,7 +48,7 @@ END CATCH",P("@Id",id),P("@Name",r.FullName.Trim()),P("@Email",email),P("@Mobile
     public async Task<IActionResult> UpdateStaff(Guid id,UpdateStaffRequest r)
     {
         if(CurrentRestaurantId==Guid.Empty) return BadRequest(new {success=false,message="Select a restaurant first."});
-        if(r.Role is not ("Manager" or "Staff")||string.IsNullOrWhiteSpace(r.FullName)||!System.Net.Mail.MailAddress.TryCreate(r.Email,out _)||string.IsNullOrWhiteSpace(r.MobileNumber))
+        if(r.Role is not ("Manager" or "Staff")||string.IsNullOrWhiteSpace(r.FullName)||!System.Net.Mail.MailAddress.TryCreate(r.Email,out _)||!ValidMobile(r.MobileNumber))
             return BadRequest(new {success=false,message="Invalid staff details or role."});
         if(User.IsInRole("Manager")&&r.Role=="Manager") return Forbid();
         var duplicate=await Db.ScalarAsync("SELECT COUNT(1) FROM dbo.Users WHERE IsDeleted=0 AND UserId<>@Id AND (Email=@Email OR MobileNumber=@Mobile)",P("@Id",id),P("@Email",r.Email.Trim().ToLowerInvariant()),P("@Mobile",r.MobileNumber.Trim()));
@@ -69,5 +69,6 @@ END CATCH",P("@Id",id),P("@Name",r.FullName.Trim()),P("@Email",email),P("@Mobile
         return n==0?NotFound():Success(null,"Staff access removed.");
     }
 
+    private static bool ValidMobile(string? value){if(string.IsNullOrWhiteSpace(value))return false;var normalized=value.Trim();if(normalized.StartsWith("+"))normalized=normalized[1..];return normalized.Length is >=10 and <=15&&normalized.All(char.IsDigit);}
     private static bool Strong(string? value)=>!string.IsNullOrWhiteSpace(value)&&value.Length>=8&&value.Any(char.IsUpper)&&value.Any(char.IsLower)&&value.Any(char.IsDigit)&&value.Any(c=>!char.IsLetterOrDigit(c));
 }
