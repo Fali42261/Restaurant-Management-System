@@ -100,14 +100,26 @@ jobs:
           RESTAURANT_ID=$(echo "$CREATED" | jq -r '.data.restaurantId // .data.RestaurantId')
           test -n "$RESTAURANT_ID" && test "$RESTAURANT_ID" != "null"
 
+          SECOND_CREATED=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/restaurants \
+            -H "Authorization: Bearer $ACCESS_TOKEN" -H 'Content-Type: application/json' \
+            -d '{"name":"CI Test Restaurant Zeta","mobileNumber":"9876543212","address":"Second Integration Address","openingTime":"10:00:00","closingTime":"23:00:00","operatingDays":["Monday","Tuesday","Wednesday","Thursday","Friday"]}')
+          echo "$SECOND_CREATED" | jq -e '.success == true' >/dev/null
+          SECOND_RESTAURANT_ID=$(echo "$SECOND_CREATED" | jq -r '.data.restaurantId // .data.RestaurantId')
+          test -n "$SECOND_RESTAURANT_ID" && test "$SECOND_RESTAURANT_ID" != "null"
+
           LIST=$(curl -fsS "http://127.0.0.1:5080/api/v1/users/$USER_ID/restaurants" \
             -H "Authorization: Bearer $ACCESS_TOKEN")
-          echo "$LIST" | jq -e --arg id "$RESTAURANT_ID" '.success == true and (.data | length == 1) and ((.data[0].restaurantId // .data[0].RestaurantId) == $id)' >/dev/null
+          echo "$LIST" | jq -e --arg first "$RESTAURANT_ID" --arg second "$SECOND_RESTAURANT_ID" '.success == true and (.data | length == 2) and ((.data[0].restaurantId // .data[0].RestaurantId) == $first) and ((.data[1].restaurantId // .data[1].RestaurantId) == $second)' >/dev/null
 
           SELECTED=$(curl -fsS -X POST "http://127.0.0.1:5080/api/v1/restaurants/$RESTAURANT_ID/select" \
             -H "Authorization: Bearer $ACCESS_TOKEN")
-          SCOPED_TOKEN=$(echo "$SELECTED" | jq -r '.data.accessToken')
-          RESTAURANT_REFRESH=$(echo "$SELECTED" | jq -r '.data.refreshToken')
+          FIRST_SCOPED_TOKEN=$(echo "$SELECTED" | jq -r '.data.accessToken')
+          test -n "$FIRST_SCOPED_TOKEN" && test "$FIRST_SCOPED_TOKEN" != "null"
+
+          SWITCHED=$(curl -fsS -X POST "http://127.0.0.1:5080/api/v1/restaurants/$SECOND_RESTAURANT_ID/select" \
+            -H "Authorization: Bearer $FIRST_SCOPED_TOKEN")
+          SCOPED_TOKEN=$(echo "$SWITCHED" | jq -r '.data.accessToken')
+          RESTAURANT_REFRESH=$(echo "$SWITCHED" | jq -r '.data.refreshToken')
           test -n "$SCOPED_TOKEN" && test "$SCOPED_TOKEN" != "null"
 
           DASHBOARD=$(curl -fsS http://127.0.0.1:5080/api/v1/reports/dashboard \
@@ -123,8 +135,11 @@ jobs:
             -H "Authorization: Bearer $ROTATED_TOKEN" | jq -e '.success == true' >/dev/null
 
           DB_CHECK=$(sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -h -1 -W \
-            -Q "SET NOCOUNT ON; SELECT COUNT(1) FROM dbo.Restaurants WHERE RestaurantId='$RESTAURANT_ID' AND Name=N'CI Test Restaurant'; SELECT COUNT(1) FROM dbo.UserRestaurants WHERE UserId='$USER_ID' AND RestaurantId='$RESTAURANT_ID' AND Role='Owner'; SELECT COUNT(1) FROM dbo.RefreshTokens WHERE UserId='$USER_ID' AND RestaurantId='$RESTAURANT_ID';")
+            -Q "SET NOCOUNT ON; SELECT COUNT(1) FROM dbo.Restaurants WHERE RestaurantId IN('$RESTAURANT_ID','$SECOND_RESTAURANT_ID'); SELECT COUNT(1) FROM dbo.UserRestaurants WHERE UserId='$USER_ID' AND RestaurantId IN('$RESTAURANT_ID','$SECOND_RESTAURANT_ID') AND Role='Owner'; SELECT COUNT(1) FROM dbo.RefreshTokens WHERE UserId='$USER_ID' AND RestaurantId='$SECOND_RESTAURANT_ID';")
           echo "$DB_CHECK"
-          test "$(echo "$DB_CHECK" | grep -c '^1$')" -ge 3
+          test "$(echo "$DB_CHECK" | grep -c '^2
+)" -ge 2
+          test "$(echo "$DB_CHECK" | grep -c '^2
+)" -ge 2
 
-          echo "PASS: SQL scripts, owner registration, login, empty restaurant lookup, create restaurant, list restaurants, select restaurant, dashboard metrics and refresh-token rotation."
+          echo "PASS: SQL scripts, owner registration, login, zero-restaurant lookup, first and second restaurant creation, sorted multi-restaurant listing, restaurant switching, dashboard metrics and refresh-token rotation."
