@@ -79,7 +79,7 @@ BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
 END;
 GO
 CREATE OR ALTER PROCEDURE dbo.usp_Auth_GetMe @UserId UNIQUEIDENTIFIER
-AS BEGIN SET NOCOUNT ON; SELECT UserId,FullName,Email,MobileNumber,Role,IsActive FROM dbo.Users WHERE UserId=@UserId AND IsDeleted=0; END;
+AS BEGIN SET NOCOUNT ON; SELECT UserId,FullName,Email,MobileNumber,Role,IsActive FROM dbo.Users WHERE UserId=@UserId AND IsActive=1 AND IsDeleted=0; END;
 GO
 CREATE OR ALTER PROCEDURE dbo.usp_Auth_Logout @UserId UNIQUEIDENTIFIER
 AS BEGIN SET NOCOUNT ON; UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() WHERE UserId=@UserId AND RevokedAt IS NULL; SELECT @@ROWCOUNT RevokedSessions; END;
