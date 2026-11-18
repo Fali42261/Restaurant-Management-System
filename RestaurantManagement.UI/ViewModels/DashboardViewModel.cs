@@ -133,6 +133,28 @@ public sealed class DashboardViewModel : BaseViewModel
     public string TodayReservationsText { get => _todayReservationsText; private set => SetProperty(ref _todayReservationsText, value); }
     public string UpcomingGuestsText { get => _upcomingGuestsText; private set => SetProperty(ref _upcomingGuestsText, value); }
     public string DashboardDataStatus { get => _dashboardDataStatus; private set => SetProperty(ref _dashboardDataStatus, value); }
+    public ObservableCollection<DashboardTopProduct> DashboardTopProducts { get; } = new();
+    private double _revenueBar1Height = 2, _revenueBar2Height = 2, _revenueBar3Height = 2, _revenueBar4Height = 2, _revenueBar5Height = 2, _revenueBar6Height = 2, _revenueBar7Height = 2;
+    private string _revenueDay1 = "—", _revenueDay2 = "—", _revenueDay3 = "—", _revenueDay4 = "—", _revenueDay5 = "—", _revenueDay6 = "—", _revenueDay7 = "—";
+    private string _revenueAxisTop = "0", _revenueAxis75 = "0", _revenueAxis50 = "0", _revenueAxis25 = "0";
+    public double RevenueBar1Height { get => _revenueBar1Height; private set => SetProperty(ref _revenueBar1Height, value); }
+    public double RevenueBar2Height { get => _revenueBar2Height; private set => SetProperty(ref _revenueBar2Height, value); }
+    public double RevenueBar3Height { get => _revenueBar3Height; private set => SetProperty(ref _revenueBar3Height, value); }
+    public double RevenueBar4Height { get => _revenueBar4Height; private set => SetProperty(ref _revenueBar4Height, value); }
+    public double RevenueBar5Height { get => _revenueBar5Height; private set => SetProperty(ref _revenueBar5Height, value); }
+    public double RevenueBar6Height { get => _revenueBar6Height; private set => SetProperty(ref _revenueBar6Height, value); }
+    public double RevenueBar7Height { get => _revenueBar7Height; private set => SetProperty(ref _revenueBar7Height, value); }
+    public string RevenueDay1 { get => _revenueDay1; private set => SetProperty(ref _revenueDay1, value); }
+    public string RevenueDay2 { get => _revenueDay2; private set => SetProperty(ref _revenueDay2, value); }
+    public string RevenueDay3 { get => _revenueDay3; private set => SetProperty(ref _revenueDay3, value); }
+    public string RevenueDay4 { get => _revenueDay4; private set => SetProperty(ref _revenueDay4, value); }
+    public string RevenueDay5 { get => _revenueDay5; private set => SetProperty(ref _revenueDay5, value); }
+    public string RevenueDay6 { get => _revenueDay6; private set => SetProperty(ref _revenueDay6, value); }
+    public string RevenueDay7 { get => _revenueDay7; private set => SetProperty(ref _revenueDay7, value); }
+    public string RevenueAxisTop { get => _revenueAxisTop; private set => SetProperty(ref _revenueAxisTop, value); }
+    public string RevenueAxis75 { get => _revenueAxis75; private set => SetProperty(ref _revenueAxis75, value); }
+    public string RevenueAxis50 { get => _revenueAxis50; private set => SetProperty(ref _revenueAxis50, value); }
+    public string RevenueAxis25 { get => _revenueAxis25; private set => SetProperty(ref _revenueAxis25, value); }
     private string _kitchenDataStatus = "Loading kitchen tickets...";
     public string KitchenDataStatus { get => _kitchenDataStatus; private set => SetProperty(ref _kitchenDataStatus, value); }
 
@@ -140,7 +162,8 @@ public sealed class DashboardViewModel : BaseViewModel
     {
         try
         {
-            var summary = await new AuthService().GetDashboardSummaryAsync();
+            var api = new AuthService();
+            var summary = await api.GetDashboardSummaryAsync();
             if (summary is null) throw new InvalidOperationException("The dashboard API returned no data.");
             TodayRevenueText = $"₹{summary.TodaySales:N0}";
             ActiveOrdersText = summary.ActiveOrders.ToString();
@@ -149,11 +172,44 @@ public sealed class DashboardViewModel : BaseViewModel
             AvailableTablesText = $"{summary.AvailableTables} available";
             TodayReservationsText = summary.TodayReservations.ToString();
             UpcomingGuestsText = $"{summary.UpcomingGuests} upcoming guests";
-            DashboardDataStatus = "Live KPI data connected; charts and lists are preview data.";
+
+            var today = DateTime.Today;
+            var from = today.AddDays(-6);
+            var sales = await api.GetDashboardSalesAsync(from, today);
+            var daily = Enumerable.Range(0, 7).Select(i => from.AddDays(i))
+                .Select(day => new { Day = day, Amount = sales.FirstOrDefault(x => x.SaleDate.Date == day.Date)?.GrossSales ?? 0m })
+                .ToArray();
+            var max = daily.Max(x => x.Amount);
+            var scale = max <= 0 ? 1m : max;
+            RevenueBar1Height = (double)Math.Max(2m, daily[0].Amount / scale * 145m);
+            RevenueBar2Height = (double)Math.Max(2m, daily[1].Amount / scale * 145m);
+            RevenueBar3Height = (double)Math.Max(2m, daily[2].Amount / scale * 145m);
+            RevenueBar4Height = (double)Math.Max(2m, daily[3].Amount / scale * 145m);
+            RevenueBar5Height = (double)Math.Max(2m, daily[4].Amount / scale * 145m);
+            RevenueBar6Height = (double)Math.Max(2m, daily[5].Amount / scale * 145m);
+            RevenueBar7Height = (double)Math.Max(2m, daily[6].Amount / scale * 145m);
+            RevenueDay1 = daily[0].Day.ToString("ddd");
+            RevenueDay2 = daily[1].Day.ToString("ddd");
+            RevenueDay3 = daily[2].Day.ToString("ddd");
+            RevenueDay4 = daily[3].Day.ToString("ddd");
+            RevenueDay5 = daily[4].Day.ToString("ddd");
+            RevenueDay6 = daily[5].Day.ToString("ddd");
+            RevenueDay7 = daily[6].Day.ToString("ddd");
+            RevenueAxisTop = max.ToString("0");
+            RevenueAxis75 = (max * .75m).ToString("0");
+            RevenueAxis50 = (max * .50m).ToString("0");
+            RevenueAxis25 = (max * .25m).ToString("0");
+
+            var topProducts = await api.GetDashboardTopProductsAsync(from, today);
+            DashboardTopProducts.Clear();
+            foreach (var product in topProducts)
+                DashboardTopProducts.Add(product);
+
+            DashboardDataStatus = "Live KPIs, 7-day sales chart and popular products connected.";
         }
-        catch (Exception ex)
+        catch
         {
-            DashboardDataStatus = "Live dashboard data unavailable. Check API/database connection.";
+            DashboardDataStatus = "Some dashboard data could not be loaded. Check API/database connection.";
         }
     }
 
