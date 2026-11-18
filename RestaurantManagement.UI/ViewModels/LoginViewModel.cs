@@ -47,7 +47,24 @@ public sealed class LoginViewModel : BaseViewModel
         {
             IsBusy = true;
             var user = await _authService.SignInAsync(EmailOrMobile, Password);
-            // Preserve the existing one-time trial behavior after successful API authentication.
+            var restaurantService = (AuthService)_authService;
+            var restaurants = await restaurantService.GetRestaurantsAsync(user.Id);
+            if (restaurants.Count == 0)
+            {
+                if (!string.Equals(user.Role, "Owner", StringComparison.OrdinalIgnoreCase))
+                {
+                    await Shell.Current.DisplayAlert("Restaurant not assigned", "Your account is not assigned to an active restaurant. Please contact the owner.", "OK");
+                    return;
+                }
+
+                await Shell.Current.Navigation.PushModalAsync(new NavigationPage(new CreateRestaurantPage(user)));
+                return;
+            }
+
+            // API response ordering is authoritative: the first restaurant is selected by default.
+            var selected = restaurants[0];
+            await restaurantService.SelectRestaurantAsync(selected);
+            RestaurantSession.Set(user, restaurants, selected);
             TrialAccessService.StartTrialIfNeeded();
             await Shell.Current.GoToAsync(nameof(DashboardPage));
         }
