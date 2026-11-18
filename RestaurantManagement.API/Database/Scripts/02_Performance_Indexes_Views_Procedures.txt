@@ -244,7 +244,7 @@ BEGIN
  SET NOCOUNT ON;
  SELECT CONVERT(date,CreatedAt) AS SaleDate,
         COUNT(1) AS BillCount,
-        COALESCE(SUM(Total),0) AS GrossSales,
+        COALESCE(SUM(AmountPaid),0) AS GrossSales,
         COALESCE(SUM(Discount),0) AS Discounts,
         COALESCE(SUM(Tax),0) AS Tax
  FROM dbo.Bills
@@ -268,6 +268,7 @@ BEGIN
  INNER JOIN dbo.Orders o ON o.OrderId=oi.OrderId
  WHERE o.IsDeleted=0
    AND o.CreatedAt>=@FromUtc AND o.CreatedAt<@ToUtcExclusive
+   AND o.Status<>'Cancelled' AND p.IsDeleted=0
  GROUP BY p.Name
  ORDER BY QuantitySold DESC,p.Name;
 END;
