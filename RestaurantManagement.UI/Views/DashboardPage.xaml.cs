@@ -117,6 +117,7 @@ public partial class DashboardPage : ContentPage
         var selected = RestaurantSession.SelectedRestaurant ?? restaurants.FirstOrDefault();
         _changingRestaurant = true;
         RestaurantSingleName.Text = selected?.Name ?? "Restaurant";
+        SidebarRestaurantName.Text = selected?.Name ?? "My Restaurant";
         RestaurantSingleName.IsVisible = restaurants.Count == 1;
         RestaurantPicker.IsVisible = restaurants.Count > 1;
         RestaurantPicker.ItemsSource = restaurants;
@@ -137,6 +138,7 @@ public partial class DashboardPage : ContentPage
             await new AuthService().SelectRestaurantAsync(selected);
             RestaurantSession.Select(selected);
             RestaurantSingleName.Text = selected.Name;
+            SidebarRestaurantName.Text = selected.Name;
             // Reset the view model so stale values from the previous restaurant are not retained.
             var refreshed = new DashboardViewModel();
             BindingContext = refreshed;
