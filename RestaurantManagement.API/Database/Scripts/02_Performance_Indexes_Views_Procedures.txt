@@ -185,3 +185,33 @@ BEGIN
  ORDER BY CreatedAt DESC,TicketId OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
 END;
 GO
+
+
+/* Restaurant-scoped dashboard KPIs. Row-level security applies through the
+   RestaurantId session context set by SqlDataAccess for every API connection. */
+CREATE OR ALTER PROCEDURE dbo.usp_Dashboard_Summary
+AS
+BEGIN
+ SET NOCOUNT ON;
+ DECLARE @Today date=CONVERT(date,SYSUTCDATETIME());
+
+ SELECT
+  (SELECT COUNT(1) FROM dbo.Orders
+   WHERE CreatedAt>=@Today AND CreatedAt<DATEADD(day,1,@Today) AND IsDeleted=0) AS TodayOrders,
+  (SELECT COALESCE(SUM(Total),0) FROM dbo.Bills
+   WHERE CreatedAt>=@Today AND CreatedAt<DATEADD(day,1,@Today)) AS TodaySales,
+  (SELECT COUNT(1) FROM dbo.Reservations
+   WHERE ReservationDate=@Today AND IsDeleted=0) AS TodayReservations,
+  (SELECT COUNT(1) FROM dbo.RestaurantTables
+   WHERE Status='Available' AND IsDeleted=0) AS AvailableTables,
+  (SELECT COUNT(1) FROM dbo.Orders
+   WHERE Status NOT IN('Completed','Cancelled') AND IsDeleted=0) AS ActiveOrders,
+  (SELECT COUNT(1) FROM dbo.RestaurantTables WHERE IsDeleted=0) AS TotalTables,
+  (SELECT COUNT(1) FROM dbo.RestaurantTables
+   WHERE Status='Occupied' AND IsDeleted=0) AS OccupiedTables,
+  (SELECT COALESCE(SUM(GuestCount),0) FROM dbo.Reservations
+   WHERE ReservationDate>=@Today AND Status IN('Pending','Confirmed') AND IsDeleted=0) AS UpcomingGuests;
+END;
+GO
+PRINT 'swapDigit dashboard summary procedure created.';
+GO
