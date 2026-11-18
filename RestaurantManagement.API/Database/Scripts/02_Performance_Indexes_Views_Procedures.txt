@@ -216,7 +216,7 @@ BEGIN
  SELECT
   (SELECT COUNT(1) FROM dbo.Orders
    WHERE CreatedAt>=@Today AND CreatedAt<DATEADD(day,1,@Today) AND IsDeleted=0) AS TodayOrders,
-  (SELECT COALESCE(SUM(Total),0) FROM dbo.Bills
+  (SELECT COALESCE(SUM(AmountPaid),0) FROM dbo.Bills
    WHERE CreatedAt>=@Today AND CreatedAt<DATEADD(day,1,@Today)) AS TodaySales,
   (SELECT COUNT(1) FROM dbo.Reservations
    WHERE ReservationDate=@Today AND IsDeleted=0) AS TodayReservations,
@@ -270,5 +270,40 @@ BEGIN
    AND o.CreatedAt>=@FromUtc AND o.CreatedAt<@ToUtcExclusive
  GROUP BY p.Name
  ORDER BY QuantitySold DESC,p.Name;
+END;
+GO
+
+
+CREATE OR ALTER PROCEDURE dbo.usp_KitchenTicket_UpdateStatus
+ @TicketId uniqueidentifier,
+ @Status nvarchar(30)
+AS
+BEGIN
+ SET NOCOUNT ON;
+ DECLARE @CurrentStatus nvarchar(30);
+ SELECT @CurrentStatus=Status FROM dbo.KitchenTickets WHERE TicketId=@TicketId;
+ IF @CurrentStatus IS NULL
+ BEGIN
+  SELECT CAST(0 AS int) AS UpdatedRows,N'NotFound' AS Outcome;
+  RETURN;
+ END;
+
+ IF NOT (
+   (@CurrentStatus='New' AND @Status IN('Preparing','Cancelled')) OR
+   (@CurrentStatus='Preparing' AND @Status IN('Ready','Cancelled')) OR
+   (@CurrentStatus='Ready' AND @Status IN('Served','Cancelled'))
+ )
+ BEGIN
+  SELECT CAST(0 AS int) AS UpdatedRows,N'InvalidTransition' AS Outcome;
+  RETURN;
+ END;
+
+ UPDATE dbo.KitchenTickets
+ SET Status=@Status,UpdatedAt=SYSUTCDATETIME()
+ WHERE TicketId=@TicketId AND Status=@CurrentStatus;
+
+ DECLARE @UpdatedRows int=@@ROWCOUNT;
+ SELECT @UpdatedRows AS UpdatedRows,
+        CASE WHEN @UpdatedRows=1 THEN N'Updated' ELSE N'Conflict' END AS Outcome;
 END;
 GO
