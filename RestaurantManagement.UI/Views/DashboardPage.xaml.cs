@@ -600,7 +600,8 @@ public partial class DashboardPage : ContentPage
             return;
         }
         var normalizedType = table.Trim().Equals("Delivery", StringComparison.OrdinalIgnoreCase) ? "Delivery" :
-            table.Trim().StartsWith("T", StringComparison.OrdinalIgnoreCase) || table.Trim().StartsWith("Table", StringComparison.OrdinalIgnoreCase) ? "DineIn" : "Takeaway";
+            table.Trim().StartsWith("Table", StringComparison.OrdinalIgnoreCase) ||
+            (table.Trim().StartsWith("T", StringComparison.OrdinalIgnoreCase) && !table.Trim().Equals("Takeaway", StringComparison.OrdinalIgnoreCase)) ? "DineIn" : "Takeaway";
         try
         {
             await new OrdersPosApiService().CreateBillAsync(new CreateBillApiRequest(
