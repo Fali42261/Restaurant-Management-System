@@ -21,3 +21,5 @@ public sealed record CreateInventoryItemRequest(string Name, string Unit, decima
 public sealed record StockMovementRequest(Guid ItemId, string MovementType, decimal Quantity, string? Reference, string? Notes);
 public sealed record CreateSupportTicketRequest(string Subject, string Message, string Priority);
 public sealed record UpdateStaffRequest(string FullName, string Email, string MobileNumber, string Role, bool IsActive);
+
+public sealed record UpdateInventoryItemRequest(string Name,string Unit,decimal ReorderLevel,decimal CostPrice,bool IsActive);
