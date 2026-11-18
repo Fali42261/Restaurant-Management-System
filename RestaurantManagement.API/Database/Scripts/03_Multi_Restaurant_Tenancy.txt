@@ -158,3 +158,11 @@ END
 GO
 PRINT 'swapDigit multi-restaurant tenant schema and row-level isolation are ready.';
 GO
+
+/* Keep refresh sessions bound to the selected restaurant during token rotation. */
+IF COL_LENGTH('dbo.RefreshTokens','RestaurantId') IS NULL
+ ALTER TABLE dbo.RefreshTokens ADD RestaurantId UNIQUEIDENTIFIER NULL;
+GO
+IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_RefreshTokens_Restaurants')
+ ALTER TABLE dbo.RefreshTokens ADD CONSTRAINT FK_RefreshTokens_Restaurants FOREIGN KEY(RestaurantId) REFERENCES dbo.Restaurants(RestaurantId);
+GO

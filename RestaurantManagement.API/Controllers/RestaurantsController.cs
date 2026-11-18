@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +50,11 @@ public sealed class RestaurantsController(SqlDataAccess db, IOptions<AppSettings
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Jwt.SigningKey));
         var token = new JwtSecurityToken(_settings.Jwt.Issuer,_settings.Jwt.Audience,claims,now,now.AddHours(1),new SigningCredentials(key,SecurityAlgorithms.HmacSha256));
-        return Success(new { accessToken=new JwtSecurityTokenHandler().WriteToken(token), expiresIn=3600, restaurant=new { restaurantId, name=row["Name"], role=row["Role"] } }, "Restaurant selected. Use this token for restaurant-scoped API requests.");
+        var refreshToken=Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+        var refreshHash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
+        await Db.ExecuteAsync("INSERT dbo.RefreshTokens(TokenId,UserId,RestaurantId,TokenHash,ExpiresAt,CreatedAt) VALUES(NEWID(),@UserId,@RestaurantId,@Hash,@Expires,SYSUTCDATETIME())",
+            P("@UserId",CurrentUserId),P("@RestaurantId",restaurantId),P("@Hash",refreshHash),P("@Expires",now.AddDays(_settings.Jwt.RefreshTokenDays)));
+        return Success(new { accessToken=new JwtSecurityTokenHandler().WriteToken(token), refreshToken, expiresIn=3600, restaurant=new { restaurantId, name=row["Name"], role=row["Role"] } }, "Restaurant selected. Use this token for restaurant-scoped API requests.");
     }
 }
 public sealed record CreateRestaurantRequest(string Name);

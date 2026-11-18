@@ -97,23 +97,46 @@ public sealed class AuthController(SqlDataAccess db, IPasswordHasher<string> has
     public async Task<IActionResult> Refresh(RefreshTokenRequest request)
     {
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(request.RefreshToken)));
-        var rows = await Db.QueryAsync("SELECT TOP 1 TokenId,UserId FROM dbo.RefreshTokens WHERE TokenHash=@Hash AND RevokedAt IS NULL AND ExpiresAt>SYSUTCDATETIME()", P("@Hash", hash));
+        var rows = await Db.QueryAsync("SELECT TOP 1 TokenId,UserId,RestaurantId FROM dbo.RefreshTokens WHERE TokenHash=@Hash AND RevokedAt IS NULL AND ExpiresAt>SYSUTCDATETIME()", P("@Hash", hash));
         if (rows.Count == 0) return Unauthorized(new { success = false, message = "Refresh token is invalid or expired." });
         var tokenId = Guid.Parse(rows[0]["TokenId"]!.ToString()!);
         var userId = Guid.Parse(rows[0]["UserId"]!.ToString()!);
+        Guid? restaurantId = rows[0]["RestaurantId"] is null ? null : Guid.Parse(rows[0]["RestaurantId"]!.ToString()!);
         var revoked = await Db.ExecuteAsync("UPDATE dbo.RefreshTokens SET RevokedAt=SYSUTCDATETIME() WHERE TokenId=@Id AND RevokedAt IS NULL AND ExpiresAt>SYSUTCDATETIME()", P("@Id", tokenId));
         if (revoked == 0) return Unauthorized(new { success = false, message = "Refresh token has already been used." });
         var userRows = await Db.QueryAsync("SELECT FullName,Email,Role,IsActive FROM dbo.Users WHERE UserId=@Id AND IsDeleted=0", P("@Id", userId));
         if (userRows.Count == 0 || !(bool)userRows[0]["IsActive"]!) return Unauthorized(new { success = false, message = "Account is inactive." });
         var user = userRows[0];
         var now = DateTime.UtcNow;
-        var claims = new[] { new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()), new Claim(JwtRegisteredClaimNames.Email, user["Email"]!.ToString()!), new Claim(ClaimTypes.Name, user["FullName"]!.ToString()!), new Claim(ClaimTypes.Role, user["Role"]!.ToString()!) };
+        var role = user["Role"]!.ToString()!;
+        string? restaurantName = null;
+        if (restaurantId.HasValue)
+        {
+            var membership = await Db.QueryAsync("SELECT TOP(1) ur.Role,r.Name FROM dbo.UserRestaurants ur INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId WHERE ur.UserId=@UserId AND ur.RestaurantId=@RestaurantId AND ur.IsActive=1 AND r.IsActive=1", P("@UserId", userId), P("@RestaurantId", restaurantId.Value));
+            if (membership.Count == 0) return Unauthorized(new { success = false, message = "Restaurant access has been removed." });
+            role = membership[0]["Role"]!.ToString()!;
+            restaurantName = membership[0]["Name"]!.ToString()!;
+        }
+        var claimsList = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtRegisteredClaimNames.Email, user["Email"]!.ToString()!),
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Name, user["FullName"]!.ToString()!),
+            new(ClaimTypes.Role, role)
+        };
+        if (restaurantId.HasValue)
+        {
+            claimsList.Add(new Claim("restaurant_id", restaurantId.Value.ToString()));
+            claimsList.Add(new Claim("restaurant_name", restaurantName ?? ""));
+        }
+        var claims = claimsList.ToArray();
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Jwt.SigningKey));
         var token = new JwtSecurityToken(_settings.Jwt.Issuer, _settings.Jwt.Audience, claims, now, now.AddMinutes(_settings.Jwt.AccessTokenMinutes), new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         var refresh = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
         var refreshHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(refresh)));
-        await Db.ExecuteAsync("INSERT dbo.RefreshTokens(TokenId,UserId,TokenHash,ExpiresAt,CreatedAt) VALUES(NEWID(),@UserId,@Hash,@Expires,SYSUTCDATETIME())", P("@UserId", userId), P("@Hash", refreshHash), P("@Expires", now.AddDays(_settings.Jwt.RefreshTokenDays)));
-        return Success(new { accessToken = new JwtSecurityTokenHandler().WriteToken(token), refreshToken = refresh, expiresIn = _settings.Jwt.AccessTokenMinutes * 60 });
+        await Db.ExecuteAsync("INSERT dbo.RefreshTokens(TokenId,UserId,RestaurantId,TokenHash,ExpiresAt,CreatedAt) VALUES(NEWID(),@UserId,@RestaurantId,@Hash,@Expires,SYSUTCDATETIME())", P("@UserId", userId), P("@RestaurantId", restaurantId), P("@Hash", refreshHash), P("@Expires", now.AddDays(_settings.Jwt.RefreshTokenDays)));
+        return Success(new { accessToken = new JwtSecurityTokenHandler().WriteToken(token), refreshToken = refresh, expiresIn = 3600, restaurantId });
     }
 
     [Authorize, HttpGet("me")]
