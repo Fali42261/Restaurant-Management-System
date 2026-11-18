@@ -483,8 +483,8 @@ public partial class DashboardPage : ContentPage
                     ? _tables.FirstOrDefault(t => t.TableId == row.TableId.Value)?.Name ?? row.OrderType
                     : row.OrderType;
                 vm.Orders.Add(new OrderRecord(row.OrderNumber,
-                    string.IsNullOrWhiteSpace(row.CustomerName) ? row.OrderType : row.CustomerName,
-                    tableName, 1, row.Status, row.CreatedAt));
+                    string.IsNullOrWhiteSpace(row.ItemSummary) ? (row.CustomerName ?? row.OrderType) : row.ItemSummary,
+                    tableName, Math.Max(1, row.Quantity), row.Status, row.CreatedAt));
             }
         }
         catch (Exception ex)
@@ -599,7 +599,34 @@ public partial class DashboardPage : ContentPage
             await DisplayAlert("Invalid amount", "Enter a bill amount greater than zero.", "OK");
             return;
         }
-        vm.AddBill(customer.Trim(), table.Trim(), amount);
+        var normalizedType = table.Trim().Equals("Delivery", StringComparison.OrdinalIgnoreCase) ? "Delivery" :
+            table.Trim().StartsWith("T", StringComparison.OrdinalIgnoreCase) || table.Trim().StartsWith("Table", StringComparison.OrdinalIgnoreCase) ? "DineIn" : "Takeaway";
+        try
+        {
+            await new OrdersPosApiService().CreateBillAsync(new CreateBillApiRequest(
+                null, customer.Trim(), normalizedType, amount, 0m, 0m, amount, "Unpaid", 0m));
+            await LoadBillsAsync(vm);
+            await DisplayAlert("Bill created", "The invoice was saved to the restaurant database.", "OK");
+        }
+        catch (Exception ex) { await DisplayAlert("Bill not created", ex.Message, "OK"); }
+    }
+
+    private async void MarkBillPaidClicked(object sender, EventArgs e)
+    {
+        if (sender is not Button { BindingContext: BillRecord bill } || BindingContext is not DashboardViewModel vm) return;
+        if (bill.Status.Equals("Paid", StringComparison.OrdinalIgnoreCase)) return;
+        if (!_billIds.TryGetValue(bill.InvoiceNumber, out var billId))
+        {
+            await DisplayAlert("Invoice unavailable", "Refresh the bills list and try again.", "OK");
+            return;
+        }
+        try
+        {
+            await new OrdersPosApiService().MarkBillPaidAsync(billId);
+            await LoadBillsAsync(vm);
+            await DisplayAlert("Payment updated", $"{bill.InvoiceNumber} is now marked as paid.", "OK");
+        }
+        catch (Exception ex) { await DisplayAlert("Payment not updated", ex.Message, "OK"); }
     }
 
     private async void ViewInvoiceClicked(object sender, EventArgs e)
