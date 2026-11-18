@@ -8,6 +8,10 @@ public partial class DashboardPage : ContentPage
 {
     private double _lastWidth = -1;
     private bool _changingRestaurant;
+    private readonly Dictionary<string, Guid> _productIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, Guid> _orderIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, Guid> _billIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<TableDto> _tables = [];
     private readonly IDispatcherTimer _tableTimer;
 
     public DashboardPage()
@@ -24,6 +28,9 @@ public partial class DashboardPage : ContentPage
             TrialAccessService.StartTrialIfNeeded();
             UpdateTrialLock(vm);
             vm.RefreshTableTimers();
+            _ = LoadProductsAsync(vm);
+            _ = LoadOrdersAsync(vm);
+            _ = LoadBillsAsync(vm);
             _tableTimer.Start();
         };
         _tableTimer = Dispatcher.CreateTimer();
@@ -105,6 +112,12 @@ public partial class DashboardPage : ContentPage
             {
                 UpdateTrialLock(vm);
                 UpdateNavigationSelection(vm.SelectedSection);
+                if (vm.SelectedSection.Equals("Orders", StringComparison.OrdinalIgnoreCase))
+                    _ = LoadOrdersAsync(vm);
+                else if (vm.SelectedSection.Equals("POS Billing", StringComparison.OrdinalIgnoreCase))
+                    _ = LoadProductsAsync(vm);
+                else if (vm.SelectedSection.Equals("Sales / Bills", StringComparison.OrdinalIgnoreCase))
+                    _ = LoadBillsAsync(vm);
                 ((Border)FindByName("UserMenu")).IsVisible = false;
                 ((Border)FindByName("NotificationPopup")).IsVisible = false;
             }
@@ -169,17 +182,34 @@ public partial class DashboardPage : ContentPage
     private async void AddOrderClicked(object sender, EventArgs e)
     {
         if (BindingContext is not DashboardViewModel vm) return;
-        var item = await DisplayPromptAsync("Add order", "Enter item name(s):", "Continue", "Cancel", "e.g. Paneer Tikka, Roti");
-        if (string.IsNullOrWhiteSpace(item)) return;
-        var table = await DisplayPromptAsync("Add order", "Enter table / order type:", "Continue", "Cancel", "e.g. Table 03 / Takeaway");
-        if (string.IsNullOrWhiteSpace(table)) return;
-        var qtyText = await DisplayPromptAsync("Add order", "Enter total quantity:", "Save", "Cancel", "1", keyboard: Keyboard.Numeric);
-        if (!int.TryParse(qtyText, out var quantity) || quantity < 1)
+        await LoadProductsAsync(vm);
+        if (vm.SelfServiceProducts.Count == 0)
         {
-            await DisplayAlert("Invalid quantity", "Please enter a quantity greater than zero.", "OK");
+            await DisplayAlert("Menu unavailable", "Products could not be loaded from the restaurant API.", "OK");
             return;
         }
-        vm.AddOrder(item.Trim(), table.Trim(), quantity);
+        var names = vm.SelfServiceProducts.Select(x => x.Name).ToArray();
+        var selected = await DisplayActionSheet("Select order item", "Cancel", null, names);
+        if (string.IsNullOrWhiteSpace(selected) || selected == "Cancel") return;
+        var quantityText = await DisplayPromptAsync("Add order", "Quantity:", "Continue", "Cancel", "1", keyboard: Keyboard.Numeric);
+        if (!int.TryParse(quantityText, out var quantity) || quantity < 1 || !_productIds.TryGetValue(selected, out var productId))
+        {
+            await DisplayAlert("Invalid order", "Select a valid product and quantity.", "OK");
+            return;
+        }
+        var service = new OrdersPosApiService();
+        try
+        {
+            var result = await service.CheckoutAsync(new PosCheckoutRequest(
+                "Walk-in Guest", "Takeaway", null, 0m, 0m, "Unpaid", 0m,
+                [new PosCheckoutItem(productId, quantity, null)]));
+            await LoadOrdersAsync(vm);
+            await DisplayAlert("Order saved", $"Order {result?.OrderNumber} was saved and sent to KOT.", "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Order not saved", ex.Message, "OK");
+        }
     }
 
     private async void ViewOrderClicked(object sender, EventArgs e)
@@ -191,24 +221,62 @@ public partial class DashboardPage : ContentPage
     private async void EditOrderClicked(object sender, EventArgs e)
     {
         if (sender is not Button { BindingContext: OrderRecord order } || BindingContext is not DashboardViewModel vm) return;
-        var item = await DisplayPromptAsync("Edit order", "Update item name(s):", "Continue", "Cancel", initialValue: order.ItemSummary);
+        if (!_orderIds.TryGetValue(order.OrderNumber, out var orderId))
+        {
+            await DisplayAlert("Order unavailable", "Refresh the Orders list and try again.", "OK");
+            return;
+        }
+        await LoadProductsAsync(vm);
+        var item = await DisplayPromptAsync("Edit order", "Enter product name(s), separated by commas:", "Continue", "Cancel", initialValue: order.ItemSummary);
         if (string.IsNullOrWhiteSpace(item)) return;
-        var table = await DisplayPromptAsync("Edit order", "Update table / order type:", "Continue", "Cancel", initialValue: order.TableName);
-        if (string.IsNullOrWhiteSpace(table)) return;
-        var qtyText = await DisplayPromptAsync("Edit order", "Update quantity:", "Save", "Cancel", initialValue: order.Quantity.ToString(), keyboard: Keyboard.Numeric);
+        var qtyText = await DisplayPromptAsync("Edit order", "Total quantity:", "Save", "Cancel", initialValue: Math.Max(1, order.Quantity).ToString(), keyboard: Keyboard.Numeric);
         if (!int.TryParse(qtyText, out var quantity) || quantity < 1)
         {
             await DisplayAlert("Invalid quantity", "Please enter a quantity greater than zero.", "OK");
             return;
         }
-        vm.UpdateOrder(order, item.Trim(), table.Trim(), quantity);
+        var selectedProducts = item.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (selectedProducts.Length == 0 || selectedProducts.Any(x => !_productIds.ContainsKey(x)))
+        {
+            await DisplayAlert("Product not found", "Use product names from the restaurant menu, separated by commas.", "OK");
+            return;
+        }
+        var lines = selectedProducts.Select((name, index) => new ReplaceOrderItem(
+            _productIds[name], index == 0 ? quantity - selectedProducts.Length + 1 : 1, null)).ToList();
+        if (lines.Any(x => x.Quantity < 1))
+        {
+            await DisplayAlert("Invalid quantity", "Total quantity must be at least the number of selected products.", "OK");
+            return;
+        }
+        try
+        {
+            await new OrdersPosApiService().ReplaceOrderItemsAsync(orderId, lines);
+            await LoadOrdersAsync(vm);
+            await LoadBillsAsync(vm);
+            await DisplayAlert("Order updated", "Order items and unpaid invoice totals were updated.", "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Order not updated", ex.Message, "OK");
+        }
     }
 
     private async void DeleteOrderClicked(object sender, EventArgs e)
     {
         if (sender is not Button { BindingContext: OrderRecord order } || BindingContext is not DashboardViewModel vm) return;
         var confirm = await DisplayAlert("Delete order", $"Delete {order.OrderNumber}?", "Delete", "Cancel");
-        if (confirm) vm.DeleteOrder(order);
+        if (!confirm) return;
+        if (!_orderIds.TryGetValue(order.OrderNumber, out var orderId))
+        {
+            await DisplayAlert("Order unavailable", "Refresh the Orders list and try again.", "OK");
+            return;
+        }
+        try
+        {
+            await new OrdersPosApiService().DeleteOrderAsync(orderId);
+            await LoadOrdersAsync(vm);
+        }
+        catch (Exception ex) { await DisplayAlert("Order not deleted", ex.Message, "OK"); }
     }
 
     private FloorRecord? _editingFloor;
@@ -375,6 +443,77 @@ public partial class DashboardPage : ContentPage
     }
 
 
+    private async Task LoadProductsAsync(DashboardViewModel vm)
+    {
+        try
+        {
+            var page = await new OrdersPosApiService().GetProductsAsync();
+            if (page is null) return;
+            _productIds.Clear();
+            vm.SelfServiceProducts.Clear();
+            foreach (var product in page.Items.Where(x => x.IsAvailable))
+            {
+                _productIds[product.Name] = product.ProductId;
+                vm.SelfServiceProducts.Add(new MenuProduct(
+                    product.Name, product.CategoryName ?? product.Category ?? "Menu",
+                    product.Price, product.Description ?? ""));
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Menu API unavailable", ex.Message, "OK");
+        }
+    }
+
+    private async Task LoadOrdersAsync(DashboardViewModel vm)
+    {
+        try
+        {
+            var service = new OrdersPosApiService();
+            var page = await service.GetOrdersAsync();
+            var tableRows = await service.GetTablesAsync();
+            _tables.Clear();
+            if (tableRows is not null) _tables.AddRange(tableRows);
+            _orderIds.Clear();
+            vm.Orders.Clear();
+            foreach (var row in page?.Items ?? [])
+            {
+                _orderIds[row.OrderNumber] = row.OrderId;
+                var tableName = row.TableId.HasValue
+                    ? _tables.FirstOrDefault(t => t.TableId == row.TableId.Value)?.Name ?? row.OrderType
+                    : row.OrderType;
+                vm.Orders.Add(new OrderRecord(row.OrderNumber,
+                    string.IsNullOrWhiteSpace(row.CustomerName) ? row.OrderType : row.CustomerName,
+                    tableName, 1, row.Status, row.CreatedAt));
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Orders API unavailable", ex.Message, "OK");
+        }
+    }
+
+    private async Task LoadBillsAsync(DashboardViewModel vm)
+    {
+        try
+        {
+            var page = await new OrdersPosApiService().GetBillsAsync();
+            _billIds.Clear();
+            vm.Bills.Clear();
+            foreach (var row in page?.Items ?? [])
+            {
+                _billIds[row.InvoiceNumber] = row.BillId;
+                vm.Bills.Add(new BillRecord(row.InvoiceNumber, row.CustomerName, row.OrderType,
+                    row.Total, row.Status, row.CreatedAt, row.PaymentMethod, row.Subtotal,
+                    row.Discount, row.Tax, row.AmountPaid, Math.Max(0m, row.AmountPaid - row.Total)));
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Bills API unavailable", ex.Message, "OK");
+        }
+    }
+
     private void PosTotalsChanged(object sender, TextChangedEventArgs e)
     {
         if (BindingContext is not DashboardViewModel vm) return;
@@ -394,21 +533,56 @@ public partial class DashboardPage : ContentPage
         decimal.TryParse(PosTaxEntry.Text, out var tax);
         decimal.TryParse(PosCashReceivedEntry.Text, out var cashReceived);
         var paymentMethod = PosPaymentPicker.SelectedItem?.ToString() ?? "Cash";
-        var success = vm.CompletePosSale(
-            PosCustomerEntry.Text ?? "Walk-in Guest",
-            PosTableEntry.Text ?? "Takeaway",
-            discount, tax, paymentMethod, cashReceived, out var message);
-        await DisplayAlert(success ? "Payment completed" : "Cannot complete checkout", message, "OK");
-        if (success)
+        if (vm.PosCart.Count == 0)
         {
+            await DisplayAlert("Cannot checkout", "Add at least one product to the bill.", "OK");
+            return;
+        }
+        await LoadProductsAsync(vm);
+        var missing = vm.PosCart.Where(x => !_productIds.ContainsKey(x.ProductName)).Select(x => x.ProductName).ToArray();
+        if (missing.Length > 0)
+        {
+            await DisplayAlert("Menu changed", $"These products are no longer available: {string.Join(", ", missing)}. Refresh the menu and try again.", "OK");
+            return;
+        }
+        var orderText = PosTableEntry.Text?.Trim() ?? "Takeaway";
+        var selectedTable = _tables.FirstOrDefault(t =>
+            t.Name.Equals(orderText, StringComparison.OrdinalIgnoreCase) ||
+            $"Table {t.Name}".Equals(orderText, StringComparison.OrdinalIgnoreCase));
+        var orderType = selectedTable is not null ? "DineIn" :
+            orderText.Equals("Delivery", StringComparison.OrdinalIgnoreCase) ? "Delivery" : "Takeaway";
+        if (orderType == "DineIn" && selectedTable is null)
+        {
+            await DisplayAlert("Table not found", "Enter a table name that exists in this restaurant, or choose Takeaway / Delivery.", "OK");
+            return;
+        }
+        var method = paymentMethod.Equals("Other", StringComparison.OrdinalIgnoreCase) ? "Online" : paymentMethod;
+        var subtotal = vm.PosCart.Sum(x => x.LineTotal);
+        var discountAmount = Math.Round(subtotal * Math.Clamp(discount, 0m, 100m) / 100m, 2);
+        var taxAmount = Math.Round((subtotal - discountAmount) * Math.Clamp(tax, 0m, 100m) / 100m, 2);
+        var items = vm.PosCart.Select(x => new PosCheckoutItem(_productIds[x.ProductName], x.Quantity, null)).ToList();
+        try
+        {
+            var result = await new OrdersPosApiService().CheckoutAsync(new PosCheckoutRequest(
+                PosCustomerEntry.Text?.Trim(), orderType, selectedTable?.TableId,
+                discountAmount, taxAmount, method, cashReceived, items));
+            if (result is null) throw new InvalidOperationException("The API did not return the saved invoice.");
+            vm.PosCart.Clear();
+            vm.RefreshPosTotals();
+            await LoadOrdersAsync(vm);
+            await LoadBillsAsync(vm);
             PosCashReceivedEntry.Text = "";
             PosDiscountEntry.Text = "0";
             PosTaxEntry.Text = "5";
-            vm.RefreshPosTotals();
             PosDiscountAmountLabel.Text = vm.PosDiscountAmountText;
             PosTaxAmountLabel.Text = vm.PosTaxAmountText;
             PosGrandTotalLabel.Text = vm.PosGrandTotalText;
-            ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Sales / Bills");
+            await DisplayAlert("Payment completed", $"Order {result.OrderNumber}\nInvoice {result.InvoiceNumber}\nTotal ₹{result.Total:N2}\nPaid ₹{result.AmountPaid:N2}\nStatus: {result.Status}", "OK");
+            vm.NavigateCommand.Execute("Sales / Bills");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Checkout failed", ex.Message, "OK");
         }
     }
 
