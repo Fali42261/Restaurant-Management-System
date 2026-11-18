@@ -120,6 +120,7 @@ public sealed class DashboardViewModel : BaseViewModel
         RemoveCartLineCommand = new Command<CartLine>(line => { if (line != null) SelfServiceCart.Remove(line); });
         PlaceSelfServiceOrderCommand = new Command(PlaceSelfServiceOrder);
         AdvanceKotCommand = new Command<KotTicket>(async ticket => await AdvanceKotAsync(ticket));
+        RefreshKitchenCommand = new Command(async () => await LoadKitchenTicketsAsync());
         NotifyOrderCounts();
         _ = LoadDashboardSummaryAsync();
         _ = LoadKitchenTicketsAsync();
@@ -422,6 +423,7 @@ public sealed class DashboardViewModel : BaseViewModel
     public ICommand RemoveCartLineCommand { get; }
     public ICommand PlaceSelfServiceOrderCommand { get; }
     public ICommand AdvanceKotCommand { get; }
+    public ICommand RefreshKitchenCommand { get; }
     public ICommand ConfirmReservationCommand { get; }
     public ICommand CancelReservationCommand { get; }
     public ICommand ViewBillCommand { get; }
@@ -520,11 +522,9 @@ public sealed class DashboardViewModel : BaseViewModel
         var bill = new BillRecord(invoice, customer.Trim(), table.Trim(), total, "Paid", DateTime.Now, method, subtotal, discount, tax, received, Math.Max(0m, received - total), items);
         Bills.Insert(0, bill);
         Orders.Insert(0, new OrderRecord($"ORD-{_orderSequence}", items, table.Trim(), PosCart.Sum(x => x.Quantity), "Completed", DateTime.Now));
-        KitchenTickets.Insert(0, new KotTicket($"KOT-{_orderSequence}", table.Trim(), items, "New", DateTime.Now));
         PosCart.Clear();
         NotifySalesSummary();
         NotifyOrderCounts();
-        OnPropertyChanged(nameof(NewKotCount));
         RefreshPosTotals();
         message = $"Payment recorded successfully. Invoice {invoice}. Change: ₹{bill.Change:N2}.";
         return true;
@@ -545,12 +545,9 @@ public sealed class DashboardViewModel : BaseViewModel
         var orderId = $"ORD-{++_orderSequence}";
         var summary = string.Join(", ", SelfServiceCart.Select(x => $"{x.ProductName} × {x.Quantity}"));
         var quantity = SelfServiceCart.Sum(x => x.Quantity);
-        var ticket = new KotTicket($"KOT-{_orderSequence}", "Self Service", summary, "New", DateTime.Now);
-        KitchenTickets.Insert(0, ticket);
         Orders.Insert(0, new OrderRecord(orderId, summary, "Self Service", quantity, "Order Placed", DateTime.Now));
         SelfServiceCart.Clear();
         OnPropertyChanged(nameof(CartTotalText));
-        OnPropertyChanged(nameof(NewKotCount));
     }
 
     public void AddReservation(string guestName, string phone, DateTime date, TimeSpan time, string table, int guests)
