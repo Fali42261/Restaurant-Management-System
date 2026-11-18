@@ -169,7 +169,12 @@ public sealed class AuthBusinessLogic(
     private string PasswordMessage()=>$"Password must be at least {MinimumPasswordLength} characters and include uppercase, lowercase, number and symbol.";
     private static bool ValidMobile(string? v){if(string.IsNullOrWhiteSpace(v))return false;var s=v.Trim();if(s.StartsWith('+'))s=s[1..];return s.Length is >=10 and <=15&&s.All(char.IsDigit);}
     private static string NewToken()=>Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
-    private static string Hash(string v)=>Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(v)));
+    private string Hash(string value)
+    {
+        var key = Encoding.UTF8.GetBytes(_settings.Jwt.SigningKey);
+        var data = Encoding.UTF8.GetBytes(value);
+        return Convert.ToHexString(HMACSHA256.HashData(key, data));
+    }
     private static string T(Dictionary<string,object?> r,string k)=>r.TryGetValue(k,out var v)?v?.ToString()??"": "";
     private static string? N(Dictionary<string,object?> r,string k)=>r.TryGetValue(k,out var v)?v?.ToString():null;
     private static bool Bool(Dictionary<string,object?> r,string k)=>r.TryGetValue(k,out var v)&&v is not null&&Convert.ToBoolean(v);
