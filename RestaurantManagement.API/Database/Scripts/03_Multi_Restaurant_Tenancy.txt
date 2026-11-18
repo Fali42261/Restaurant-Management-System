@@ -306,3 +306,60 @@ GO
 IF NOT EXISTS(SELECT 1 FROM sys.foreign_keys WHERE name='FK_RefreshTokens_User_Restaurant')
  ALTER TABLE dbo.RefreshTokens WITH CHECK ADD CONSTRAINT FK_RefreshTokens_User_Restaurant FOREIGN KEY(UserId,RestaurantId) REFERENCES dbo.UserRestaurants(UserId,RestaurantId);
 GO
+
+
+/* Restaurant profile fields used by the post-login restaurant selector and first-run creation flow. */
+IF COL_LENGTH('dbo.Restaurants','MobileNumber') IS NULL ALTER TABLE dbo.Restaurants ADD MobileNumber NVARCHAR(25) NULL;
+IF COL_LENGTH('dbo.Restaurants','Address') IS NULL ALTER TABLE dbo.Restaurants ADD Address NVARCHAR(500) NULL;
+IF COL_LENGTH('dbo.Restaurants','OpeningTime') IS NULL ALTER TABLE dbo.Restaurants ADD OpeningTime TIME NULL;
+IF COL_LENGTH('dbo.Restaurants','ClosingTime') IS NULL ALTER TABLE dbo.Restaurants ADD ClosingTime TIME NULL;
+IF COL_LENGTH('dbo.Restaurants','OperatingDays') IS NULL ALTER TABLE dbo.Restaurants ADD OperatingDays NVARCHAR(200) NULL;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_UserRestaurants_List
+    @UserId UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT r.RestaurantId, r.Name, r.MobileNumber, r.Address,
+           CONVERT(VARCHAR(5), r.OpeningTime, 108) AS OpeningTime,
+           CONVERT(VARCHAR(5), r.ClosingTime, 108) AS ClosingTime,
+           r.OperatingDays, ur.Role
+    FROM dbo.UserRestaurants ur
+    INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId
+    WHERE ur.UserId=@UserId AND ur.IsActive=1 AND r.IsActive=1
+    ORDER BY r.Name;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Restaurant_CreateForOwner
+    @UserId UNIQUEIDENTIFIER,
+    @Name NVARCHAR(160),
+    @MobileNumber NVARCHAR(25),
+    @Address NVARCHAR(500),
+    @OpeningTime TIME,
+    @ClosingTime TIME,
+    @OperatingDays NVARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    DECLARE @RestaurantId UNIQUEIDENTIFIER=NEWID();
+    BEGIN TRANSACTION;
+    IF NOT EXISTS(SELECT 1 FROM dbo.Users WHERE UserId=@UserId AND Role='Owner' AND IsActive=1 AND IsDeleted=0)
+    BEGIN
+        ROLLBACK TRANSACTION;
+        THROW 51001, 'Only an active owner can create a restaurant.', 1;
+    END;
+    INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,MobileNumber,Address,OpeningTime,ClosingTime,OperatingDays,IsActive,CreatedAt)
+    VALUES(@RestaurantId,@UserId,@Name,@MobileNumber,@Address,@OpeningTime,@ClosingTime,@OperatingDays,1,SYSUTCDATETIME());
+    INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt)
+    VALUES(@UserId,@RestaurantId,'Owner',1,SYSUTCDATETIME());
+    COMMIT TRANSACTION;
+    SELECT RestaurantId,Name,MobileNumber,Address,
+           CONVERT(VARCHAR(5),OpeningTime,108) AS OpeningTime,
+           CONVERT(VARCHAR(5),ClosingTime,108) AS ClosingTime,
+           OperatingDays,CAST('Owner' AS NVARCHAR(30)) AS Role
+    FROM dbo.Restaurants WHERE RestaurantId=@RestaurantId;
+END
+GO
