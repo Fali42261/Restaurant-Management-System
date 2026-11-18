@@ -261,6 +261,7 @@
                         <VerticalStackLayout Spacing="3">
                             <Label Text="Kitchen Order Tickets" FontSize="25" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#222D27, Dark=#E7EFEB}" />
                             <Label Text="Track incoming orders and move each ticket through kitchen preparation." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
+                            <Label Text="{Binding KitchenDataStatus}" FontSize="11" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" />
                         </VerticalStackLayout>
                         <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
                             <Border BackgroundColor="{AppThemeBinding Light=#FFF5E5, Dark=#3A3020}" StrokeThickness="0" StrokeShape="RoundRectangle 10" Padding="10"><VerticalStackLayout><Label Text="NEW" FontSize="10" TextColor="#A56A12"/><Label Text="{Binding NewKotCount}" FontSize="22" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#8A5A12, Dark=#F5C46B}"/></VerticalStackLayout></Border>
