@@ -57,6 +57,7 @@ jobs:
           sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/01_Tables_And_Seed_Data.txt
           sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/02_Performance_Indexes_Views_Procedures.txt
           sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/03_Multi_Restaurant_Tenancy.txt
+          sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/04_Orders_POS_Billing.txt
 
       - name: Run API and test register, login, restaurant creation, selection and dashboard
         shell: bash
@@ -134,9 +135,50 @@ jobs:
           curl -fsS http://127.0.0.1:5080/api/v1/reports/dashboard \
             -H "Authorization: Bearer $ROTATED_TOKEN" | jq -e '.success == true' >/dev/null
 
+          CATEGORY=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/categories \
+            -H "Authorization: Bearer $SCOPED_TOKEN" -H 'Content-Type: application/json' \
+            -d '{"name":"CI Menu","sortOrder":1,"isActive":true}')
+          echo "$CATEGORY" | jq -e '.success == true' >/dev/null
+
+          PRODUCT=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/products \
+            -H "Authorization: Bearer $SCOPED_TOKEN" -H 'Content-Type: application/json' \
+            -d '{"name":"CI POS Test Item","category":"CI Menu","description":"Integration test product","price":10,"imageUrl":null}')
+          echo "$PRODUCT" | jq -e '.success == true' >/dev/null
+          PRODUCT_ID=$(echo "$PRODUCT" | jq -r '.data.productId // .data.ProductId')
+          test -n "$PRODUCT_ID" && test "$PRODUCT_ID" != "null"
+
+          CHECKOUT=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/pos/checkout \
+            -H "Authorization: Bearer $SCOPED_TOKEN" -H 'Content-Type: application/json' \
+            -d "$(jq -n --arg product "$PRODUCT_ID" '{customerName:"CI POS Guest",orderType:"Takeaway",tableId:null,discount:0,tax:0,paymentMethod:"Cash",cashReceived:5,items:[{productId:$product,quantity:2,notes:"no onion"}]}')")
+          echo "$CHECKOUT" | jq -e '.success == true and (.data.status // .data.Status) == "Unpaid"' >/dev/null
+          ORDER_ID=$(echo "$CHECKOUT" | jq -r '.data.orderId // .data.OrderId')
+          INVOICE=$(echo "$CHECKOUT" | jq -r '.data.invoiceNumber // .data.InvoiceNumber')
+          test -n "$ORDER_ID" && test "$ORDER_ID" != "null"
+          test -n "$INVOICE" && test "$INVOICE" != "null"
+
+          ORDERS=$(curl -fsS http://127.0.0.1:5080/api/v1/orders?pageNumber=1\&pageSize=10 \
+            -H "Authorization: Bearer $SCOPED_TOKEN")
+          echo "$ORDERS" | jq -e --arg id "$ORDER_ID" '.success == true and any(.data.items[]; (.orderId // .OrderId) == $id and (.quantity // .Quantity) == 2)' >/dev/null
+
+          BILLS=$(curl -fsS http://127.0.0.1:5080/api/v1/bills?pageNumber=1\&pageSize=10 \
+            -H "Authorization: Bearer $SCOPED_TOKEN")
+          BILL_ID=$(echo "$BILLS" | jq -r --arg invoice "$INVOICE" '.data.items[] | select((.invoiceNumber // .InvoiceNumber) == $invoice) | (.billId // .BillId)')
+          test -n "$BILL_ID" && test "$BILL_ID" != "null"
+          echo "$BILLS" | jq -e --arg invoice "$INVOICE" 'any(.data.items[]; (.invoiceNumber // .InvoiceNumber) == $invoice and (.status // .Status) == "Unpaid")' >/dev/null
+
+          curl -fsS -X PUT "http://127.0.0.1:5080/api/v1/pos/bills/$BILL_ID/pay" \
+            -H "Authorization: Bearer $SCOPED_TOKEN" | jq -e '.success == true' >/dev/null
+          PAID_BILLS=$(curl -fsS http://127.0.0.1:5080/api/v1/bills?pageNumber=1\&pageSize=10 \
+            -H "Authorization: Bearer $SCOPED_TOKEN")
+          echo "$PAID_BILLS" | jq -e --arg invoice "$INVOICE" 'any(.data.items[]; (.invoiceNumber // .InvoiceNumber) == $invoice and (.status // .Status) == "Paid" and (.amountPaid // .AmountPaid) == 20)' >/dev/null
+
+          KOTS=$(curl -fsS http://127.0.0.1:5080/api/v1/kots?pageNumber=1\&pageSize=10 \
+            -H "Authorization: Bearer $SCOPED_TOKEN")
+          echo "$KOTS" | jq -e --arg order "$ORDER_ID" 'any(.data.items[]; (.orderId // .OrderId) == $order)' >/dev/null
+
           DB_CHECK=$(sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -h -1 -W \
             -Q "SET NOCOUNT ON; SELECT COUNT(1) FROM dbo.Restaurants WHERE RestaurantId IN('$RESTAURANT_ID','$SECOND_RESTAURANT_ID'); SELECT COUNT(1) FROM dbo.UserRestaurants WHERE UserId='$USER_ID' AND RestaurantId IN('$RESTAURANT_ID','$SECOND_RESTAURANT_ID') AND Role='Owner'; SELECT COUNT(1) FROM dbo.RefreshTokens WHERE UserId='$USER_ID' AND RestaurantId='$SECOND_RESTAURANT_ID';")
           echo "$DB_CHECK"
           test -n "$DB_CHECK"
 
-          echo "PASS: SQL scripts, owner registration, login, zero-restaurant lookup, first and second restaurant creation, sorted multi-restaurant listing, restaurant switching, dashboard metrics and refresh-token rotation."
+          echo "PASS: SQL scripts, auth, multi-restaurant switching, dashboard, product creation, atomic POS checkout, order/KOT persistence, bill payment and restaurant-scoped data."
