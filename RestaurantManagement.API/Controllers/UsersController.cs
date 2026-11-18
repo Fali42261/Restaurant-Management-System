@@ -64,7 +64,7 @@ END CATCH",P("@Id",id),P("@Name",r.FullName.Trim()),P("@Email",email),P("@Mobile
     {
         if(CurrentRestaurantId==Guid.Empty) return BadRequest(new {success=false,message="Select a restaurant first."});
         var actorRole=User.IsInRole("Owner")?"Owner":"Manager";
-        var n=await Db.ExecuteAsync("UPDATE dbo.UserRestaurants SET IsActive=0 WHERE UserId=@Id AND RestaurantId=@RestaurantId AND IsActive=1 AND (@ActorRole='Owner' OR Role='Staff'); UPDATE dbo.Users SET IsActive=0,IsDeleted=1,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@Id AND Role IN('Manager','Staff') AND NOT EXISTS(SELECT 1 FROM dbo.UserRestaurants WHERE UserId=@Id AND IsActive=1)",
+        var n=await Db.ExecuteAsync("UPDATE dbo.UserRestaurants SET IsActive=0 WHERE UserId=@Id AND RestaurantId=@RestaurantId AND IsActive=1 AND (@ActorRole='Owner' OR Role='Staff'); UPDATE dbo.Users SET IsActive=0,IsDeleted=1,UpdatedAt=SYSUTCDATETIME() WHERE UserId=@Id AND Role IN('Manager','Staff') AND EXISTS(SELECT 1 FROM dbo.UserRestaurants WHERE UserId=@Id AND RestaurantId=@RestaurantId AND Role IN('Manager','Staff') AND (@ActorRole='Owner' OR Role='Staff')) AND NOT EXISTS(SELECT 1 FROM dbo.UserRestaurants WHERE UserId=@Id AND IsActive=1)",
             P("@Id",id),P("@RestaurantId",CurrentRestaurantId),P("@ActorRole",actorRole));
         return n==0?NotFound():Success(null,"Staff access removed.");
     }
