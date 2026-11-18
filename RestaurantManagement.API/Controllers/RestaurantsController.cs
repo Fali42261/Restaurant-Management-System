@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RestaurantManagement.API.Configuration;
 using RestaurantManagement.API.Infrastructure;
+using RestaurantManagement.API.Models;
 
 namespace RestaurantManagement.API.Controllers;
 
@@ -19,30 +20,40 @@ public sealed class RestaurantsController(SqlDataAccess db, IOptions<AppSettings
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var rows = await Db.QueryAsync("SELECT r.RestaurantId,r.Name,r.IsActive,ur.Role FROM dbo.UserRestaurants ur INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId WHERE ur.UserId=@UserId AND ur.IsActive=1 AND r.IsActive=1 ORDER BY r.Name", P("@UserId", CurrentUserId));
+        var rows = await Db.QueryProcedureAsync("dbo.usp_UserRestaurants_List", P("@UserId", CurrentUserId));
         return Success(rows, "Restaurants available to this account.");
+    }
+
+    [HttpGet("~/api/v1/users/{userId:guid}/restaurants")]
+    public async Task<IActionResult> GetForUser(Guid userId)
+    {
+        if (userId != CurrentUserId) return Forbid();
+        var rows = await Db.QueryProcedureAsync("dbo.usp_UserRestaurants_List", P("@UserId", userId));
+        return Success(rows, "Restaurants loaded.");
     }
 
     [HttpPost, Authorize(Roles="Owner")]
     public async Task<IActionResult> Create(CreateRestaurantRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Trim().Length > 160)
-            return BadRequest(new { success=false, message="Restaurant name is required and must be 160 characters or fewer." });
-        var id = Guid.NewGuid();
-        await Db.ExecuteAsync(@"SET XACT_ABORT ON;
-BEGIN TRANSACTION;
-BEGIN TRY
- INSERT dbo.Restaurants(RestaurantId,OwnerUserId,Name,IsActive,CreatedAt) VALUES(@Id,@Owner,@Name,1,SYSUTCDATETIME());
- INSERT dbo.UserRestaurants(UserId,RestaurantId,Role,IsActive,CreatedAt) VALUES(@Owner,@Id,'Owner',1,SYSUTCDATETIME());
- COMMIT TRANSACTION;
-END TRY
-BEGIN CATCH
- IF @@TRANCOUNT>0 ROLLBACK TRANSACTION;
- THROW;
-END CATCH", P("@Id", id), P("@Owner", CurrentUserId), P("@Name", request.Name.Trim()));
-        return CreatedResult(new { restaurantId=id, name=request.Name.Trim(), subscriptionStatus="NotSubscribed" }, "Restaurant created. Each restaurant requires its own subscription.");
-    }
+        if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Trim().Length > 160 ||
+            string.IsNullOrWhiteSpace(request.MobileNumber) || request.MobileNumber.Trim().Length is < 10 or > 16 ||
+            request.MobileNumber.Trim().TrimStart('+').Any(c => !char.IsDigit(c)) ||
+            string.IsNullOrWhiteSpace(request.Address) || request.Address.Trim().Length > 500 ||
+            request.OpeningTime < TimeSpan.Zero || request.OpeningTime >= TimeSpan.FromDays(1) ||
+            request.ClosingTime < TimeSpan.Zero || request.ClosingTime >= TimeSpan.FromDays(1) ||
+            request.OpeningTime == request.ClosingTime ||
+            request.OperatingDays is null || request.OperatingDays.Length == 0 ||
+            request.OperatingDays.Any(day => !new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" }.Contains(day, StringComparer.OrdinalIgnoreCase)))
+            return BadRequest(new { success=false, message="Enter valid restaurant name, mobile, address, opening/closing time and at least one operating day." });
 
+        var daysJson = System.Text.Json.JsonSerializer.Serialize(request.OperatingDays.Select(day => day.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray());
+        var rows = await Db.QueryProcedureAsync("dbo.usp_Restaurant_CreateForOwner",
+            P("@UserId", CurrentUserId), P("@Name", request.Name.Trim()), P("@MobileNumber", request.MobileNumber.Trim()),
+            P("@Address", request.Address.Trim()), P("@OpeningTime", request.OpeningTime), P("@ClosingTime", request.ClosingTime),
+            P("@OperatingDays", daysJson));
+        if (rows.Count == 0) return StatusCode(500, new { success=false, message="Restaurant could not be created." });
+        return CreatedResult(rows[0], "Restaurant created successfully.");
+    }
 
     [HttpPut("{restaurantId:guid}")]
     [Authorize(Roles="Owner")]
@@ -79,6 +90,4 @@ END CATCH", P("@Id", id), P("@Owner", CurrentUserId), P("@Name", request.Name.Tr
         return Success(new { accessToken=new JwtSecurityTokenHandler().WriteToken(token), refreshToken, expiresIn=3600, restaurant=new { restaurantId, name=row["Name"], role=row["Role"] } }, "Restaurant selected. Use this token for restaurant-scoped API requests.");
     }
 }
-public sealed record CreateRestaurantRequest(string Name);
-
 public sealed record UpdateRestaurantRequest(string Name);
