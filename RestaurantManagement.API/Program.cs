@@ -10,6 +10,7 @@ using RestaurantManagement.API.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+Console.WriteLine($"swapDigit API bootstrap. urls={builder.Configuration["urls"] ?? "(unset)"}; args={string.Join(" ", args)}");
 if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")) &&
     !args.Any(argument => argument.Equals("--urls", StringComparison.OrdinalIgnoreCase) || argument.StartsWith("--urls=", StringComparison.OrdinalIgnoreCase)))
     builder.WebHost.UseUrls("http://0.0.0.0:5080");
@@ -71,6 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+Console.WriteLine("swapDigit API host built.");
 app.UseSerilogRequestLogging(options =>
 {
     options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
