@@ -1,4 +1,5 @@
 using RestaurantManagement.UI.Services;
+using RestaurantManagement.UI.Models;
 using RestaurantManagement.UI.ViewModels;
 
 namespace RestaurantManagement.UI.Views;
@@ -6,6 +7,7 @@ namespace RestaurantManagement.UI.Views;
 public partial class DashboardPage : ContentPage
 {
     private double _lastWidth = -1;
+    private bool _changingRestaurant;
     private readonly IDispatcherTimer _tableTimer;
 
     public DashboardPage()
@@ -26,6 +28,7 @@ public partial class DashboardPage : ContentPage
         Loaded += (_, _) =>
         {
             UpdateNavigationSelection(vm.SelectedSection);
+            ConfigureRestaurantHeader();
             ConfigureResponsiveLayout(Width);
             TrialAccessService.StartTrialIfNeeded();
             UpdateTrialLock(vm);
@@ -100,6 +103,49 @@ public partial class DashboardPage : ContentPage
                 Grid.SetColumn((BindableObject)grid.Children[i], i);
                 Grid.SetRow((BindableObject)grid.Children[i], 0);
             }
+        }
+    }
+
+    private void ConfigureRestaurantHeader()
+    {
+        var restaurants = RestaurantSession.Restaurants;
+        var selected = RestaurantSession.SelectedRestaurant ?? restaurants.FirstOrDefault();
+        _changingRestaurant = true;
+        RestaurantSingleName.Text = selected?.Name ?? "Restaurant";
+        RestaurantSingleName.IsVisible = restaurants.Count == 1;
+        RestaurantPicker.IsVisible = restaurants.Count > 1;
+        RestaurantPicker.ItemsSource = restaurants;
+        RestaurantPicker.ItemDisplayBinding = new Binding(nameof(RestaurantInfo.Name));
+        RestaurantPicker.SelectedItem = selected;
+        _changingRestaurant = false;
+    }
+
+    private async void RestaurantPickerChanged(object sender, EventArgs e)
+    {
+        if (_changingRestaurant || RestaurantPicker.SelectedItem is not RestaurantInfo selected ||
+            selected.RestaurantId == RestaurantSession.SelectedRestaurant?.RestaurantId)
+            return;
+
+        try
+        {
+            RestaurantPicker.IsEnabled = false;
+            await new AuthService().SelectRestaurantAsync(selected);
+            RestaurantSession.Select(selected);
+            RestaurantSingleName.Text = selected.Name;
+            // Reset the view model so stale values from the previous restaurant are not retained.
+            BindingContext = new DashboardViewModel();
+            UpdateNavigationSelection(((DashboardViewModel)BindingContext).SelectedSection);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Restaurant switch failed", ex.Message, "OK");
+            _changingRestaurant = true;
+            RestaurantPicker.SelectedItem = RestaurantSession.SelectedRestaurant;
+            _changingRestaurant = false;
+        }
+        finally
+        {
+            RestaurantPicker.IsEnabled = true;
         }
     }
 
@@ -205,7 +251,7 @@ public partial class DashboardPage : ContentPage
             await DisplayAlert("Plan selected", $"{plan}\n\nOnline payment and subscription activation will be enabled after payment gateway integration.", "OK");
     }
     private void HelpMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Help Support"); ((Border)FindByName("UserMenu")).IsVisible = false; }
-    private void LogoutMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).LogoutCommand.Execute(null); ((Border)FindByName("UserMenu")).IsVisible = false; }
+    private void LogoutMenuClicked(object sender, EventArgs e) { RestaurantSession.Clear(); ((DashboardViewModel)BindingContext).LogoutCommand.Execute(null); ((Border)FindByName("UserMenu")).IsVisible = false; }
 
     private void AddFloorClicked(object sender, EventArgs e)
     {
