@@ -681,36 +681,36 @@
                         <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
                                 <Label Text="TODAY'S REVENUE" FontSize="15" CharacterSpacing="0.8" TextColor="#7C8780" />
-                                <Label Text="₹12,304" FontSize="27" TextColor="#202923" />
-                                <Label Text="↗  3.5%  than last day" FontSize="15" TextColor="#368C55" />
+                                <Label Text="{Binding TodayRevenueText}" FontSize="27" TextColor="#202923" />
+                                <Label Text="Live sales today" FontSize="15" TextColor="#368C55" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
                                 <Label Text="ACTIVE ORDERS" FontSize="15" CharacterSpacing="0.8" TextColor="#7C8780" />
-                                <Label Text="24" FontSize="27" TextColor="#202923" />
+                                <Label Text="{Binding ActiveOrdersText}" FontSize="27" TextColor="#202923" />
                                 <HorizontalStackLayout Spacing="7">
-                                    <Label Text="16 Online" FontSize="15" TextColor="#368C55" />
-                                    <Label Text="7 Dine-in" FontSize="15" TextColor="#7B8580" />
-                                    <Label Text="1 Takeaway" FontSize="15" TextColor="#7B8580" />
+                                    <Label Text="{Binding TodayOrdersDetailText}" FontSize="15" TextColor="#368C55" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="2" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
                                 <Label Text="TABLES OCCUPIED" FontSize="15" CharacterSpacing="0.8" TextColor="#7C8780" />
-                                <Label Text="4/12" FontSize="27" TextColor="#202923" />
-                                <Label Text="8 available" FontSize="15" TextColor="#7B8580" />
+                                <Label Text="{Binding OccupiedTablesText}" FontSize="27" TextColor="#202923" />
+                                <Label Text="{Binding AvailableTablesText}" FontSize="15" TextColor="#7B8580" />
                             </VerticalStackLayout>
                         </Border>
                         <Border Grid.Column="3" Style="{StaticResource DashboardCardStyle}">
                             <VerticalStackLayout Spacing="7">
                                 <Label Text="RESERVATIONS TODAY" FontSize="15" CharacterSpacing="0.8" TextColor="#7C8780" />
-                                <Label Text="2" FontSize="27" TextColor="#202923" />
-                                <Label Text="12 upcoming guests" FontSize="15" TextColor="#7B8580" />
+                                <Label Text="{Binding TodayReservationsText}" FontSize="27" TextColor="#202923" />
+                                <Label Text="{Binding UpcomingGuestsText}" FontSize="15" TextColor="#7B8580" />
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
+
+                    <Label Text="{Binding DashboardDataStatus}" FontSize="10" TextColor="#718078" Margin="2,0,0,2" />
 
                     <!-- Revenue and orders -->
                     <Grid x:Name="AnalyticsGrid" IsVisible="{Binding IsDashboardSection}" ColumnDefinitions="1.2*,1*" RowDefinitions="Auto" ColumnSpacing="10">
