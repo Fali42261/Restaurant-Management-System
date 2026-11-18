@@ -1,0 +1,132 @@
+name: DevApi SQL and Auth Integration
+
+on:
+  push:
+    branches: [DevApi]
+    paths:
+      - 'RestaurantManagement.API/**'
+      - '.github/workflows/devapi-integration.yml'
+  pull_request:
+    branches: [DevApi]
+  workflow_dispatch:
+
+jobs:
+  sql-auth-restaurant-smoke:
+    runs-on: ubuntu-22.04
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: "SwapDigit!CI2026"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "bash -c '</dev/tcp/127.0.0.1/1433'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      SA_PASSWORD: "SwapDigit!CI2026"
+    steps:
+      - name: Checkout DevApi
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install SQL Server command line tools
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc >/dev/null
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
+          echo "/opt/mssql-tools18/bin" >> "$GITHUB_PATH"
+
+      - name: Restore and build API
+        run: |
+          dotnet restore RestaurantManagement.API/RestaurantManagement.API.csproj
+          dotnet build RestaurantManagement.API/RestaurantManagement.API.csproj --configuration Release --no-restore
+
+      - name: Execute database scripts in documented order
+        run: |
+          for i in $(seq 1 30); do
+            sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -Q "SELECT 1" >/dev/null 2>&1 && break
+            sleep 5
+          done
+          sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/01_Tables_And_Seed_Data.txt
+          sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/02_Performance_Indexes_Views_Procedures.txt
+          sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -i RestaurantManagement.API/Database/Scripts/03_Multi_Restaurant_Tenancy.txt
+
+      - name: Run API and test register, login, restaurant creation, selection and dashboard
+        shell: bash
+        run: |
+          export App__Database__ConnectionString="Server=127.0.0.1,1433;Database=swapDigitDb;User Id=sa;Password=$SA_PASSWORD;Encrypt=True;TrustServerCertificate=True;Connect Timeout=30"
+          export App__Jwt__SigningKey="SwapDigit-CI-Only-Signing-Key-2026-Not-For-Production"
+          export App__Jwt__Issuer="swapDigit"
+          export App__Jwt__Audience="swapDigit.Clients"
+          dotnet run --project RestaurantManagement.API/RestaurantManagement.API.csproj --configuration Release --no-build --urls http://127.0.0.1:5080 > /tmp/swapdigit-api.log 2>&1 &
+          API_PID=$!
+          trap 'kill "$API_PID" 2>/dev/null || true' EXIT
+
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:5080/health >/dev/null && break
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:5080/health | jq -e '.success == true' >/dev/null
+
+          REGISTER=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/auth/register \
+            -H 'Content-Type: application/json' \
+            -d '{"fullName":"CI Owner","email":"ci-owner@example.test","mobileNumber":"9876543210","password":"SwapDigit!Test2026"}')
+          echo "$REGISTER" | jq -e '.success == true' >/dev/null
+
+          LOGIN=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"emailOrMobile":"ci-owner@example.test","password":"SwapDigit!Test2026"}')
+          ACCESS_TOKEN=$(echo "$LOGIN" | jq -r '.data.accessToken')
+          REFRESH_TOKEN=$(echo "$LOGIN" | jq -r '.data.refreshToken')
+          USER_ID=$(echo "$LOGIN" | jq -r '.data.user.userId')
+          test -n "$ACCESS_TOKEN" && test "$ACCESS_TOKEN" != "null"
+          test -n "$USER_ID" && test "$USER_ID" != "null"
+
+          EMPTY_LIST=$(curl -fsS "http://127.0.0.1:5080/api/v1/users/$USER_ID/restaurants" \
+            -H "Authorization: Bearer $ACCESS_TOKEN")
+          echo "$EMPTY_LIST" | jq -e '.success == true and (.data | length == 0)' >/dev/null
+
+          CREATED=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/restaurants \
+            -H "Authorization: Bearer $ACCESS_TOKEN" -H 'Content-Type: application/json' \
+            -d '{"name":"CI Test Restaurant","mobileNumber":"9876543211","address":"Integration Test Address","openingTime":"09:00:00","closingTime":"22:00:00","operatingDays":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]}')
+          echo "$CREATED" | jq -e '.success == true' >/dev/null
+          RESTAURANT_ID=$(echo "$CREATED" | jq -r '.data.restaurantId')
+          test -n "$RESTAURANT_ID" && test "$RESTAURANT_ID" != "null"
+
+          LIST=$(curl -fsS "http://127.0.0.1:5080/api/v1/users/$USER_ID/restaurants" \
+            -H "Authorization: Bearer $ACCESS_TOKEN")
+          echo "$LIST" | jq -e --arg id "$RESTAURANT_ID" '.success == true and (.data | length == 1) and .data[0].restaurantId == $id' >/dev/null
+
+          SELECTED=$(curl -fsS -X POST "http://127.0.0.1:5080/api/v1/restaurants/$RESTAURANT_ID/select" \
+            -H "Authorization: Bearer $ACCESS_TOKEN")
+          SCOPED_TOKEN=$(echo "$SELECTED" | jq -r '.data.accessToken')
+          RESTAURANT_REFRESH=$(echo "$SELECTED" | jq -r '.data.refreshToken')
+          test -n "$SCOPED_TOKEN" && test "$SCOPED_TOKEN" != "null"
+
+          DASHBOARD=$(curl -fsS http://127.0.0.1:5080/api/v1/reports/dashboard \
+            -H "Authorization: Bearer $SCOPED_TOKEN")
+          echo "$DASHBOARD" | jq -e '.success == true and .data.todayOrders == 0 and .data.todayReservations == 0 and .data.totalTables == 0' >/dev/null
+
+          ROTATED=$(curl -fsS -X POST http://127.0.0.1:5080/api/v1/auth/refresh \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -n --arg token "$RESTAURANT_REFRESH" '{refreshToken:$token}')")
+          ROTATED_TOKEN=$(echo "$ROTATED" | jq -r '.data.accessToken')
+          test -n "$ROTATED_TOKEN" && test "$ROTATED_TOKEN" != "null"
+          curl -fsS http://127.0.0.1:5080/api/v1/reports/dashboard \
+            -H "Authorization: Bearer $ROTATED_TOKEN" | jq -e '.success == true' >/dev/null
+
+          DB_CHECK=$(sqlcmd -S localhost,1433 -U sa -P "$SA_PASSWORD" -C -b -h -1 -W \
+            -Q "SET NOCOUNT ON; SELECT COUNT(1) FROM dbo.Restaurants WHERE RestaurantId='$RESTAURANT_ID' AND Name=N'CI Test Restaurant'; SELECT COUNT(1) FROM dbo.UserRestaurants WHERE UserId='$USER_ID' AND RestaurantId='$RESTAURANT_ID' AND Role='Owner'; SELECT COUNT(1) FROM dbo.RefreshTokens WHERE UserId='$USER_ID' AND RestaurantId='$RESTAURANT_ID';")
+          echo "$DB_CHECK"
+          test "$(echo "$DB_CHECK" | grep -c '^1$')" -ge 3
+
+          echo "PASS: SQL scripts, owner registration, login, empty restaurant lookup, create restaurant, list restaurants, select restaurant, dashboard metrics and refresh-token rotation."
