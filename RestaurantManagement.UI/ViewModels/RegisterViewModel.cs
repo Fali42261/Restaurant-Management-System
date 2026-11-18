@@ -82,9 +82,14 @@ public sealed class RegisterViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(FullName)) return "Enter your full name.";
         if (!IsValidEmail(Email)) return "Enter a valid email address.";
-        if (string.IsNullOrWhiteSpace(MobileNumber) || MobileNumber.Count(char.IsDigit) < 10)
-            return "Enter a valid mobile number with at least 10 digits.";
-        if (Password.Length < 8) return "Password must contain at least 8 characters.";
+        var mobile = MobileNumber?.Trim() ?? string.Empty;
+        var normalizedMobile = mobile.StartsWith("+", StringComparison.Ordinal) ? mobile[1..] : mobile;
+        if (normalizedMobile.Length is < 10 or > 15 || !normalizedMobile.All(char.IsDigit))
+            return "Enter a valid mobile number with 10 to 15 digits.";
+        if (Password.Length < 8 || !Password.Any(char.IsUpper) || !Password.Any(char.IsLower) ||
+            !Password.Any(char.IsDigit) || !Password.Any(c => !char.IsLetterOrDigit(c)))
+            return "Password must contain at least 8 characters with uppercase, lowercase, number and symbol."); 
+
         if (!string.Equals(Password, ConfirmPassword, StringComparison.Ordinal))
             return "Password and confirm password do not match.";
         return null;
