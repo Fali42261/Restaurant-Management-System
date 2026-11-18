@@ -112,16 +112,22 @@ public sealed class AuthService : IAuthService
 
     public async Task SignOutAsync(CancellationToken cancellationToken = default)
     {
-        var token = await SecureStorage.Default.GetAsync("swapDigit.accessToken");
-        if (!string.IsNullOrWhiteSpace(token))
+        try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, AppConfig.Routes.SignOut);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            using var response = await Client.SendAsync(request, cancellationToken);
+            var token = await SecureStorage.Default.GetAsync("swapDigit.accessToken");
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Post, AppConfig.Routes.SignOut);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                using var response = await Client.SendAsync(request, cancellationToken);
+            }
         }
-
-        SecureStorage.Default.Remove("swapDigit.accessToken");
-        SecureStorage.Default.Remove("swapDigit.refreshToken");
+        finally
+        {
+            SecureStorage.Default.Remove("swapDigit.accessToken");
+            SecureStorage.Default.Remove("swapDigit.refreshToken");
+            RestaurantSession.Clear();
+        }
     }
 
     private static async Task<T?> PostAsync<T>(
