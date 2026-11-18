@@ -35,9 +35,10 @@ public sealed class RestaurantsController(SqlDataAccess db, IOptions<AppSettings
     [HttpPost, Authorize(Roles="Owner")]
     public async Task<IActionResult> Create(CreateRestaurantRequest request)
     {
+        var normalizedMobile = request.MobileNumber?.Trim() ?? string.Empty;
+        normalizedMobile = normalizedMobile.StartsWith("+", StringComparison.Ordinal) ? normalizedMobile[1..] : normalizedMobile;
         if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Trim().Length > 160 ||
-            string.IsNullOrWhiteSpace(request.MobileNumber) || request.MobileNumber.Trim().Length is < 10 or > 16 ||
-            request.MobileNumber.Trim().TrimStart('+').Any(c => !char.IsDigit(c)) ||
+            normalizedMobile.Length is < 10 or > 15 || normalizedMobile.Any(c => !char.IsDigit(c)) ||
             string.IsNullOrWhiteSpace(request.Address) || request.Address.Trim().Length > 500 ||
             request.OpeningTime < TimeSpan.Zero || request.OpeningTime >= TimeSpan.FromDays(1) ||
             request.ClosingTime < TimeSpan.Zero || request.ClosingTime >= TimeSpan.FromDays(1) ||
