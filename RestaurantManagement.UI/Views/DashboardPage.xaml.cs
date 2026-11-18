@@ -262,7 +262,13 @@ public partial class DashboardPage : ContentPage
             await DisplayAlert("Plan selected", $"{plan}\n\nOnline payment and subscription activation will be enabled after payment gateway integration.", "OK");
     }
     private void HelpMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Help Support"); ((Border)FindByName("UserMenu")).IsVisible = false; }
-    private void LogoutMenuClicked(object sender, EventArgs e) { RestaurantSession.Clear(); ((DashboardViewModel)BindingContext).LogoutCommand.Execute(null); ((Border)FindByName("UserMenu")).IsVisible = false; }
+    private async void LogoutMenuClicked(object sender, EventArgs e)
+    {
+        try { await new AuthService().SignOutAsync(); }
+        catch { RestaurantSession.Clear(); }
+        ((DashboardViewModel)BindingContext).LogoutCommand.Execute(null);
+        ((Border)FindByName("UserMenu")).IsVisible = false;
+    }
 
     private void AddFloorClicked(object sender, EventArgs e)
     {
