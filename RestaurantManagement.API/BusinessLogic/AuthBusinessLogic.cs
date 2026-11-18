@@ -79,7 +79,7 @@ public sealed class AuthBusinessLogic(
         var mail=request.Email?.Trim().ToLowerInvariant();
         if(string.IsNullOrWhiteSpace(mail)||!System.Net.Mail.MailAddress.TryCreate(mail,out _)||string.IsNullOrWhiteSpace(request.Code)||!StrongPassword(request.NewPassword))
             return Bad(400,"Reset code is invalid or expired, or the new password does not meet policy.");
-        var rows=await data.ResetPasswordAsync(mail,Hash(request.Code.Trim()),hasher.HashPassword(mail,request.NewPassword));
+        var account=await data.GetUserIdByEmailAsync(mail);\n        if(account.Count==0)return Bad(400,"Reset code is invalid or expired.");\n        var userId=Guid.Parse(T(account[0],"UserId"));\n        var rows=await data.ResetPasswordAsync(mail,Hash(request.Code.Trim()),hasher.HashPassword(userId.ToString(),request.NewPassword));
         if(rows.Count==0||!Bool(rows[0],"Success")){logger.LogWarning("Password reset rejected. Reason=InvalidExpiredOrAttemptLimit");return Bad(400,"Reset code is invalid or expired.");}
         logger.LogInformation("Password reset completed; refresh sessions revoked.");
         return Ok(null,"Password reset successful. Please sign in again.");
