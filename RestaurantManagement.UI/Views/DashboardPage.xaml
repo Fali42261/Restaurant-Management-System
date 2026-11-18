@@ -90,7 +90,7 @@
                         <Border BackgroundColor="#DDEBD6" StrokeThickness="0" StrokeShape="RoundRectangle 16" WidthRequest="32" HeightRequest="32">
                             <Label Text="👤" FontSize="17" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
                         </Border>
-                        <VerticalStackLayout Spacing="0"><Label Text="Arthur" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" /><Label Text="Owner" FontSize="10" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" /></VerticalStackLayout>
+                        <VerticalStackLayout Spacing="0"><Label x:Name="ProfileName" Text="User" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" /><Label x:Name="ProfileRole" Text="Owner" FontSize="10" TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}" /></VerticalStackLayout>
                         <Label Text="⌄" FontSize="15" TextColor="#65716A" VerticalTextAlignment="Center" />
                     </HorizontalStackLayout>
                 </Border>
