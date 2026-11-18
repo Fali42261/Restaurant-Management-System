@@ -61,17 +61,32 @@ public sealed class RestaurantsController(SqlDataAccess db, IOptions<AppSettings
     {
         if(string.IsNullOrWhiteSpace(request.Name)||request.Name.Trim().Length>160)
             return BadRequest(new {success=false,message="Restaurant name is required and must be 160 characters or fewer."});
-        var n=await Db.ExecuteAsync("UPDATE dbo.Restaurants SET Name=@Name,UpdatedAt=SYSUTCDATETIME() WHERE RestaurantId=@Id AND OwnerUserId=@Owner AND IsActive=1",
-            P("@Name",request.Name.Trim()),P("@Id",restaurantId),P("@Owner",CurrentUserId));
-        return n==0?NotFound():Success(null,"Restaurant name updated.");
+        var rows = await Db.QueryProcedureAsync("dbo.usp_Restaurant_Rename",
+            P("@UserId", CurrentUserId), P("@RestaurantId", restaurantId), P("@Name", request.Name.Trim()));
+        return rows.Count == 0 || Convert.ToInt32(rows[0]["RowsAffected"]) == 0
+            ? NotFound()
+            : Success(null, "Restaurant name updated.");
     }
 
     [HttpPost("{restaurantId:guid}/select")]
     public async Task<IActionResult> Select(Guid restaurantId)
     {
-        var rows = await Db.QueryAsync("SELECT TOP(1) r.RestaurantId,r.Name,u.UserId,u.FullName,u.Email,ur.Role FROM dbo.UserRestaurants ur INNER JOIN dbo.Restaurants r ON r.RestaurantId=ur.RestaurantId INNER JOIN dbo.Users u ON u.UserId=ur.UserId WHERE ur.UserId=@UserId AND ur.RestaurantId=@RestaurantId AND ur.IsActive=1 AND r.IsActive=1 AND u.IsActive=1 AND u.IsDeleted=0", P("@UserId", CurrentUserId), P("@RestaurantId", restaurantId));
-        if (rows.Count == 0) return NotFound(new { success=false, message="Restaurant is not assigned to this account or is inactive." });
-        var row=rows[0]; var now=DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+        var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+        var refreshHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
+        List<Dictionary<string, object?>> rows;
+        try
+        {
+            rows = await Db.QueryProcedureAsync("dbo.usp_Restaurant_SelectForUser",
+                P("@UserId", CurrentUserId), P("@RestaurantId", restaurantId),
+                P("@TokenHash", refreshHash), P("@ExpiresAt", now.AddDays(_settings.Jwt.RefreshTokenDays)));
+        }
+        catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 51002)
+        {
+            return NotFound(new { success = false, message = "Restaurant is not assigned to this account or is inactive." });
+        }
+        if (rows.Count == 0) return NotFound(new { success = false, message = "Restaurant is not assigned to this account or is inactive." });
+        var row = rows[0];
         var claims = new[] {
             new Claim(JwtRegisteredClaimNames.Sub, CurrentUserId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, row["Email"]!.ToString()!),
@@ -83,10 +98,6 @@ public sealed class RestaurantsController(SqlDataAccess db, IOptions<AppSettings
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Jwt.SigningKey));
         var token = new JwtSecurityToken(_settings.Jwt.Issuer,_settings.Jwt.Audience,claims,now,now.AddHours(1),new SigningCredentials(key,SecurityAlgorithms.HmacSha256));
-        var refreshToken=Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
-        var refreshHash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
-        await Db.ExecuteAsync("INSERT dbo.RefreshTokens(TokenId,UserId,RestaurantId,TokenHash,ExpiresAt,CreatedAt) VALUES(NEWID(),@UserId,@RestaurantId,@Hash,@Expires,SYSUTCDATETIME())",
-            P("@UserId",CurrentUserId),P("@RestaurantId",restaurantId),P("@Hash",refreshHash),P("@Expires",now.AddDays(_settings.Jwt.RefreshTokenDays)));
         return Success(new { accessToken=new JwtSecurityTokenHandler().WriteToken(token), refreshToken, expiresIn=3600, restaurant=new { restaurantId, name=row["Name"], role=row["Role"] } }, "Restaurant selected. Use this token for restaurant-scoped API requests.");
     }
 }
