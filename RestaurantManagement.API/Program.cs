@@ -33,7 +33,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
         fileSizeLimitBytes: 10 * 1024 * 1024,
         rollOnFileSizeLimit: true,
         retainedFileCountLimit: 30,
-        buffered: true,
+        buffered: false,
         shared: true,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [Trace:{TraceId}] {Message:lj}{NewLine}{Exception}"));
 
