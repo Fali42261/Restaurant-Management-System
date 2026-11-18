@@ -227,7 +227,7 @@ public partial class DashboardPage : ContentPage
             return;
         }
         await LoadProductsAsync(vm);
-        var item = await DisplayPromptAsync("Edit order", "Enter product name(s), separated by commas:", "Continue", "Cancel", initialValue: order.ItemSummary);
+        var item = await DisplayPromptAsync("Edit order", "Enter product name(s), separated by commas:", "Continue", "Cancel", initialValue: string.Join(", ", order.ItemSummary.Split(", ", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Split(" × ", StringSplitOptions.None)[0])));
         if (string.IsNullOrWhiteSpace(item)) return;
         var qtyText = await DisplayPromptAsync("Edit order", "Total quantity:", "Save", "Cancel", initialValue: Math.Max(1, order.Quantity).ToString(), keyboard: Keyboard.Numeric);
         if (!int.TryParse(qtyText, out var quantity) || quantity < 1)
