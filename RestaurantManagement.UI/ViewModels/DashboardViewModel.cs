@@ -115,18 +115,14 @@ public sealed class DashboardViewModel : BaseViewModel
         AddPosToCartCommand = new Command<string>(AddPosToCart);
         RemovePosCartLineCommand = new Command<CartLine>(line => { if (line != null) PosCart.Remove(line); });
         SelfServiceCart.CollectionChanged += (_, _) => OnPropertyChanged(nameof(CartTotalText));
-        KitchenTickets = new ObservableCollection<KotTicket>
-        {
-            new("KOT-1001", "Table 05", "Paneer Butter Masala × 1, Butter Naan × 2", "New", DateTime.Now.AddMinutes(-8)),
-            new("KOT-1002", "Table 02", "Veg Biryani × 2, Cold Coffee × 1", "Preparing", DateTime.Now.AddMinutes(-14)),
-            new("KOT-1003", "Takeaway", "Masala Dosa × 1", "Ready", DateTime.Now.AddMinutes(-19))
-        };
+        KitchenTickets = new ObservableCollection<KotTicket>();
         AddToCartCommand = new Command<string>(AddToCart);
         RemoveCartLineCommand = new Command<CartLine>(line => { if (line != null) SelfServiceCart.Remove(line); });
         PlaceSelfServiceOrderCommand = new Command(PlaceSelfServiceOrder);
-        AdvanceKotCommand = new Command<KotTicket>(AdvanceKot);
+        AdvanceKotCommand = new Command<KotTicket>(async ticket => await AdvanceKotAsync(ticket));
         NotifyOrderCounts();
         _ = LoadDashboardSummaryAsync();
+        _ = LoadKitchenTicketsAsync();
     }
 
     public string TodayRevenueText { get => _todayRevenueText; private set => SetProperty(ref _todayRevenueText, value); }
@@ -137,6 +133,8 @@ public sealed class DashboardViewModel : BaseViewModel
     public string TodayReservationsText { get => _todayReservationsText; private set => SetProperty(ref _todayReservationsText, value); }
     public string UpcomingGuestsText { get => _upcomingGuestsText; private set => SetProperty(ref _upcomingGuestsText, value); }
     public string DashboardDataStatus { get => _dashboardDataStatus; private set => SetProperty(ref _dashboardDataStatus, value); }
+    private string _kitchenDataStatus = "Loading kitchen tickets...";
+    public string KitchenDataStatus { get => _kitchenDataStatus; private set => SetProperty(ref _kitchenDataStatus, value); }
 
     private async Task LoadDashboardSummaryAsync()
     {
@@ -157,6 +155,61 @@ public sealed class DashboardViewModel : BaseViewModel
         {
             DashboardDataStatus = "Live dashboard data unavailable. Check API/database connection.";
         }
+    }
+
+    private async Task LoadKitchenTicketsAsync()
+    {
+        try
+        {
+            KitchenDataStatus = "Loading live kitchen tickets...";
+            var rows = await new AuthService().GetKitchenTicketsAsync();
+            KitchenTickets.Clear();
+            foreach (var row in rows)
+                KitchenTickets.Add(new KotTicket(row.TicketId, row.OrderNumber,
+                    string.IsNullOrWhiteSpace(row.Location) ? row.OrderType : row.Location,
+                    row.Items, row.Status, row.CreatedAt));
+            KitchenDataStatus = rows.Count == 0
+                ? "No kitchen tickets found for this restaurant."
+                : $"Live kitchen tickets connected • {rows.Count} loaded";
+            NotifyKitchenCounts();
+        }
+        catch
+        {
+            KitchenTickets.Clear();
+            KitchenDataStatus = "Kitchen API unavailable. Tickets were not loaded.";
+            NotifyKitchenCounts();
+        }
+    }
+
+    private async Task AdvanceKotAsync(KotTicket? ticket)
+    {
+        if (ticket is null || ticket.TicketId == Guid.Empty) return;
+        var next = ticket.Status switch
+        {
+            "New" => "Preparing",
+            "Preparing" => "Ready",
+            "Ready" => "Served",
+            _ => ticket.Status
+        };
+        if (next == ticket.Status) return;
+        try
+        {
+            await new AuthService().UpdateKitchenTicketStatusAsync(ticket.TicketId, next);
+            ticket.SetStatus(next);
+            KitchenDataStatus = $"Ticket {ticket.TicketNumber} updated to {next}.";
+            NotifyKitchenCounts();
+        }
+        catch
+        {
+            KitchenDataStatus = $"Could not update {ticket.TicketNumber}. Database status was not changed.";
+        }
+    }
+
+    private void NotifyKitchenCounts()
+    {
+        OnPropertyChanged(nameof(NewKotCount));
+        OnPropertyChanged(nameof(PreparingKotCount));
+        OnPropertyChanged(nameof(ReadyKotCount));
     }
 
     public ObservableCollection<TableRecord> Tables { get; }
@@ -502,14 +555,7 @@ public sealed class DashboardViewModel : BaseViewModel
         NotifyReportSummary();
     }
 
-    private void AdvanceKot(KotTicket? ticket)
-    {
-        if (ticket == null) return;
-        ticket.Advance();
-        OnPropertyChanged(nameof(NewKotCount));
-        OnPropertyChanged(nameof(PreparingKotCount));
-        OnPropertyChanged(nameof(ReadyKotCount));
-    }
+
 
     public void RefreshTableTimers()
     {
@@ -587,6 +633,10 @@ public sealed class DashboardViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(section) || !Descriptions.ContainsKey(section)) return;
         SelectedSection = section;
+        if (section.Equals("KOT", StringComparison.OrdinalIgnoreCase))
+            _ = LoadKitchenTicketsAsync();
+        else if (section.Equals("Dashboard", StringComparison.OrdinalIgnoreCase))
+            _ = LoadDashboardSummaryAsync();
     }
 
 
@@ -720,16 +770,20 @@ public sealed class CartLine : BaseViewModel
 public sealed class KotTicket : BaseViewModel
 {
     private string _status;
+    public KotTicket(Guid ticketId, string ticketNumber, string orderType, string items, string status, DateTime createdAt)
+    { TicketId = ticketId; TicketNumber = ticketNumber; OrderType = orderType; Items = items; _status = status; CreatedAt = createdAt; }
     public KotTicket(string ticketNumber, string orderType, string items, string status, DateTime createdAt)
-    { TicketNumber = ticketNumber; OrderType = orderType; Items = items; _status = status; CreatedAt = createdAt; }
+        : this(Guid.Empty, ticketNumber, orderType, items, status, createdAt) { }
+    public Guid TicketId { get; }
     public string TicketNumber { get; }
     public string OrderType { get; }
     public string Items { get; }
     public DateTime CreatedAt { get; }
-    public string AgeText => $"{Math.Max(0, (int)(DateTime.Now - CreatedAt).TotalMinutes)} min ago";
+    public string AgeText => string.Format("{0} min ago", Math.Max(0, (int)(DateTime.Now - CreatedAt).TotalMinutes));
     public string Status { get => _status; private set { if (SetProperty(ref _status, value)) { OnPropertyChanged(nameof(ActionText)); OnPropertyChanged(nameof(StatusColor)); } } }
     public string ActionText => Status switch { "New" => "Start Preparing", "Preparing" => "Mark Ready", "Ready" => "Mark Served", _ => "Completed" };
     public string StatusColor => Status switch { "New" => "#B7791F", "Preparing" => "#2563A6", "Ready" => "#17804A", _ => "#64748B" };
+    public void SetStatus(string status) => Status = status;
     public void Advance() { Status = Status switch { "New" => "Preparing", "Preparing" => "Ready", "Ready" => "Served", _ => "Served" }; }
 }
 
