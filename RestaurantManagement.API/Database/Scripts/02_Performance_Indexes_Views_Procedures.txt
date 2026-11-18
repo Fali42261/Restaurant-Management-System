@@ -99,10 +99,18 @@ BEGIN
  SET NOCOUNT ON;
  SET @PageNumber=CASE WHEN @PageNumber<1 THEN 1 ELSE @PageNumber END;
  SET @PageSize=CASE WHEN @PageSize<1 THEN 25 WHEN @PageSize>101 THEN 101 ELSE @PageSize END;
- SELECT BillId,InvoiceNumber,OrderId,CustomerName,OrderType,Subtotal,Discount,Tax,Total,PaymentMethod,AmountPaid,Status,CreatedAt
- FROM dbo.Bills
- WHERE (@FromUtc IS NULL OR CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR CreatedAt<@ToUtc)
- ORDER BY CreatedAt DESC,BillId
+ SELECT b.BillId,b.InvoiceNumber,b.OrderId,b.CustomerName,b.OrderType,b.Subtotal,b.Discount,b.Tax,b.Total,b.PaymentMethod,b.AmountPaid,b.Status,b.CreatedAt,
+        COALESCE(items.ItemSummary,N'') AS ItemSummary
+ FROM dbo.Bills b
+ OUTER APPLY
+ (
+  SELECT STRING_AGG(CONVERT(nvarchar(max),CONCAT(p.Name,N' × ',oi.Quantity)),N', ')
+           WITHIN GROUP (ORDER BY p.Name) AS ItemSummary
+  FROM dbo.OrderItems oi INNER JOIN dbo.Products p ON p.ProductId=oi.ProductId
+  WHERE oi.OrderId=b.OrderId
+ ) items
+ WHERE (@FromUtc IS NULL OR b.CreatedAt>=@FromUtc) AND (@ToUtc IS NULL OR b.CreatedAt<@ToUtc)
+ ORDER BY b.CreatedAt DESC,b.BillId
  OFFSET (@PageNumber-1)*@PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
 END;
 GO
