@@ -10,7 +10,8 @@ using RestaurantManagement.API.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-if (string.IsNullOrWhiteSpace(builder.Configuration["urls"]) && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
+if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")) &&
+    !args.Any(argument => argument.Equals("--urls", StringComparison.OrdinalIgnoreCase) || argument.StartsWith("--urls=", StringComparison.OrdinalIgnoreCase)))
     builder.WebHost.UseUrls("http://0.0.0.0:5080");
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection(AppSettings.SectionName));
 builder.Services.PostConfigure<AppSettings>(settings => settings.Jwt.AccessTokenMinutes = 60);
