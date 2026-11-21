@@ -5,7 +5,7 @@ namespace RestaurantManagement.UI.Validation;
 
 public static class AuthRequestValidator
 {
-    public static string? ValidateOwner(OwnerRegistrationRequest request)
+    public static string? ValidateOwner(OwnerRegistrationRequest request, string confirmPassword)
     {
         if (string.IsNullOrWhiteSpace(request.FullName)) return "Enter your full name.";
         if (!IsValidEmail(request.Email)) return "Enter a valid email address.";
@@ -13,7 +13,11 @@ public static class AuthRequestValidator
         var normalized = mobile.StartsWith("+", StringComparison.Ordinal) ? mobile[1..] : mobile;
         if (normalized.Length is < 10 or > 15 || !normalized.All(char.IsDigit))
             return "Enter a valid mobile number with 10 to 15 digits.";
-        return ValidatePassword(request.Password);
+        var passwordError = ValidatePassword(request.Password);
+        if (passwordError is not null) return passwordError;
+        if (!string.Equals(request.Password, confirmPassword, StringComparison.Ordinal))
+            return "Password and confirm password do not match.";
+        return null;
     }
 
     public static string? ValidateLogin(string identifier, string password)
