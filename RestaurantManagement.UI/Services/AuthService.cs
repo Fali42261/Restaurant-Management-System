@@ -31,8 +31,8 @@ public sealed class AuthService : IAuthService
     public async Task<string> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
         var message = await Api.PostMessageAsync(AppConfig.Routes.ChangePassword, request, authorized: true, cancellationToken: cancellationToken);
-        SecureStorage.Default.Remove("swapDigit.accessToken");
-        SecureStorage.Default.Remove("swapDigit.refreshToken");
+        SecureStorage.Default.Remove(AppConfig.Security.AccessTokenStorageKey);
+        SecureStorage.Default.Remove(AppConfig.Security.RefreshTokenStorageKey);
         RestaurantSession.Clear();
         return message;
     }
@@ -44,9 +44,9 @@ public sealed class AuthService : IAuthService
         if (result is null || string.IsNullOrWhiteSpace(result.AccessToken) || result.User is null)
             throw new AuthApiException("The API returned an incomplete login response.", HttpStatusCode.BadGateway);
 
-        await SecureStorage.Default.SetAsync("swapDigit.accessToken", result.AccessToken);
+        await SecureStorage.Default.SetAsync(AppConfig.Security.AccessTokenStorageKey, result.AccessToken);
         if (!string.IsNullOrWhiteSpace(result.RefreshToken))
-            await SecureStorage.Default.SetAsync("swapDigit.refreshToken", result.RefreshToken);
+            await SecureStorage.Default.SetAsync(AppConfig.Security.RefreshTokenStorageKey, result.RefreshToken);
 
         var user = new User
         {
@@ -77,9 +77,9 @@ public sealed class AuthService : IAuthService
         var result = await Api.PostAsync<RestaurantSelectionResponse>(string.Format(AppConfig.Routes.SelectRestaurant, restaurant.RestaurantId), authorized: true, cancellationToken: cancellationToken);
         if (result is null || string.IsNullOrWhiteSpace(result.AccessToken))
             throw new AuthApiException("The API did not return a restaurant-scoped access token.", HttpStatusCode.BadGateway);
-        await SecureStorage.Default.SetAsync("swapDigit.accessToken", result.AccessToken);
+        await SecureStorage.Default.SetAsync(AppConfig.Security.AccessTokenStorageKey, result.AccessToken);
         if (!string.IsNullOrWhiteSpace(result.RefreshToken))
-            await SecureStorage.Default.SetAsync("swapDigit.refreshToken", result.RefreshToken);
+            await SecureStorage.Default.SetAsync(AppConfig.Security.RefreshTokenStorageKey, result.RefreshToken);
         RestaurantSession.Select(restaurant);
     }
 
@@ -120,8 +120,8 @@ public sealed class AuthService : IAuthService
         try { await Api.PostAsync<object>(AppConfig.Routes.SignOut, authorized: true, cancellationToken: cancellationToken); }
         finally
         {
-            SecureStorage.Default.Remove("swapDigit.accessToken");
-            SecureStorage.Default.Remove("swapDigit.refreshToken");
+            SecureStorage.Default.Remove(AppConfig.Security.AccessTokenStorageKey);
+            SecureStorage.Default.Remove(AppConfig.Security.RefreshTokenStorageKey);
             RestaurantSession.Clear();
         }
     }
