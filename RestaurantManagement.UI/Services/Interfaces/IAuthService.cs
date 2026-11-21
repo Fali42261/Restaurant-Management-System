@@ -8,7 +8,7 @@ public interface IAuthService
     Task<string> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default);
     Task<string> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default);
     Task<string> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default);
-    Task<User> SignInAsync(string identifier, string password, CancellationToken cancellationToken = default);
+    Task<User> SignInAsync(LoginRequest request, CancellationToken cancellationToken = default);
     Task<List<RestaurantInfo>> GetRestaurantsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<RestaurantInfo> CreateRestaurantAsync(CreateRestaurantInput input, CancellationToken cancellationToken = default);
     Task SelectRestaurantAsync(RestaurantInfo restaurant, CancellationToken cancellationToken = default);
