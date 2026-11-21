@@ -1,3 +1,5 @@
+using RestaurantManagement.API.Common.Constants;
+
 namespace RestaurantManagement.API.Configuration;
 
 public sealed class AppSettings
@@ -16,4 +18,4 @@ public sealed class JwtSettings { public string Issuer { get; set; } = "swapDigi
 public sealed class EmailSettings { public string SmtpHost { get; set; } = ""; public int SmtpPort { get; set; } = 587; public bool EnableSsl { get; set; } = true; public string UserName { get; set; } = ""; public string Password { get; set; } = ""; public string FromEmail { get; set; } = ""; public string FromName { get; set; } = "swapDigit"; }
 public sealed class CorsSettings { public string[] AllowedOrigins { get; set; } = []; }
 public sealed class FileStorageSettings { public string RootPath { get; set; } = "App_Data/Uploads"; public long MaxFileSizeMb { get; set; } = 10; }
-public sealed class BusinessSettings { public string CurrencyCode { get; set; } = "INR"; public decimal DefaultTaxPercent { get; set; } = 5m; public int PasswordMinimumLength { get; set; } = 8; }
+public sealed class BusinessSettings { public string CurrencyCode { get; set; } = "INR"; public decimal DefaultTaxPercent { get; set; } = 5m; public int PasswordMinimumLength { get; set; } = AuthConstants.MinimumPasswordLength; }
