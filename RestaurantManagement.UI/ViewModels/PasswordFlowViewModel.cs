@@ -91,10 +91,6 @@ public sealed class PasswordFlowViewModel : BaseViewModel
         {
             ToastService.Error(ex.Message);
         }
-        catch (AuthApiException ex)
-        {
-            ToastService.Error(ex.Message);
-        }
         catch (HttpRequestException)
         {
             ToastService.Error($"Cannot reach the API at {Configuration.AppConfig.Api.BaseUrl}. Check that the API is running.");
