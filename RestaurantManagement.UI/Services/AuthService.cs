@@ -137,7 +137,7 @@ public sealed class AuthService : IAuthService
             throw new ArgumentException("Invalid kitchen ticket status.", nameof(status));
 
         await SendAuthorizedAsync<object>(
-            HttpMethod.Put, $"api/v1/kots/{ticketId}/status",
+            HttpMethod.Put, string.Format(AppConfig.Routes.UpdateKotStatus, ticketId),
             new { Status = allowed.First(x => x.Equals(status, StringComparison.OrdinalIgnoreCase)) },
             cancellationToken);
     }
