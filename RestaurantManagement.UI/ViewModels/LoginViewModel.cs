@@ -25,7 +25,7 @@ public sealed class LoginViewModel : BaseViewModel
         GoToResetPasswordCommand = new Command(async () => await Shell.Current.GoToAsync(nameof(ResetPasswordPage)));
         GoToChangePasswordCommand = new Command(async () =>
         {
-            var accessToken = await SecureStorage.Default.GetAsync("swapDigit.accessToken");
+            var accessToken = await SecureStorage.Default.GetAsync(Configuration.AppConfig.Security.AccessTokenStorageKey);
             var targetPage = string.IsNullOrWhiteSpace(accessToken) ? nameof(ResetPasswordPage) : nameof(ChangePasswordPage);
             await Shell.Current.GoToAsync(targetPage);
         });
