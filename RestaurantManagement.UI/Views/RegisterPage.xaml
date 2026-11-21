@@ -51,7 +51,7 @@
                                 
                             </VerticalStackLayout>
                             <Label Text="Owner account registration. Staff members must sign in with credentials provided by the owner." FontSize="12" TextColor="#718078" />
-                            <Button Text="Create account" Command="{Binding RegisterCommand}" BackgroundColor="#1F6B57" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="52" />
+                            <Button Text="Create account" Command="{Binding RegisterCommand}" IsEnabled="{Binding IsRegisterEnabled}" BackgroundColor="#1F6B57" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="52" />
                             <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
                                 <Label Text="Already have an account?" TextColor="#718078" FontSize="13" VerticalTextAlignment="Center" />
                                 <Label Text="Sign in" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" VerticalTextAlignment="Center">
