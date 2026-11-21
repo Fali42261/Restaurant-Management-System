@@ -74,10 +74,6 @@ public sealed class LoginViewModel : BaseViewModel
         {
             ToastService.Error(ex.Message);
         }
-        catch (AuthApiException ex)
-        {
-            ToastService.Error(ex.Message);
-        }
         catch (HttpRequestException)
         {
             ToastService.Error($"Cannot reach the API at {Configuration.AppConfig.Api.BaseUrl}. Start the API and check the configured base URL.");
