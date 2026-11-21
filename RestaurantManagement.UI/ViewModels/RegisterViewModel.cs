@@ -15,6 +15,7 @@ public sealed class RegisterViewModel : BaseViewModel
     private string _mobileNumber = string.Empty;
     private string _password = string.Empty;
     private string _confirmPassword = string.Empty;
+    private bool _isRegisterEnabled = true;
 
     public RegisterViewModel(IAuthService authService)
     {
@@ -29,6 +30,7 @@ public sealed class RegisterViewModel : BaseViewModel
     public string MobileNumber { get => _mobileNumber; set => SetProperty(ref _mobileNumber, value); }
     public string Password { get => _password; set => SetProperty(ref _password, value); }
     public string ConfirmPassword { get => _confirmPassword; set => SetProperty(ref _confirmPassword, value); }
+    public bool IsRegisterEnabled { get => _isRegisterEnabled; private set => SetProperty(ref _isRegisterEnabled, value); }
     public ICommand RegisterCommand { get; }
     public ICommand GoToLoginCommand { get; }
 
@@ -46,6 +48,7 @@ public sealed class RegisterViewModel : BaseViewModel
         try
         {
             IsBusy = true;
+            IsRegisterEnabled = false;
             await _authService.RegisterOwnerAsync(new OwnerRegistrationRequest(
                 FullName.Trim(),
                 Email.Trim().ToLowerInvariant(),
@@ -75,6 +78,7 @@ public sealed class RegisterViewModel : BaseViewModel
         finally
         {
             IsBusy = false;
+            IsRegisterEnabled = true;
         }
     }
 
