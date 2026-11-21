@@ -53,7 +53,10 @@ public sealed class RegisterViewModel : BaseViewModel
             await Task.Delay(TimeSpan.FromSeconds(5));
             await Shell.Current.GoToAsync("..");
         }
-        catch (ApiException ex)\n        {\n            ToastService.Error(ex.Message);\n        }\n        catch (AuthApiException ex)
+        catch (ApiException ex)
+        {
+            ToastService.Error(ex.Message);
+        }\n        catch (AuthApiException ex)
         {
             ToastService.Error(ex.Message);
         }
