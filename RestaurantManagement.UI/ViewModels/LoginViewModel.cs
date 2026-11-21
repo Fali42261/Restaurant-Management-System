@@ -63,7 +63,6 @@ public sealed class LoginViewModel : BaseViewModel
                 // until a restaurant is created and selected from the dashboard workflow.
                 RestaurantSession.Set(user, restaurants, null);
                 await Shell.Current.GoToAsync(nameof(DashboardPage));
-                ToastService.Success("Signed in successfully.");
                 return;
             }
 
@@ -73,7 +72,6 @@ public sealed class LoginViewModel : BaseViewModel
             RestaurantSession.Set(user, restaurants, selected);
             TrialAccessService.StartTrialIfNeeded();
             await Shell.Current.GoToAsync(nameof(DashboardPage));
-            ToastService.Success("Signed in successfully.");
         }
         catch (ApiException ex)
         {
