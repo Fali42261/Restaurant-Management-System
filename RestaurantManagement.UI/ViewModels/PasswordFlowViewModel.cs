@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using RestaurantManagement.UI.Models;
 using RestaurantManagement.UI.Services.Interfaces;
+using RestaurantManagement.UI.Validation;
 
 namespace RestaurantManagement.UI.ViewModels;
 
@@ -52,14 +53,7 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     private async Task ResetPasswordAsync()
     {
         if (IsBusy) return;
-        if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@') ||
-            string.IsNullOrWhiteSpace(VerificationCode) || VerificationCode.Trim().Length < 4)
-        {
-            ToastService.Error("Enter a valid email address and the verification code.");
-            return;
-        }
-
-        var validation = ValidateNewPassword();
+        var validation = AuthRequestValidator.ValidateReset(Email, VerificationCode, NewPassword);
         if (validation is not null) { ToastService.Error(validation); return; }
 
         await RunRequestAsync(async () =>
@@ -75,13 +69,7 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     private async Task ChangePasswordAsync()
     {
         if (IsBusy) return;
-        if (string.IsNullOrWhiteSpace(CurrentPassword))
-        {
-            ToastService.Error("Enter your current password.");
-            return;
-        }
-
-        var validation = ValidateNewPassword();
+        var validation = AuthRequestValidator.ValidateChange(CurrentPassword, NewPassword);
         if (validation is not null) { ToastService.Error(validation); return; }
 
         await RunRequestAsync(async () =>
@@ -91,16 +79,6 @@ public sealed class PasswordFlowViewModel : BaseViewModel
             await Task.Delay(TimeSpan.FromSeconds(5));
             await Shell.Current.GoToAsync("//LoginPage");
         });
-    }
-
-    private string? ValidateNewPassword()
-    {
-        if (NewPassword.Length < 8 || !NewPassword.Any(char.IsUpper) || !NewPassword.Any(char.IsLower) ||
-            !NewPassword.Any(char.IsDigit) || !NewPassword.Any(x => !char.IsLetterOrDigit(x)))
-            return "Password must contain at least 8 characters with uppercase, lowercase, number and symbol.";
-        if (!string.Equals(NewPassword, ConfirmPassword, StringComparison.Ordinal))
-            return "New password and confirm password do not match.";
-        return null;
     }
 
     private async Task RunRequestAsync(Func<Task> request)
