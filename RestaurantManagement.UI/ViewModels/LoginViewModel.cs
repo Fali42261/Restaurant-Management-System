@@ -35,12 +35,12 @@ public sealed class LoginViewModel : BaseViewModel
         if (IsBusy) return;
         if (string.IsNullOrWhiteSpace(EmailOrMobile))
         {
-            await Shell.Current.DisplayAlert("Sign in", "Enter your email or mobile number.", "OK");
+            ToastService.Error("Enter your email or mobile number.");
             return;
         }
         if (string.IsNullOrWhiteSpace(Password))
         {
-            await Shell.Current.DisplayAlert("Sign in", "Enter your password.", "OK");
+            ToastService.Error("Enter your password.");
             return;
         }
 
@@ -67,20 +67,19 @@ public sealed class LoginViewModel : BaseViewModel
             RestaurantSession.Set(user, restaurants, selected);
             TrialAccessService.StartTrialIfNeeded();
             await Shell.Current.GoToAsync(nameof(DashboardPage));
+            ToastService.Success("Signed in successfully.");
         }
         catch (AuthApiException ex)
         {
-            await Shell.Current.DisplayAlert("Sign in failed", ex.Message, "OK");
+            ToastService.Error(ex.Message);
         }
         catch (HttpRequestException)
         {
-            await Shell.Current.DisplayAlert("Connection error",
-                $"Cannot reach the API at {Configuration.AppConfig.Api.BaseUrl}. Start the API and check the configured base URL.",
-                "OK");
+            ToastService.Error($"Cannot reach the API at {Configuration.AppConfig.Api.BaseUrl}. Start the API and check the configured base URL.");
         }
         catch (TaskCanceledException)
         {
-            await Shell.Current.DisplayAlert("Request timeout", "The API did not respond in time. Please try again.", "OK");
+            ToastService.Error("The API did not respond in time. Please try again.");
         }
         finally
         {
