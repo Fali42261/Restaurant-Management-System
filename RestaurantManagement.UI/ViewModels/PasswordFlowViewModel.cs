@@ -38,11 +38,8 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     private async Task SendResetCodeAsync()
     {
         if (IsBusy) return;
-        if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
-        {
-            ToastService.Error("Enter a valid account email address.");
-            return;
-        }
+        var validation = AuthRequestValidator.ValidateForgot(Email);
+        if (validation is not null) { ToastService.Error(validation); return; }
 
         await RunRequestAsync(async () =>
         {
@@ -54,7 +51,7 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     private async Task ResetPasswordAsync()
     {
         if (IsBusy) return;
-        var validation = AuthRequestValidator.ValidateReset(Email, VerificationCode, NewPassword);
+        var validation = AuthRequestValidator.ValidateReset(Email, VerificationCode, NewPassword, ConfirmPassword);
         if (validation is not null) { ToastService.Error(validation); return; }
 
         await RunRequestAsync(async () =>
@@ -70,7 +67,7 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     private async Task ChangePasswordAsync()
     {
         if (IsBusy) return;
-        var validation = AuthRequestValidator.ValidateChange(CurrentPassword, NewPassword);
+        var validation = AuthRequestValidator.ValidateChange(CurrentPassword, NewPassword, ConfirmPassword);
         if (validation is not null) { ToastService.Error(validation); return; }
 
         await RunRequestAsync(async () =>
