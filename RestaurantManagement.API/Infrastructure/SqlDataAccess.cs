@@ -64,8 +64,11 @@ public sealed class SqlDataAccess(
         }
     }
 
+    public Task<List<Dictionary<string, object?>>> QueryAsync(string sql, params SqlParameter[] parameters) =>
+        QueryAsync(sql, CancellationToken.None, parameters);
+
     public async Task<List<Dictionary<string, object?>>> QueryAsync(
-        string sql, CancellationToken cancellationToken = default, params SqlParameter[] parameters)
+        string sql, CancellationToken cancellationToken, params SqlParameter[] parameters)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sql);
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -78,8 +81,11 @@ public sealed class SqlDataAccess(
         return await ReadRowsAsync(reader, cancellationToken);
     }
 
+    public Task<int> ExecuteAsync(string sql, params SqlParameter[] parameters) =>
+        ExecuteAsync(sql, CancellationToken.None, parameters);
+
     public async Task<int> ExecuteAsync(
-        string sql, CancellationToken cancellationToken = default, params SqlParameter[] parameters)
+        string sql, CancellationToken cancellationToken, params SqlParameter[] parameters)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sql);
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -89,8 +95,11 @@ public sealed class SqlDataAccess(
         return await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public Task<object?> ScalarAsync(string sql, params SqlParameter[] parameters) =>
+        ScalarAsync(sql, CancellationToken.None, parameters);
+
     public async Task<object?> ScalarAsync(
-        string sql, CancellationToken cancellationToken = default, params SqlParameter[] parameters)
+        string sql, CancellationToken cancellationToken, params SqlParameter[] parameters)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sql);
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -112,8 +121,11 @@ public sealed class SqlDataAccess(
         return parameter;
     }
 
+    public Task<int> ExecuteProcedureAsync(string procedureName, params SqlParameter[] parameters) =>
+        ExecuteProcedureAsync(procedureName, CancellationToken.None, parameters);
+
     public async Task<int> ExecuteProcedureAsync(
-        string procedureName, CancellationToken cancellationToken = default, params SqlParameter[] parameters)
+        string procedureName, CancellationToken cancellationToken, params SqlParameter[] parameters)
     {
         ValidateProcedureName(procedureName);
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -127,8 +139,11 @@ public sealed class SqlDataAccess(
         return await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public Task<List<Dictionary<string, object?>>> QueryProcedureAsync(string procedureName, params SqlParameter[] parameters) =>
+        QueryProcedureAsync(procedureName, CancellationToken.None, parameters);
+
     public async Task<List<Dictionary<string, object?>>> QueryProcedureAsync(
-        string procedureName, CancellationToken cancellationToken = default, params SqlParameter[] parameters)
+        string procedureName, CancellationToken cancellationToken, params SqlParameter[] parameters)
     {
         ValidateProcedureName(procedureName);
         await using var connection = await OpenConnectionAsync(cancellationToken);
