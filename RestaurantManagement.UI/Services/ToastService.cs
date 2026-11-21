@@ -6,6 +6,7 @@ namespace RestaurantManagement.UI.Services;
 public static class ToastService
 {
     private static Border? _activeToast;
+    private static Grid? _activeHost;
     private static int _sequence;
 
     public static void Success(string message) => Show(message, true);
@@ -31,8 +32,8 @@ public static class ToastService
                 if (oldContent is not null) host.Children.Add(oldContent);
             }
 
-            if (_activeToast is not null)
-                host.Children.Remove(_activeToast);
+            if (_activeToast is not null && _activeHost is not null)
+                _activeHost.Children.Remove(_activeToast);
 
             var id = Interlocked.Increment(ref _sequence);
             var toast = new Border
@@ -61,7 +62,7 @@ public static class ToastService
             if (id == _sequence)
             {
                 host.Children.Remove(toast);
-                _activeToast = null;
+                _activeToast = null;\n                _activeHost = null;
             }
         });
     }
