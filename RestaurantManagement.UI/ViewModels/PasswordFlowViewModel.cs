@@ -1,20 +1,25 @@
 using System.Windows.Input;
+using RestaurantManagement.UI.Models;
+using RestaurantManagement.UI.Services.Interfaces;
 
 namespace RestaurantManagement.UI.ViewModels;
 
 public sealed class PasswordFlowViewModel : BaseViewModel
 {
+    private readonly IAuthService _authService;
     private string _email = "";
     private string _verificationCode = "";
     private string _currentPassword = "";
     private string _newPassword = "";
     private string _confirmPassword = "";
 
-    public PasswordFlowViewModel()
+    public PasswordFlowViewModel(IAuthService authService)
     {
+        _authService = authService;
         Title = "Password";
-        ResetPasswordCommand = new Command(ResetPassword);
-        ChangePasswordCommand = new Command(ChangePassword);
+        ForgotPasswordCommand = new Command(async () => await SendResetCodeAsync());
+        ResetPasswordCommand = new Command(async () => await ResetPasswordAsync());
+        ChangePasswordCommand = new Command(async () => await ChangePasswordAsync());
         GoToLoginCommand = new Command(async () => await Shell.Current.GoToAsync("//LoginPage"));
     }
 
@@ -23,33 +28,107 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     public string CurrentPassword { get => _currentPassword; set => SetProperty(ref _currentPassword, value); }
     public string NewPassword { get => _newPassword; set => SetProperty(ref _newPassword, value); }
     public string ConfirmPassword { get => _confirmPassword; set => SetProperty(ref _confirmPassword, value); }
+    public ICommand ForgotPasswordCommand { get; }
     public ICommand ResetPasswordCommand { get; }
     public ICommand ChangePasswordCommand { get; }
     public ICommand GoToLoginCommand { get; }
 
-    private void ResetPassword()
+    private async Task SendResetCodeAsync()
     {
+        if (IsBusy) return;
         if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
-        return;
-        if (string.IsNullOrWhiteSpace(VerificationCode) || VerificationCode.Trim().Length < 4)
-        return;
-        ValidateNewPassword("Password reset");
+        {
+            ToastService.Error("Enter a valid account email address.");
+            return;
+        }
+
+        await RunRequestAsync(async () =>
+        {
+            var message = await _authService.ForgotPasswordAsync(new ForgotPasswordRequest(Email.Trim()));
+            ToastService.Success(message);
+        });
     }
 
-    private void ChangePassword()
+    private async Task ResetPasswordAsync()
     {
+        if (IsBusy) return;
+        if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@') ||
+            string.IsNullOrWhiteSpace(VerificationCode) || VerificationCode.Trim().Length < 4)
+        {
+            ToastService.Error("Enter a valid email address and the verification code.");
+            return;
+        }
+
+        var validation = ValidateNewPassword();
+        if (validation is not null) { ToastService.Error(validation); return; }
+
+        await RunRequestAsync(async () =>
+        {
+            var message = await _authService.ResetPasswordAsync(
+                new ResetPasswordRequest(Email.Trim(), VerificationCode.Trim(), NewPassword));
+            ToastService.Success(message);
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Shell.Current.GoToAsync("//LoginPage");
+        });
+    }
+
+    private async Task ChangePasswordAsync()
+    {
+        if (IsBusy) return;
         if (string.IsNullOrWhiteSpace(CurrentPassword))
-        return;
-        ValidateNewPassword("Password change");
+        {
+            ToastService.Error("Enter your current password.");
+            return;
+        }
+
+        var validation = ValidateNewPassword();
+        if (validation is not null) { ToastService.Error(validation); return; }
+
+        await RunRequestAsync(async () =>
+        {
+            var message = await _authService.ChangePasswordAsync(new ChangePasswordRequest(CurrentPassword, NewPassword));
+            ToastService.Success(message);
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Shell.Current.GoToAsync("//LoginPage");
+        });
     }
 
-    private void ValidateNewPassword(string action)
+    private string? ValidateNewPassword()
     {
-        if (string.IsNullOrWhiteSpace(NewPassword) || NewPassword.Length < 8)
-        return;
+        if (NewPassword.Length < 8 || !NewPassword.Any(char.IsUpper) || !NewPassword.Any(char.IsLower) ||
+            !NewPassword.Any(char.IsDigit) || !NewPassword.Any(x => !char.IsLetterOrDigit(x)))
+            return "Password must contain at least 8 characters with uppercase, lowercase, number and symbol.";
         if (!string.Equals(NewPassword, ConfirmPassword, StringComparison.Ordinal))
-        return;
-        // Validation only; feedback notifications are temporarily disabled.
+            return "New password and confirm password do not match.";
+        return null;
     }
 
+    private async Task RunRequestAsync(Func<Task> request)
+    {
+        try
+        {
+            IsBusy = true;
+            await request();
+        }
+        catch (AuthApiException ex)
+        {
+            ToastService.Error(ex.Message);
+        }
+        catch (HttpRequestException)
+        {
+            ToastService.Error($"Cannot reach the API at {Configuration.AppConfig.Api.BaseUrl}. Check that the API is running.");
+        }
+        catch (TaskCanceledException)
+        {
+            ToastService.Error("The API did not respond in time. Please try again.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.Error($"Request failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 }
