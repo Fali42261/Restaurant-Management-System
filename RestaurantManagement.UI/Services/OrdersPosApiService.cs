@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Maui.Storage;
 using RestaurantManagement.UI.Configuration;
+using RestaurantManagement.UI.Models;
 
 namespace RestaurantManagement.UI.Services;
 
@@ -154,18 +155,6 @@ public sealed class TableDto
     public string Status { get; set; } = "";
 }
 
-public sealed record PosCheckoutRequest(
-    string? CustomerName,
-    string OrderType,
-    Guid? TableId,
-    decimal Discount,
-    decimal Tax,
-    string PaymentMethod,
-    decimal CashReceived,
-    List<PosCheckoutItem> Items);
-
-public sealed record PosCheckoutItem(Guid ProductId, int Quantity, string? Notes);
-
 public sealed class CheckoutResult
 {
     public Guid OrderId { get; set; }
@@ -179,6 +168,3 @@ public sealed class CheckoutResult
     public string Status { get; set; } = "";
 }
 
-public sealed record ReplaceOrderItem(Guid ProductId, int Quantity, string? Notes = null);
-
-public sealed record CreateBillApiRequest(Guid? OrderId, string CustomerName, string OrderType, decimal Subtotal, decimal Discount, decimal Tax, decimal Total, string PaymentMethod, decimal AmountPaid);
