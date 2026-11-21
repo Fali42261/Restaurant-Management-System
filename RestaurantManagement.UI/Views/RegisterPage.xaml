@@ -42,12 +42,20 @@
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><ImageButton Grid.Column="1" x:Name="PasswordEyeButton" Source="eye.svg" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" WidthRequest="44" HeightRequest="44" MinimumWidthRequest="44" MinimumHeightRequest="44" Padding="9" Aspect="AspectFit" Opacity="1" IsVisible="True" HorizontalOptions="End" VerticalOptions="Center" /></Grid>
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Image x:Name="PasswordEyeButton" Source="eye.svg" WidthRequest="24" HeightRequest="24" Aspect="AspectFit" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Image.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="TogglePasswordVisibility" />
+                                    </Image.GestureRecognizers>
+                                </Image></Grid>
                                 
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
                                 <Label Text="Confirm password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="ConfirmPasswordEntry" BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><ImageButton Grid.Column="1" x:Name="ConfirmPasswordEyeButton" Source="eye.svg" Clicked="ToggleConfirmPasswordVisibility" BackgroundColor="Transparent" WidthRequest="44" HeightRequest="44" MinimumWidthRequest="44" MinimumHeightRequest="44" Padding="9" Aspect="AspectFit" Opacity="1" IsVisible="True" HorizontalOptions="End" VerticalOptions="Center" /></Grid>
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="ConfirmPasswordEntry" BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Image x:Name="ConfirmPasswordEyeButton" Source="eye.svg" WidthRequest="24" HeightRequest="24" Aspect="AspectFit" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Image.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="ToggleConfirmPasswordVisibility" />
+                                    </Image.GestureRecognizers>
+                                </Image></Grid>
                                 
                             </VerticalStackLayout>
                             <Label Text="Owner account registration. Staff members must sign in with credentials provided by the owner." FontSize="12" TextColor="#718078" />
