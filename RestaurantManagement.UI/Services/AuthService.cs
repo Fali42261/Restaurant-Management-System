@@ -12,8 +12,15 @@ public sealed class AuthService : IAuthService
 {
     private static readonly ApiClient Api = new();
 
-    public Task<string> RegisterOwnerAsync(OwnerRegistrationRequest request, CancellationToken cancellationToken = default) =>
-        Api.PostMessageAsync(AppConfig.Routes.Register, request, cancellationToken: cancellationToken);
+    public async Task<string> RegisterOwnerAsync(OwnerRegistrationRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await Api.PostResponseAsync<OwnerRegistrationResponse>(
+            AppConfig.Routes.Register, request, cancellationToken: cancellationToken);
+        if (response.Data is null || response.Data.UserId == Guid.Empty ||
+            !string.Equals(response.Data.Role, "Owner", StringComparison.OrdinalIgnoreCase))
+            throw new AuthApiException("The API did not return a valid owner account response.", HttpStatusCode.BadGateway);
+        return string.IsNullOrWhiteSpace(response.Message) ? "Owner account created successfully." : response.Message;
+    }
 
     public Task<string> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default) =>
         Api.PostMessageAsync(AppConfig.Routes.ForgotPassword, request, cancellationToken: cancellationToken);
