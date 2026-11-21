@@ -4,6 +4,7 @@ using RestaurantManagement.UI.Models;
 using RestaurantManagement.UI.Services;
 using RestaurantManagement.UI.Services.Interfaces;
 using RestaurantManagement.UI.Views;
+using RestaurantManagement.UI.Validation;
 
 namespace RestaurantManagement.UI.ViewModels;
 
@@ -33,16 +34,8 @@ public sealed class LoginViewModel : BaseViewModel
     private async Task SignInAsync()
     {
         if (IsBusy) return;
-        if (string.IsNullOrWhiteSpace(EmailOrMobile))
-        {
-            ToastService.Error("Enter your email or mobile number.");
-            return;
-        }
-        if (string.IsNullOrWhiteSpace(Password))
-        {
-            ToastService.Error("Enter your password.");
-            return;
-        }
+        var validationMessage = AuthRequestValidator.ValidateLogin(EmailOrMobile, Password);
+        if (validationMessage is not null) { ToastService.Error(validationMessage); return; }
 
         try
         {
