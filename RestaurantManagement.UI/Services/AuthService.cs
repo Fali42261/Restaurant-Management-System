@@ -70,6 +70,49 @@ public sealed class AuthService : IAuthService
         RestaurantSession.Select(restaurant);
     }
 
+    public async Task<List<DashboardSalesPoint>> GetDashboardSalesAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        var route = $"{AppConfig.Routes.DashboardSales}?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+        return await Api.GetAsync<List<DashboardSalesPoint>>(route, authorized: true, cancellationToken) ?? [];
+    }
+
+    public async Task<List<DashboardTopProduct>> GetDashboardTopProductsAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default)
+    {
+        var route = $"{AppConfig.Routes.DashboardTopProducts}?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+        return await Api.GetAsync<List<DashboardTopProduct>>(route, authorized: true, cancellationToken) ?? [];
+    }
+
+    public async Task<List<KitchenTicketApiModel>> GetKitchenTicketsAsync(CancellationToken cancellationToken = default)
+    {
+        var page = await Api.GetAsync<PagedApiResult<KitchenTicketApiModel>>(AppConfig.Routes.KitchenTickets, authorized: true, cancellationToken);
+        return page?.Items ?? [];
+    }
+
+    public async Task UpdateKitchenTicketStatusAsync(Guid ticketId, string status, CancellationToken cancellationToken = default)
+    {
+        if (ticketId == Guid.Empty) throw new ArgumentException("A valid kitchen ticket is required.", nameof(ticketId));
+        var allowed = new[] { "New", "Preparing", "Ready", "Served", "Cancelled" };
+        if (!allowed.Contains(status, StringComparer.OrdinalIgnoreCase))
+            throw new ArgumentException("Invalid kitchen ticket status.", nameof(status));
+        await Api.PutAsync<object>(string.Format(AppConfig.Routes.UpdateKotStatus, ticketId),
+            new { Status = allowed.First(x => x.Equals(status, StringComparison.OrdinalIgnoreCase)) },
+            authorized: true, cancellationToken);
+    }
+
+    public Task<DashboardSummary?> GetDashboardSummaryAsync(CancellationToken cancellationToken = default) =>
+        Api.GetAsync<DashboardSummary>(AppConfig.Routes.DashboardSummary, authorized: true, cancellationToken);
+
+    public async Task SignOutAsync(CancellationToken cancellationToken = default)
+    {
+        try { await Api.PostAsync<object>(AppConfig.Routes.SignOut, authorized: true, cancellationToken); }
+        finally
+        {
+            SecureStorage.Default.Remove("swapDigit.accessToken");
+            SecureStorage.Default.Remove("swapDigit.refreshToken");
+            RestaurantSession.Clear();
+        }
+    }
+
     private static Task<T?> SendAuthorizedAsync<T>(HttpMethod method, string route, object? payload, CancellationToken cancellationToken) =>
         Api.SendAsync<T>(method, route, payload, authorized: true, cancellationToken);
 
