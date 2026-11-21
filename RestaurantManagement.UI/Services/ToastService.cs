@@ -64,7 +64,8 @@ public static class ToastService
             if (id == _sequence)
             {
                 host.Children.Remove(toast);
-                _activeToast = null;\n                _activeHost = null;
+                _activeToast = null;
+                _activeHost = null;
             }
         });
     }
