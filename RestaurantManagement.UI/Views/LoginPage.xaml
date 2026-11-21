@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Sign in"
     Shell.NavBarIsVisible="False"
-    BackgroundColor="#F4F7FB">
+    BackgroundColor="{AppThemeBinding Light=#F4F7FB, Dark=#10191D}">
 
     <ContentPage.Resources><Style TargetType="Entry"><Setter Property="HeightRequest" Value="48" /><Setter Property="FontSize" Value="15" /><Setter Property="HorizontalOptions" Value="Fill" /><Setter Property="VerticalOptions" Value="Center" /><Setter Property="Margin" Value="0" /><Setter Property="BackgroundColor" Value="Transparent" /></Style></ContentPage.Resources>
     <Grid><ScrollView>
@@ -19,16 +19,16 @@
                     <Label Text="swapDigit"
                            FontSize="29"
                            FontAttributes="Bold"
-                           TextColor="#172B27"
+                           TextColor="{AppThemeBinding Light=#172B27, Dark=#E7EFEB}"
                            HorizontalTextAlignment="Center" />
                     <Label Text="Welcome back. Sign in to continue."
                            FontSize="14"
-                           TextColor="#718078"
+                           TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
 
-                <Border BackgroundColor="White"
-                        Stroke="#E5EBE8"
+                <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}"
+                        Stroke="{AppThemeBinding Light=#E5EBE8, Dark=#34464B}"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 24"
                         Padding="24">
@@ -47,7 +47,7 @@
                             <Label Text="Email or mobile number"
                                    FontSize="13"
                                    FontAttributes="Bold"
-                                   TextColor="#344A43" />
+                                   TextColor="{AppThemeBinding Light=#344A43, Dark=#D9EFEC}" />
                             <Grid RowDefinitions="48,1" ColumnDefinitions="*" ColumnSpacing="0">
                                 <Entry Grid.Row="0" BackgroundColor="Transparent" Placeholder="Enter your email or mobile number" Keyboard="Email" Text="{Binding EmailOrMobile}" TextColor="#172B27" PlaceholderColor="#9AA9A2" ClearButtonVisibility="WhileEditing" />
                                 <BoxView Grid.Row="1" BackgroundColor="#B9C9C2" HeightRequest="1" HorizontalOptions="Fill" />
@@ -71,20 +71,29 @@
                         </VerticalStackLayout>
 
                         <HorizontalStackLayout HorizontalOptions="End">
-                            <Label Text="Change password" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold">
+                            <Label Text="Change password" TextColor="#548F61" FontSize="13" FontAttributes="Bold">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding GoToChangePasswordCommand}" />
                                 </Label.GestureRecognizers>
                             </Label>
                         </HorizontalStackLayout>
 
-                        <Button Text="Sign in"
-                                Command="{Binding SignInCommand}"
-                                BackgroundColor="#1F6B57"
-                                TextColor="White"
-                                FontAttributes="Bold"
-                                CornerRadius="12"
-                                HeightRequest="52" />
+                        <Grid HeightRequest="52">
+                            <Button Text="Sign in"
+                                    Command="{Binding SignInCommand}"
+                                    IsEnabled="{Binding CanSignIn}"
+                                    BackgroundColor="#A8DDB0"
+                                    TextColor="#244B32"
+                                    FontAttributes="Bold"
+                                    CornerRadius="12"
+                                    HeightRequest="52" />
+                            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                               IsVisible="{Binding IsBusy}"
+                                               Color="#244B32"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Center"
+                                               Margin="0,0,22,0" />
+                        </Grid>
 
                         <HorizontalStackLayout HorizontalOptions="Center"
                                                Spacing="5">
