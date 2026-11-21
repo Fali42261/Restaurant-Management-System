@@ -27,18 +27,29 @@ public static class AuthRequestValidator
         return null;
     }
 
-    public static string? ValidateReset(string email, string code, string newPassword)
+    public static string? ValidateForgot(string email) =>
+        IsValidEmail(email) ? null : "Enter a valid email address.";
+
+    public static string? ValidateReset(string email, string code, string newPassword, string confirmPassword)
     {
         if (!IsValidEmail(email)) return "Enter a valid email address.";
         if (string.IsNullOrWhiteSpace(code) || code.Trim().Length < 4)
             return "Enter the verification code.";
-        return ValidatePassword(newPassword);
+        var passwordError = ValidatePassword(newPassword);
+        if (passwordError is not null) return passwordError;
+        if (!string.Equals(newPassword, confirmPassword, StringComparison.Ordinal))
+            return "New password and confirm password do not match.";
+        return null;
     }
 
-    public static string? ValidateChange(string currentPassword, string newPassword)
+    public static string? ValidateChange(string currentPassword, string newPassword, string confirmPassword)
     {
         if (string.IsNullOrWhiteSpace(currentPassword)) return "Enter your current password.";
-        return ValidatePassword(newPassword);
+        var passwordError = ValidatePassword(newPassword);
+        if (passwordError is not null) return passwordError;
+        if (!string.Equals(newPassword, confirmPassword, StringComparison.Ordinal))
+            return "New password and confirm password do not match.";
+        return null;
     }
 
     public static string? ValidatePassword(string password)
