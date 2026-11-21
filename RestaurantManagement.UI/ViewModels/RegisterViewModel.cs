@@ -64,6 +64,10 @@ public sealed class RegisterViewModel : BaseViewModel
         {
             ToastService.Error("The API did not respond in time. Please try again.");
         }
+        catch (Exception ex)
+        {
+            ToastService.Error($"Registration failed: {ex.Message}");
+        }
         finally
         {
             IsBusy = false;
