@@ -7,7 +7,7 @@ public partial class ResetPasswordPage : ContentPage
     public ResetPasswordPage()
     {
         InitializeComponent();
-        BindingContext = new PasswordFlowViewModel();
+        BindingContext = new PasswordFlowViewModel(new RestaurantManagement.UI.Services.AuthService());
     }
 
     private void ToggleNewPassword(object sender, EventArgs e)
