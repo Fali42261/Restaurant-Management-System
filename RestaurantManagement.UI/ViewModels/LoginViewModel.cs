@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Windows.Input;
+using Microsoft.Maui.Storage;
 using RestaurantManagement.UI.Models;
 using RestaurantManagement.UI.Models.Responses;
 using RestaurantManagement.UI.Services;
@@ -22,7 +23,12 @@ public sealed class LoginViewModel : BaseViewModel
         SignInCommand = new Command(async () => await SignInAsync());
         GoToRegisterCommand = new Command(async () => await Shell.Current.GoToAsync(nameof(RegisterPage)));
         GoToResetPasswordCommand = new Command(async () => await Shell.Current.GoToAsync(nameof(ResetPasswordPage)));
-        GoToChangePasswordCommand = new Command(async () => await Shell.Current.GoToAsync(nameof(ChangePasswordPage)));
+        GoToChangePasswordCommand = new Command(async () =>
+        {
+            var accessToken = await SecureStorage.Default.GetAsync("swapDigit.accessToken");
+            var targetPage = string.IsNullOrWhiteSpace(accessToken) ? nameof(ResetPasswordPage) : nameof(ChangePasswordPage);
+            await Shell.Current.GoToAsync(targetPage);
+        });
     }
 
     public string EmailOrMobile { get => _emailOrMobile; set => SetProperty(ref _emailOrMobile, value); }
