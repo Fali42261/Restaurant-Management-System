@@ -6,6 +6,7 @@ namespace RestaurantManagement.API.Common.Constants;
 /// </summary>
 public static class AuthConstants
 {
+    public const int MinimumPasswordLength = 8;
     public const int EmailMaxLength = 256;
     public const int MobileMaxLength = 25;
     public const int FullNameMaxLength = 150;
