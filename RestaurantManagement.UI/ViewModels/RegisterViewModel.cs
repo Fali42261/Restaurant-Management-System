@@ -41,7 +41,7 @@ public sealed class RegisterViewModel : BaseViewModel
         var validationMessage = ValidateInput();
         if (validationMessage is not null)
         {
-            await Shell.Current.DisplayAlert("Check your details", validationMessage, "OK");
+            ToastService.Error(validationMessage);
             return;
         }
 
@@ -49,31 +49,27 @@ public sealed class RegisterViewModel : BaseViewModel
         {
             IsBusy = true;
             IsRegisterEnabled = false;
-            await _authService.RegisterOwnerAsync(new OwnerRegistrationRequest(
+            var message = await _authService.RegisterOwnerAsync(new OwnerRegistrationRequest(
                 FullName.Trim(),
                 Email.Trim().ToLowerInvariant(),
                 MobileNumber.Trim(),
                 Password));
 
-            await Shell.Current.DisplayAlert(
-                "Account created",
-                "Your owner account has been created successfully. Please sign in.",
-                "Continue");
+            ToastService.Success(message + " Please sign in.");
+            await Task.Delay(TimeSpan.FromSeconds(5));
             await Shell.Current.GoToAsync("..");
         }
         catch (AuthApiException ex)
         {
-            await Shell.Current.DisplayAlert("Registration failed", ex.Message, "OK");
+            ToastService.Error(ex.Message);
         }
         catch (HttpRequestException)
         {
-            await Shell.Current.DisplayAlert("Connection error",
-                $"Cannot reach the API at {Configuration.AppConfig.Api.BaseUrl}. Start the API and check the configured base URL.",
-                "OK");
+            ToastService.Error($"Cannot reach the API at {Configuration.AppConfig.Api.BaseUrl}. Start the API and check the configured base URL.");
         }
         catch (TaskCanceledException)
         {
-            await Shell.Current.DisplayAlert("Request timeout", "The API did not respond in time. Please try again.", "OK");
+            ToastService.Error("The API did not respond in time. Please try again.");
         }
         finally
         {
