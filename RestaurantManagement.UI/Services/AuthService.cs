@@ -18,7 +18,7 @@ public sealed class AuthService : IAuthService
             AppConfig.Routes.Register, request, cancellationToken: cancellationToken);
         if (response.Data is null || response.Data.UserId == Guid.Empty ||
             !string.Equals(response.Data.Role, "Owner", StringComparison.OrdinalIgnoreCase))
-            throw new AuthApiException("The API did not return a valid owner account response.", HttpStatusCode.BadGateway);
+            throw new ApiException("The API did not return a valid owner account response.", HttpStatusCode.BadGateway);
         return string.IsNullOrWhiteSpace(response.Message) ? "Owner account created successfully." : response.Message;
     }
 
@@ -42,7 +42,7 @@ public sealed class AuthService : IAuthService
         var result = await Api.PostAsync<LoginResponse>(AppConfig.Routes.SignIn, request with { EmailOrMobile = request.EmailOrMobile.Trim() }, cancellationToken: cancellationToken);
 
         if (result is null || string.IsNullOrWhiteSpace(result.AccessToken) || result.User is null)
-            throw new AuthApiException("The API returned an incomplete login response.", HttpStatusCode.BadGateway);
+            throw new ApiException("The API returned an incomplete login response.", HttpStatusCode.BadGateway);
 
         await SecureStorage.Default.SetAsync(AppConfig.Security.AccessTokenStorageKey, result.AccessToken);
         if (!string.IsNullOrWhiteSpace(result.RefreshToken))
@@ -69,14 +69,14 @@ public sealed class AuthService : IAuthService
     public async Task<RestaurantInfo> CreateRestaurantAsync(CreateRestaurantInput input, CancellationToken cancellationToken = default)
     {
         var result = await Api.PostAsync<RestaurantInfo>(AppConfig.Routes.CreateRestaurant, input, authorized: true, cancellationToken: cancellationToken);
-        return result ?? throw new AuthApiException("The API did not return the created restaurant.", HttpStatusCode.BadGateway);
+        return result ?? throw new ApiException("The API did not return the created restaurant.", HttpStatusCode.BadGateway);
     }
 
     public async Task SelectRestaurantAsync(RestaurantInfo restaurant, CancellationToken cancellationToken = default)
     {
         var result = await Api.PostAsync<RestaurantSelectionResponse>(string.Format(AppConfig.Routes.SelectRestaurant, restaurant.RestaurantId), authorized: true, cancellationToken: cancellationToken);
         if (result is null || string.IsNullOrWhiteSpace(result.AccessToken))
-            throw new AuthApiException("The API did not return a restaurant-scoped access token.", HttpStatusCode.BadGateway);
+            throw new ApiException("The API did not return a restaurant-scoped access token.", HttpStatusCode.BadGateway);
         await SecureStorage.Default.SetAsync(AppConfig.Security.AccessTokenStorageKey, result.AccessToken);
         if (!string.IsNullOrWhiteSpace(result.RefreshToken))
             await SecureStorage.Default.SetAsync(AppConfig.Security.RefreshTokenStorageKey, result.RefreshToken);
@@ -127,9 +127,4 @@ public sealed class AuthService : IAuthService
     }
 
 
-}
-
-public sealed class AuthApiException(string message, HttpStatusCode statusCode) : Exception(message)
-{
-    public HttpStatusCode StatusCode { get; } = statusCode;
 }
