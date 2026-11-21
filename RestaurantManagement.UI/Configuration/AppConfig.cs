@@ -7,6 +7,7 @@ public static class AppConfig
         public const string Name = "swapDigit";
         public const string DefaultRole = "Staff";
         public const int RequestTimeoutSeconds = 30;
+        public const int ToastDurationSeconds = 5;
     }
 
     public static class Api
@@ -19,6 +20,12 @@ public static class AppConfig
         // Windows, iOS Simulator and Mac Catalyst development.
         public const string BaseUrl = "http://localhost:5080/";
 #endif
+    }
+
+    public static class Security
+    {
+        public const string AccessTokenStorageKey = "swapDigit.accessToken";
+        public const string RefreshTokenStorageKey = "swapDigit.refreshToken";
     }
 
     public static class Routes
