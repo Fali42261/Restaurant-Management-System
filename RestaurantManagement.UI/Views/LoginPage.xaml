@@ -61,7 +61,11 @@
                                    TextColor="#344A43" />
                             <Grid RowDefinitions="48,1" ColumnDefinitions="*,44" ColumnSpacing="4">
                                 <Entry x:Name="PasswordEntry" Grid.Row="0" Grid.Column="0" BackgroundColor="Transparent" Placeholder="Enter your password" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
-                                <ImageButton x:Name="PasswordEyeButton" Grid.Row="0" Grid.Column="1" Source="eye.svg" Clicked="TogglePasswordVisibility" BackgroundColor="Transparent" WidthRequest="44" HeightRequest="44" MinimumWidthRequest="44" MinimumHeightRequest="44" Padding="9" Aspect="AspectFit" Opacity="1" IsVisible="True" HorizontalOptions="End" VerticalOptions="Center" />
+                                <Image x:Name="PasswordEyeButton" Source="eye.svg" WidthRequest="24" HeightRequest="24" Aspect="AspectFit" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Image.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="TogglePasswordVisibility" />
+                                    </Image.GestureRecognizers>
+                                </Image>
                                 <BoxView Grid.Row="1" Grid.ColumnSpan="2" BackgroundColor="#1F9AA5" HeightRequest="1.5" HorizontalOptions="Fill" />
                             </Grid>
                         </VerticalStackLayout>
