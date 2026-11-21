@@ -24,36 +24,36 @@ public sealed class OrdersPosApiService
     };
 
     public Task<PagedResult<ProductDto>?> GetProductsAsync(CancellationToken ct = default) =>
-        SendAsync<PagedResult<ProductDto>>(HttpMethod.Get, "api/v1/products?pageNumber=1&pageSize=100", null, ct);
+        SendAsync<PagedResult<ProductDto>>(HttpMethod.Get, AppConfig.Routes.Products, null, ct);
 
     public Task<PagedResult<OrderDto>?> GetOrdersAsync(CancellationToken ct = default) =>
-        SendAsync<PagedResult<OrderDto>>(HttpMethod.Get, "api/v1/orders?pageNumber=1&pageSize=100", null, ct);
+        SendAsync<PagedResult<OrderDto>>(HttpMethod.Get, AppConfig.Routes.Orders, null, ct);
 
     public Task<PagedResult<BillDto>?> GetBillsAsync(CancellationToken ct = default) =>
-        SendAsync<PagedResult<BillDto>>(HttpMethod.Get, "api/v1/bills?pageNumber=1&pageSize=100", null, ct);
+        SendAsync<PagedResult<BillDto>>(HttpMethod.Get, AppConfig.Routes.Bills, null, ct);
 
     public Task<List<TableDto>?> GetTablesAsync(CancellationToken ct = default) =>
-        SendAsync<List<TableDto>>(HttpMethod.Get, "api/v1/tables", null, ct);
+        SendAsync<List<TableDto>>(HttpMethod.Get, AppConfig.Routes.Tables, null, ct);
 
     public Task<CheckoutResult?> CheckoutAsync(PosCheckoutRequest request, CancellationToken ct = default) =>
-        SendAsync<CheckoutResult>(HttpMethod.Post, "api/v1/pos/checkout", request, ct);
+        SendAsync<CheckoutResult>(HttpMethod.Post, AppConfig.Routes.PosCheckout, request, ct);
 
     public Task<object?> CreateBillAsync(CreateBillApiRequest request, CancellationToken ct = default) =>
-        SendAsync<object>(HttpMethod.Post, "api/v1/bills", request, ct);
+        SendAsync<object>(HttpMethod.Post, AppConfig.Routes.CreateBill, request, ct);
 
     public Task ReplaceOrderItemsAsync(Guid orderId, List<ReplaceOrderItem> items, CancellationToken ct = default) =>
-        SendAsync<object>(HttpMethod.Put, $"api/v1/orders/{orderId}/items", new { Items = items }, ct);
+        SendAsync<object>(HttpMethod.Put, string.Format(AppConfig.Routes.ReplaceOrderItems, orderId), new { Items = items }, ct);
 
     public async Task MarkBillPaidAsync(Guid billId, CancellationToken ct = default)
     {
         if (billId == Guid.Empty) throw new ArgumentException("A valid bill is required.", nameof(billId));
-        await SendAsync<object>(HttpMethod.Put, $"api/v1/pos/bills/{billId}/pay", null, ct);
+        await SendAsync<object>(HttpMethod.Put, string.Format(AppConfig.Routes.PayBill, billId), null, ct);
     }
 
     public async Task DeleteOrderAsync(Guid orderId, CancellationToken ct = default)
     {
         if (orderId == Guid.Empty) throw new ArgumentException("A valid order is required.", nameof(orderId));
-        await SendAsync<object>(HttpMethod.Delete, $"api/v1/orders/{orderId}", null, ct);
+        await SendAsync<object>(HttpMethod.Delete, string.Format(AppConfig.Routes.DeleteOrder, orderId), null, ct);
     }
 
     private static async Task<T?> SendAsync<T>(HttpMethod method, string route, object? payload, CancellationToken ct)
