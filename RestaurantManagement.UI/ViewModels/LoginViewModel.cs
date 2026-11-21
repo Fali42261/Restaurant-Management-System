@@ -15,6 +15,7 @@ public sealed class LoginViewModel : BaseViewModel
     private readonly IAuthService _authService;
     private string _emailOrMobile = string.Empty;
     private string _password = string.Empty;
+    private bool _canSignIn = true;
 
     public LoginViewModel(IAuthService authService)
     {
@@ -33,6 +34,12 @@ public sealed class LoginViewModel : BaseViewModel
 
     public string EmailOrMobile { get => _emailOrMobile; set => SetProperty(ref _emailOrMobile, value); }
     public string Password { get => _password; set => SetProperty(ref _password, value); }
+    public bool CanSignIn
+    {
+        get => _canSignIn;
+        private set => SetProperty(ref _canSignIn, value);
+    }
+
     public ICommand SignInCommand { get; }
     public ICommand GoToRegisterCommand { get; }
     public ICommand GoToResetPasswordCommand { get; }
@@ -40,12 +47,13 @@ public sealed class LoginViewModel : BaseViewModel
 
     private async Task SignInAsync()
     {
-        if (IsBusy) return;
+        if (IsBusy || !CanSignIn) return;
         var validationMessage = AuthRequestValidator.ValidateLogin(EmailOrMobile, Password);
         if (validationMessage is not null) { ToastService.Error(validationMessage); return; }
 
         try
         {
+            CanSignIn = false;
             IsBusy = true;
             var request = new LoginRequest(EmailOrMobile.Trim(), Password);
             var user = await _authService.SignInAsync(request);
@@ -92,6 +100,7 @@ public sealed class LoginViewModel : BaseViewModel
         finally
         {
             IsBusy = false;
+            CanSignIn = true;
         }
     }
 }
