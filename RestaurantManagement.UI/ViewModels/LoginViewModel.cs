@@ -58,7 +58,12 @@ public sealed class LoginViewModel : BaseViewModel
                     return;
                 }
 
-                await Shell.Current.Navigation.PushModalAsync(new NavigationPage(new CreateRestaurantPage(user)));
+                // Owners without a restaurant should still enter the dashboard.
+                // Keep the authenticated user session; restaurant-scoped data will remain empty
+                // until a restaurant is created and selected from the dashboard workflow.
+                RestaurantSession.Set(user, restaurants, null);
+                await Shell.Current.GoToAsync(nameof(DashboardPage));
+                ToastService.Success("Signed in successfully.");
                 return;
             }
 
