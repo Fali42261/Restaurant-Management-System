@@ -40,7 +40,8 @@ public sealed class LoginViewModel : BaseViewModel
         try
         {
             IsBusy = true;
-            var user = await _authService.SignInAsync(EmailOrMobile, Password);
+            var request = new LoginRequest(EmailOrMobile.Trim(), Password);
+            var user = await _authService.SignInAsync(request);
             var restaurants = await _authService.GetRestaurantsAsync(user.Id);
             if (restaurants.Count == 0)
             {
