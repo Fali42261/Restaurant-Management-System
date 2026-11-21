@@ -44,5 +44,9 @@ public static class AppConfig
         public const string PosCheckout = "api/v1/pos/checkout";
         public const string CreateBill = "api/v1/bills";
         public const string KitchenTickets = "api/v1/kots?pageNumber=1&pageSize=100";
+        public const string ReplaceOrderItems = "api/v1/orders/{0}/items";
+        public const string DeleteOrder = "api/v1/orders/{0}";
+        public const string PayBill = "api/v1/pos/bills/{0}/pay";
+        public const string UpdateKotStatus = "api/v1/kots/{0}/status";
     }
 }
