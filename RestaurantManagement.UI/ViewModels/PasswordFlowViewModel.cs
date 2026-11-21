@@ -87,6 +87,10 @@ public sealed class PasswordFlowViewModel : BaseViewModel
             IsBusy = true;
             await request();
         }
+        catch (ApiException ex)
+        {
+            ToastService.Error(ex.Message);
+        }
         catch (AuthApiException ex)
         {
             ToastService.Error(ex.Message);
