@@ -46,7 +46,7 @@ public sealed class LoginViewModel : BaseViewModel
             {
                 if (!string.Equals(user.Role, "Owner", StringComparison.OrdinalIgnoreCase))
                 {
-                    await Shell.Current.DisplayAlert("Restaurant not assigned", "Your account is not assigned to an active restaurant. Please contact the owner.", "OK");
+                    ToastService.Error("Your account is not assigned to an active restaurant. Please contact the owner.");
                     return;
                 }
 
@@ -73,6 +73,10 @@ public sealed class LoginViewModel : BaseViewModel
         catch (TaskCanceledException)
         {
             ToastService.Error("The API did not respond in time. Please try again.");
+        }
+        catch (Exception ex)
+        {
+            ToastService.Error($"Sign in failed: {ex.Message}");
         }
         finally
         {
