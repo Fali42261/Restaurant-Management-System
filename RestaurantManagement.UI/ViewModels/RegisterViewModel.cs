@@ -56,7 +56,8 @@ public sealed class RegisterViewModel : BaseViewModel
         catch (ApiException ex)
         {
             ToastService.Error(ex.Message);
-        }\n        catch (AuthApiException ex)
+        }
+        catch (AuthApiException ex)
         {
             ToastService.Error(ex.Message);
         }
