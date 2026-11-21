@@ -817,7 +817,7 @@
     <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}" Stroke="{AppThemeBinding Light=#DDE5DF, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="10" WidthRequest="230" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="100">
         <VerticalStackLayout Spacing="3">
             <Label Text="ACCOUNT" FontSize="10" CharacterSpacing="1" TextColor="{AppThemeBinding Light=#87938B, Dark=#AAB8B0}" Margin="8,4,0,3"/>
-            <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" FontSize="14" HorizontalOptions="Center" HorizontalTextAlignment="Center" WidthRequest="190" />
+            <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#34433A, Dark=#E7EFEB}" FontSize="14" HorizontalOptions="Center" WidthRequest="190" />
             <Label Text="THEMES" FontSize="10" CharacterSpacing="1" TextColor="{AppThemeBinding Light=#87938B, Dark=#AAB8B0}" Margin="8,8,0,0"/>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="6" Margin="2,0,2,4">
                 <Button Text="☾  Dark" Clicked="DarkThemeClicked" BackgroundColor="#173C43" TextColor="White" FontSize="12" Padding="5,7" BorderColor="#173C43" BorderWidth="0" />
