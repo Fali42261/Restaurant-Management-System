@@ -22,7 +22,7 @@ public sealed class AuthService : IAuthService
         Api.PostMessageAsync(AppConfig.Routes.ResetPassword, request, cancellationToken: cancellationToken);
 
     public Task<string> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default) =>
-        Api.PostMessageAsync(AppConfig.Routes.ChangePassword, request, authorized: true, cancellationToken);
+        Api.PostMessageAsync(AppConfig.Routes.ChangePassword, request, authorized: true, cancellationToken: cancellationToken);
 
     public async Task<User> SignInAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
@@ -113,17 +113,6 @@ public sealed class AuthService : IAuthService
         }
     }
 
-    private static Task<T?> SendAuthorizedAsync<T>(HttpMethod method, string route, object? payload, CancellationToken cancellationToken) =>
-        Api.SendAsync<T>(method, route, payload, authorized: true, cancellationToken);
-
-    private static Task<string> PostMessageAsync<T>(string route, object payload, CancellationToken cancellationToken) =>
-        Api.PostMessageAsync(route, payload, cancellationToken: cancellationToken);
-
-    private static Task<string> SendAuthorizedMessageAsync(string route, object payload, CancellationToken cancellationToken) =>
-        Api.PostMessageAsync(route, payload, authorized: true, cancellationToken);
-
-    private static Task<T?> PostAsync<T>(string route, object payload, CancellationToken cancellationToken) =>
-        Api.PostAsync<T>(route, payload, cancellationToken: cancellationToken);
 
 }
 
