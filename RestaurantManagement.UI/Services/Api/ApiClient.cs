@@ -41,8 +41,26 @@ public sealed class ApiClient
 
     public async Task<string> PostMessageAsync(string route, object payload, bool authorized = false, CancellationToken cancellationToken = default)
     {
-        var response = await SendAsync<object>(HttpMethod.Post, route, payload, authorized, cancellationToken);
-        return response is null ? "Request completed successfully." : response.ToString() ?? "Request completed successfully.";
+        using var request = new HttpRequestMessage(HttpMethod.Post, route);
+        if (authorized)
+        {
+            var token = await SecureStorage.Default.GetAsync("swapDigit.accessToken");
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ApiException("Please sign in again.", HttpStatusCode.Unauthorized);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+        request.Content = JsonContent.Create(payload, options: JsonOptions);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        ApiResponse<JsonElement>? envelope = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try { envelope = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(body, JsonOptions); }
+            catch (JsonException) { }
+        }
+        if (!response.IsSuccessStatusCode || envelope?.Success != true)
+            throw new ApiException(envelope?.Message ?? $"API request failed ({(int)response.StatusCode}).", response.StatusCode);
+        return string.IsNullOrWhiteSpace(envelope.Message) ? "Request completed successfully." : envelope.Message;
     }
 
     public async Task<T?> SendAsync<T>(HttpMethod method, string route, object? payload = null, bool authorized = false, CancellationToken cancellationToken = default)
