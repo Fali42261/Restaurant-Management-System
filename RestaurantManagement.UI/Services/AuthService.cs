@@ -41,12 +41,14 @@ public sealed class AuthService : IAuthService
     {
         var result = await Api.PostAsync<LoginResponse>(AppConfig.Routes.SignIn, request with { EmailOrMobile = request.EmailOrMobile.Trim() }, cancellationToken: cancellationToken);
 
-        if (result is null || string.IsNullOrWhiteSpace(result.AccessToken) || result.User is null)
-            throw new ApiException("The API returned an incomplete login response.", HttpStatusCode.BadGateway);
+        if (result is null || string.IsNullOrWhiteSpace(result.AccessToken) ||
+            string.IsNullOrWhiteSpace(result.RefreshToken) || result.User is null)
+            throw new ApiException("The API returned an incomplete login response. Both access and refresh tokens are required.", HttpStatusCode.BadGateway);
 
+        SecureStorage.Default.Remove(AppConfig.Security.AccessTokenStorageKey);
+        SecureStorage.Default.Remove(AppConfig.Security.RefreshTokenStorageKey);
         await SecureStorage.Default.SetAsync(AppConfig.Security.AccessTokenStorageKey, result.AccessToken);
-        if (!string.IsNullOrWhiteSpace(result.RefreshToken))
-            await SecureStorage.Default.SetAsync(AppConfig.Security.RefreshTokenStorageKey, result.RefreshToken);
+        await SecureStorage.Default.SetAsync(AppConfig.Security.RefreshTokenStorageKey, result.RefreshToken);
 
         var user = new User
         {
@@ -75,11 +77,10 @@ public sealed class AuthService : IAuthService
     public async Task SelectRestaurantAsync(RestaurantInfo restaurant, CancellationToken cancellationToken = default)
     {
         var result = await Api.PostAsync<RestaurantSelectionResponse>(string.Format(AppConfig.Routes.SelectRestaurant, restaurant.RestaurantId), authorized: true, cancellationToken: cancellationToken);
-        if (result is null || string.IsNullOrWhiteSpace(result.AccessToken))
-            throw new ApiException("The API did not return a restaurant-scoped access token.", HttpStatusCode.BadGateway);
+        if (result is null || string.IsNullOrWhiteSpace(result.AccessToken) || string.IsNullOrWhiteSpace(result.RefreshToken))
+            throw new ApiException("The API did not return both restaurant-scoped tokens.", HttpStatusCode.BadGateway);
         await SecureStorage.Default.SetAsync(AppConfig.Security.AccessTokenStorageKey, result.AccessToken);
-        if (!string.IsNullOrWhiteSpace(result.RefreshToken))
-            await SecureStorage.Default.SetAsync(AppConfig.Security.RefreshTokenStorageKey, result.RefreshToken);
+        await SecureStorage.Default.SetAsync(AppConfig.Security.RefreshTokenStorageKey, result.RefreshToken);
         RestaurantSession.Select(restaurant);
     }
 
