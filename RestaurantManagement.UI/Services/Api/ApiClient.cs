@@ -41,6 +41,12 @@ public sealed class ApiClient
 
     public async Task<string> PostMessageAsync(string route, object payload, bool authorized = false, CancellationToken cancellationToken = default)
     {
+        var envelope = await PostResponseAsync<JsonElement>(route, payload, authorized, cancellationToken);
+        return string.IsNullOrWhiteSpace(envelope.Message) ? "Request completed successfully." : envelope.Message;
+    }
+
+    public async Task<ApiResponse<T>> PostResponseAsync<T>(string route, object payload, bool authorized = false, CancellationToken cancellationToken = default)
+    {
         using var request = new HttpRequestMessage(HttpMethod.Post, route);
         if (authorized)
         {
@@ -49,18 +55,20 @@ public sealed class ApiClient
                 throw new ApiException("Please sign in again.", HttpStatusCode.Unauthorized);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
+
         request.Content = JsonContent.Create(payload, options: JsonOptions);
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        ApiResponse<JsonElement>? envelope = null;
+        ApiResponse<T>? envelope = null;
         if (!string.IsNullOrWhiteSpace(body))
         {
-            try { envelope = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(body, JsonOptions); }
+            try { envelope = JsonSerializer.Deserialize<ApiResponse<T>>(body, JsonOptions); }
             catch (JsonException) { }
         }
+
         if (!response.IsSuccessStatusCode || envelope?.Success != true)
             throw new ApiException(envelope?.Message ?? $"API request failed ({(int)response.StatusCode}).", response.StatusCode);
-        return string.IsNullOrWhiteSpace(envelope.Message) ? "Request completed successfully." : envelope.Message;
+        return envelope;
     }
 
     public async Task<T?> SendAsync<T>(HttpMethod method, string route, object? payload = null, bool authorized = false, CancellationToken cancellationToken = default)
