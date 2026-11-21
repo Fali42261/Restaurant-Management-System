@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RestaurantManagement.API.Configuration;
+using RestaurantManagement.API.Common.Constants;
 using RestaurantManagement.API.DataAccess;
 using RestaurantManagement.API.Models;
 using RestaurantManagement.API.Services;
@@ -17,7 +18,7 @@ public sealed class AuthBusinessLogic(
     EmailService email, ILogger<AuthBusinessLogic> logger)
 {
     private readonly AppSettings _settings=options.Value;
-    private int MinimumPasswordLength=>Math.Max(8,_settings.Business.PasswordMinimumLength);
+    private int MinimumPasswordLength=>Math.Max(AuthConstants.MinimumPasswordLength,_settings.Business.PasswordMinimumLength);
 
     private async Task<AuthResult> RegisterOwnerCoreAsync(OwnerRegistration request)
     {
