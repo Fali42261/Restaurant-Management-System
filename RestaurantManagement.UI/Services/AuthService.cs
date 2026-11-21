@@ -26,12 +26,17 @@ public sealed class AuthService : IAuthService
         };
     }
 
-    public async Task RegisterOwnerAsync(
-        OwnerRegistrationRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        await PostAsync<OwnerRegistrationData>(AppConfig.Routes.Register, request, cancellationToken);
-    }
+    public Task<string> RegisterOwnerAsync(OwnerRegistrationRequest request, CancellationToken cancellationToken = default) =>
+        PostMessageAsync<OwnerRegistrationData>(AppConfig.Routes.Register, request, cancellationToken);
+
+    public Task<string> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default) =>
+        PostMessageAsync<object>(AppConfig.Routes.ForgotPassword, request, cancellationToken);
+
+    public Task<string> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default) =>
+        PostMessageAsync<object>(AppConfig.Routes.ResetPassword, request, cancellationToken);
+
+    public Task<string> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default) =>
+        SendAuthorizedMessageAsync(AppConfig.Routes.ChangePassword, request, cancellationToken);
 
     public async Task<User> SignInAsync(
         string identifier,
@@ -40,7 +45,7 @@ public sealed class AuthService : IAuthService
     {
         var result = await PostAsync<LoginData>(
             AppConfig.Routes.SignIn,
-            new LoginRequest(identifier.Trim(), password),
+            new RestaurantManagement.UI.Models.LoginRequest(identifier.Trim(), password),
             cancellationToken);
 
         if (result is null || string.IsNullOrWhiteSpace(result.AccessToken) || result.User is null)
@@ -64,19 +69,19 @@ public sealed class AuthService : IAuthService
 
     public async Task<List<RestaurantInfo>> GetRestaurantsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var result = await SendAuthorizedAsync<List<RestaurantInfo>>(HttpMethod.Get, $"api/v1/users/{userId}/restaurants", null, cancellationToken);
+        var result = await SendAuthorizedAsync<List<RestaurantInfo>>(HttpMethod.Get, string.Format(AppConfig.Routes.UserRestaurants, userId), null, cancellationToken);
         return result ?? [];
     }
 
     public async Task<RestaurantInfo> CreateRestaurantAsync(CreateRestaurantInput input, CancellationToken cancellationToken = default)
     {
-        var result = await SendAuthorizedAsync<RestaurantInfo>(HttpMethod.Post, "api/v1/restaurants", input, cancellationToken);
+        var result = await SendAuthorizedAsync<RestaurantInfo>(HttpMethod.Post, AppConfig.Routes.CreateRestaurant, input, cancellationToken);
         return result ?? throw new AuthApiException("The API did not return the created restaurant.", HttpStatusCode.BadGateway);
     }
 
     public async Task SelectRestaurantAsync(RestaurantInfo restaurant, CancellationToken cancellationToken = default)
     {
-        var result = await SendAuthorizedAsync<RestaurantSelectionData>(HttpMethod.Post, $"api/v1/restaurants/{restaurant.RestaurantId}/select", null, cancellationToken);
+        var result = await SendAuthorizedAsync<RestaurantSelectionData>(HttpMethod.Post, string.Format(AppConfig.Routes.SelectRestaurant, restaurant.RestaurantId), null, cancellationToken);
         if (result is null || string.IsNullOrWhiteSpace(result.AccessToken))
             throw new AuthApiException("The API did not return a restaurant-scoped access token.", HttpStatusCode.BadGateway);
         await SecureStorage.Default.SetAsync("swapDigit.accessToken", result.AccessToken);
@@ -107,20 +112,20 @@ public sealed class AuthService : IAuthService
 
     public async Task<List<DashboardSalesPoint>> GetDashboardSalesAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
-        var route = $"api/v1/reports/sales?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+        var route = $"{AppConfig.Routes.DashboardSales}?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
         return await SendAuthorizedAsync<List<DashboardSalesPoint>>(HttpMethod.Get, route, null, cancellationToken) ?? [];
     }
 
     public async Task<List<DashboardTopProduct>> GetDashboardTopProductsAsync(DateTime from, DateTime to, CancellationToken cancellationToken = default)
     {
-        var route = $"api/v1/reports/top-products?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+        var route = $"{AppConfig.Routes.DashboardTopProducts}?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
         return await SendAuthorizedAsync<List<DashboardTopProduct>>(HttpMethod.Get, route, null, cancellationToken) ?? [];
     }
 
     public async Task<List<KitchenTicketApiModel>> GetKitchenTicketsAsync(CancellationToken cancellationToken = default)
     {
         var page = await SendAuthorizedAsync<PagedApiResult<KitchenTicketApiModel>>(
-            HttpMethod.Get, "api/v1/kots?pageNumber=1&pageSize=100", null, cancellationToken);
+            HttpMethod.Get, AppConfig.Routes.KitchenTickets, null, cancellationToken);
         return page?.Items ?? [];
     }
 
@@ -139,7 +144,7 @@ public sealed class AuthService : IAuthService
 
     public async Task<DashboardSummary?> GetDashboardSummaryAsync(CancellationToken cancellationToken = default)
     {
-        return await SendAuthorizedAsync<DashboardSummary>(HttpMethod.Get, "api/v1/reports/dashboard", null, cancellationToken);
+        return await SendAuthorizedAsync<DashboardSummary>(HttpMethod.Get, AppConfig.Routes.DashboardSummary, null, cancellationToken);
     }
 
     public async Task SignOutAsync(CancellationToken cancellationToken = default)
@@ -160,6 +165,47 @@ public sealed class AuthService : IAuthService
             SecureStorage.Default.Remove("swapDigit.refreshToken");
             RestaurantSession.Clear();
         }
+    }
+
+    private static async Task<string> PostMessageAsync<T>(string route, object payload, CancellationToken cancellationToken)
+    {
+        using var response = await Client.PostAsJsonAsync(route, payload, JsonOptions, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        ApiEnvelope<T>? envelope = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try { envelope = JsonSerializer.Deserialize<ApiEnvelope<T>>(body, JsonOptions); }
+            catch (JsonException) { }
+        }
+
+        if (!response.IsSuccessStatusCode || envelope?.Success != true)
+            throw new AuthApiException(envelope?.Message ?? $"API request failed ({(int)response.StatusCode}).", response.StatusCode);
+
+        return string.IsNullOrWhiteSpace(envelope.Message) ? "Request completed successfully." : envelope.Message;
+    }
+
+    private static async Task<string> SendAuthorizedMessageAsync(string route, object payload, CancellationToken cancellationToken)
+    {
+        var token = await SecureStorage.Default.GetAsync("swapDigit.accessToken");
+        if (string.IsNullOrWhiteSpace(token))
+            throw new AuthApiException("Please sign in again.", HttpStatusCode.Unauthorized);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, route);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Content = JsonContent.Create(payload, options: JsonOptions);
+        using var response = await Client.SendAsync(request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        ApiEnvelope<object>? envelope = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            try { envelope = JsonSerializer.Deserialize<ApiEnvelope<object>>(body, JsonOptions); }
+            catch (JsonException) { }
+        }
+
+        if (!response.IsSuccessStatusCode || envelope?.Success != true)
+            throw new AuthApiException(envelope?.Message ?? $"API request failed ({(int)response.StatusCode}).", response.StatusCode);
+
+        return string.IsNullOrWhiteSpace(envelope.Message) ? "Request completed successfully." : envelope.Message;
     }
 
     private static async Task<T?> PostAsync<T>(
@@ -210,7 +256,6 @@ public sealed class AuthService : IAuthService
         public string Role { get; set; } = string.Empty;
     }
 
-    private sealed record LoginRequest(string EmailOrMobile, string Password);
 
     private sealed class RestaurantSelectionData
     {
