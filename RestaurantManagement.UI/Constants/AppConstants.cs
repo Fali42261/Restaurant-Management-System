@@ -2,6 +2,7 @@ namespace RestaurantManagement.UI.Constants;
 
 public static class AppConstants
 {
-    public const string ApplicationName = "Restaurant Management";
-    public const string DefaultUserRole = "Staff";
+    // Backward-compatible aliases; canonical values live in AppConfig.
+    public const string ApplicationName = RestaurantManagement.UI.Configuration.AppConfig.Application.Name;
+    public const string DefaultUserRole = RestaurantManagement.UI.Configuration.AppConfig.Application.DefaultRole;
 }
