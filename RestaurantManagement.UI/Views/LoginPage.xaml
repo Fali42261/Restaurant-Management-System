@@ -70,14 +70,13 @@
                             </Grid>
                         </VerticalStackLayout>
 
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                            <Label Grid.Column="0" Text="Forgot password?" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="Start">
-                                <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding GoToResetPasswordCommand}" /></Label.GestureRecognizers>
+                        <HorizontalStackLayout HorizontalOptions="End">
+                            <Label Text="Change password" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding GoToChangePasswordCommand}" />
+                                </Label.GestureRecognizers>
                             </Label>
-                            <Label Grid.Column="1" Text="Change password" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" HorizontalTextAlignment="End">
-                                <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding GoToChangePasswordCommand}" /></Label.GestureRecognizers>
-                            </Label>
-                        </Grid>
+                        </HorizontalStackLayout>
 
                         <Button Text="Sign in"
                                 Command="{Binding SignInCommand}"
