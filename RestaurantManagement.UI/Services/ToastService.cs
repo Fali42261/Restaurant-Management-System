@@ -1,4 +1,5 @@
 using Microsoft.Maui.Controls;
+using RestaurantManagement.UI.Configuration;
 
 namespace RestaurantManagement.UI.Services;
 
@@ -56,9 +57,10 @@ public static class ToastService
                 }
             };
             _activeToast = toast;
+            _activeHost = host;
             host.Children.Add(toast);
 
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(TimeSpan.FromSeconds(AppConfig.Application.ToastDurationSeconds));
             if (id == _sequence)
             {
                 host.Children.Remove(toast);
