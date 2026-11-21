@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Maui.Storage;
 using RestaurantManagement.UI.Configuration;
+using RestaurantManagement.UI.Models;
 using RestaurantManagement.UI.Models.Responses;
 using RestaurantManagement.UI.Services;
 
@@ -119,7 +120,12 @@ public sealed class ApiClient
 
             var refreshToken = await SecureStorage.Default.GetAsync(AppConfig.Security.RefreshTokenStorageKey);
             if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                SecureStorage.Default.Remove(AppConfig.Security.AccessTokenStorageKey);
+                SecureStorage.Default.Remove(AppConfig.Security.RefreshTokenStorageKey);
+                RestaurantSession.Clear();
                 throw new ApiException("Your session has expired. Please sign in again.", HttpStatusCode.Unauthorized);
+            }
 
             using var request = new HttpRequestMessage(HttpMethod.Post, AppConfig.Routes.RefreshToken)
             {
