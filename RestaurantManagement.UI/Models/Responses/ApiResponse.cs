@@ -8,7 +8,10 @@ public sealed class ApiResponse<T>
     public string? TraceId { get; set; }
 }
 
-public sealed class ApiException(string message, System.Net.HttpStatusCode statusCode) : Exception(message)
+public sealed class ApiException : Exception
 {
-    public System.Net.HttpStatusCode StatusCode { get; } = statusCode;
+    public ApiException(string message, System.Net.HttpStatusCode statusCode, Exception? innerException = null)
+        : base(message, innerException) => StatusCode = statusCode;
+
+    public System.Net.HttpStatusCode StatusCode { get; }
 }
