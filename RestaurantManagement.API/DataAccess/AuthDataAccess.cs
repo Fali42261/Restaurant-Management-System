@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
+using RestaurantManagement.API.Common.Constants;
 using RestaurantManagement.API.Infrastructure;
 
 namespace RestaurantManagement.API.DataAccess;
@@ -12,30 +13,24 @@ public sealed class AuthDataAccess(
     SqlDataAccess sqlDataAccess,
     ILogger<AuthDataAccess> logger)
 {
-    private const int EmailMaxLength = 256;
-    private const int MobileMaxLength = 25;
-    private const int FullNameMaxLength = 150;
-    private const int PasswordHashMaxLength = 500;
-    private const int TokenHashLength = 64;
-
     public async Task<AuthOwnerRegistrationDbResult> RegisterOwnerAsync(
         Guid userId, string fullName, string email, string mobileNumber, string passwordHash,
         CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(userId, Guid.Empty);
-        ValidateText(fullName, FullNameMaxLength, nameof(fullName));
-        ValidateText(email, EmailMaxLength, nameof(email));
-        ValidateText(mobileNumber, MobileMaxLength, nameof(mobileNumber));
-        ValidateText(passwordHash, PasswordHashMaxLength, nameof(passwordHash));
+        ValidateText(fullName, AuthConstants.FullNameMaxLength, nameof(fullName));
+        ValidateText(email, AuthConstants.EmailMaxLength, nameof(email));
+        ValidateText(mobileNumber, AuthConstants.MobileMaxLength, nameof(mobileNumber));
+        ValidateText(passwordHash, AuthConstants.PasswordHashMaxLength, nameof(passwordHash));
 
         var rows = await Query(
             "dbo.usp_Auth_RegisterOwner",
             cancellationToken,
             GuidParameter("@UserId", userId),
-            NVarCharParameter("@FullName", fullName, FullNameMaxLength),
-            NVarCharParameter("@Email", email, EmailMaxLength),
-            NVarCharParameter("@MobileNumber", mobileNumber, MobileMaxLength),
-            NVarCharParameter("@PasswordHash", passwordHash, PasswordHashMaxLength));
+            NVarCharParameter("@FullName", fullName, AuthConstants.FullNameMaxLength),
+            NVarCharParameter("@Email", email, AuthConstants.EmailMaxLength),
+            NVarCharParameter("@MobileNumber", mobileNumber, AuthConstants.MobileMaxLength),
+            NVarCharParameter("@PasswordHash", passwordHash, AuthConstants.PasswordHashMaxLength));
 
         if (rows.Count == 0)
             throw new DataException("Owner registration procedure returned no result.");
@@ -46,9 +41,9 @@ public sealed class AuthDataAccess(
     public Task<List<Dictionary<string, object?>>> LoginUserAsync(
         string identifier, CancellationToken cancellationToken = default)
     {
-        ValidateText(identifier, EmailMaxLength, nameof(identifier));
+        ValidateText(identifier, AuthConstants.EmailMaxLength, nameof(identifier));
         return Query("dbo.usp_Auth_LoginUser", cancellationToken,
-            NVarCharParameter("@Identifier", identifier, EmailMaxLength));
+            NVarCharParameter("@Identifier", identifier, AuthConstants.EmailMaxLength));
     }
 
     public Task<List<Dictionary<string, object?>>> GetRestaurantsAsync(
@@ -64,7 +59,7 @@ public sealed class AuthDataAccess(
         return Execute("dbo.usp_Auth_CreateRefreshToken", cancellationToken,
             GuidParameter("@UserId", userId),
             NullableGuidParameter("@RestaurantId", restaurantId),
-            CharParameter("@TokenHash", tokenHash, TokenHashLength),
+            CharParameter("@TokenHash", tokenHash, AuthConstants.TokenHashLength),
             DateTimeParameter("@ExpiresAt", expiresAt));
     }
 
@@ -76,41 +71,41 @@ public sealed class AuthDataAccess(
     public Task<List<Dictionary<string, object?>>> ChangePasswordAsync(
         Guid userId, string passwordHash, CancellationToken cancellationToken = default)
     {
-        ValidateText(passwordHash, PasswordHashMaxLength, nameof(passwordHash));
+        ValidateText(passwordHash, AuthConstants.PasswordHashMaxLength, nameof(passwordHash));
         return Query("dbo.usp_Auth_ChangePassword", cancellationToken,
             GuidParameter("@UserId", userId),
-            NVarCharParameter("@PasswordHash", passwordHash, PasswordHashMaxLength));
+            NVarCharParameter("@PasswordHash", passwordHash, AuthConstants.PasswordHashMaxLength));
     }
 
     public Task<List<Dictionary<string, object?>>> GetUserIdByEmailAsync(
         string email, CancellationToken cancellationToken = default)
     {
-        ValidateText(email, EmailMaxLength, nameof(email));
+        ValidateText(email, AuthConstants.EmailMaxLength, nameof(email));
         return Query("dbo.usp_Auth_GetUserIdByEmail", cancellationToken,
-            NVarCharParameter("@Email", email, EmailMaxLength));
+            NVarCharParameter("@Email", email, AuthConstants.EmailMaxLength));
     }
 
     public Task<List<Dictionary<string, object?>>> StartPasswordResetAsync(
         string email, string codeHash, CancellationToken cancellationToken = default)
     {
-        ValidateText(email, EmailMaxLength, nameof(email));
+        ValidateText(email, AuthConstants.EmailMaxLength, nameof(email));
         ValidateHash(codeHash, nameof(codeHash));
         return Query("dbo.usp_Auth_StartPasswordReset", cancellationToken,
-            NVarCharParameter("@Email", email, EmailMaxLength),
-            CharParameter("@CodeHash", codeHash, TokenHashLength));
+            NVarCharParameter("@Email", email, AuthConstants.EmailMaxLength),
+            CharParameter("@CodeHash", codeHash, AuthConstants.TokenHashLength));
     }
 
     public Task<List<Dictionary<string, object?>>> ResetPasswordAsync(
         string email, string codeHash, string passwordHash,
         CancellationToken cancellationToken = default)
     {
-        ValidateText(email, EmailMaxLength, nameof(email));
+        ValidateText(email, AuthConstants.EmailMaxLength, nameof(email));
         ValidateHash(codeHash, nameof(codeHash));
-        ValidateText(passwordHash, PasswordHashMaxLength, nameof(passwordHash));
+        ValidateText(passwordHash, AuthConstants.PasswordHashMaxLength, nameof(passwordHash));
         return Query("dbo.usp_Auth_ResetPassword", cancellationToken,
-            NVarCharParameter("@Email", email, EmailMaxLength),
-            CharParameter("@CodeHash", codeHash, TokenHashLength),
-            NVarCharParameter("@PasswordHash", passwordHash, PasswordHashMaxLength));
+            NVarCharParameter("@Email", email, AuthConstants.EmailMaxLength),
+            CharParameter("@CodeHash", codeHash, AuthConstants.TokenHashLength),
+            NVarCharParameter("@PasswordHash", passwordHash, AuthConstants.PasswordHashMaxLength));
     }
 
     public Task<List<Dictionary<string, object?>>> RotateRefreshTokenAsync(
@@ -120,8 +115,8 @@ public sealed class AuthDataAccess(
         ValidateHash(oldHash, nameof(oldHash));
         ValidateHash(newHash, nameof(newHash));
         return Query("dbo.usp_Auth_RotateRefreshToken", cancellationToken,
-            CharParameter("@OldTokenHash", oldHash, TokenHashLength),
-            CharParameter("@NewTokenHash", newHash, TokenHashLength),
+            CharParameter("@OldTokenHash", oldHash, AuthConstants.TokenHashLength),
+            CharParameter("@NewTokenHash", newHash, AuthConstants.TokenHashLength),
             DateTimeParameter("@ExpiresAt", expiresAt));
     }
 
@@ -196,7 +191,7 @@ public sealed class AuthDataAccess(
 
     private static void ValidateHash(string value, string parameterName)
     {
-        if (value is null || value.Length != TokenHashLength || !value.All(Uri.IsHexDigit))
+        if (value is null || value.Length != AuthConstants.TokenHashLength || !value.All(Uri.IsHexDigit))
             throw new ArgumentException("A 64-character hexadecimal SHA-256 digest is required.", parameterName);
     }
 
