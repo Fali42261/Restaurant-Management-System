@@ -63,7 +63,7 @@ public sealed class LoginViewModel : BaseViewModel
             await Shell.Current.GoToAsync(nameof(DashboardPage));
             ToastService.Success("Signed in successfully.");
         }
-        catch (AuthApiException ex)
+        catch (ApiException ex)\n        {\n            ToastService.Error(ex.Message);\n        }\n        catch (AuthApiException ex)
         {
             ToastService.Error(ex.Message);
         }
