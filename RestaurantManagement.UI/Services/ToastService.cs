@@ -21,15 +21,18 @@ public static class ToastService
             if (page is null) return;
 
             Grid host;
-            if (page.Content is Grid existing)
+            // Only ContentPage exposes Content; Shell pages may be other Page types.
+            if (page is not ContentPage contentPage) return;
+
+            if (contentPage.Content is Grid existing)
             {
                 host = existing;
             }
             else
             {
-                var oldContent = page.Content;
+                var oldContent = contentPage.Content;
                 host = new Grid();
-                page.Content = host;
+                contentPage.Content = host;
                 if (oldContent is not null) host.Children.Add(oldContent);
             }
 
