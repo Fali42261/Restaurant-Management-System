@@ -27,6 +27,22 @@ public static class AppConfig
         public const string SignOut = "api/v1/auth/logout";
         public const string Register = "api/v1/auth/register";
         public const string ChangePassword = "api/v1/auth/change-password";
+        public const string ForgotPassword = "api/v1/auth/forgot-password";
         public const string ResetPassword = "api/v1/auth/reset-password";
+        public const string RefreshToken = "api/v1/auth/refresh";
+        public const string CurrentUser = "api/v1/auth/me";
+        public const string UserRestaurants = "api/v1/users/{0}/restaurants";
+        public const string CreateRestaurant = "api/v1/restaurants";
+        public const string SelectRestaurant = "api/v1/restaurants/{0}/select";
+        public const string DashboardSummary = "api/v1/reports/dashboard";
+        public const string DashboardSales = "api/v1/reports/sales";
+        public const string DashboardTopProducts = "api/v1/reports/top-products";
+        public const string Products = "api/v1/products?pageNumber=1&pageSize=100";
+        public const string Orders = "api/v1/orders?pageNumber=1&pageSize=100";
+        public const string Bills = "api/v1/bills?pageNumber=1&pageSize=100";
+        public const string Tables = "api/v1/tables";
+        public const string PosCheckout = "api/v1/pos/checkout";
+        public const string CreateBill = "api/v1/bills";
+        public const string KitchenTickets = "api/v1/kots?pageNumber=1&pageSize=100";
     }
 }
