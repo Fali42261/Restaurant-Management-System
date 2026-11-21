@@ -21,8 +21,14 @@ public sealed class AuthService : IAuthService
     public Task<string> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default) =>
         Api.PostMessageAsync(AppConfig.Routes.ResetPassword, request, cancellationToken: cancellationToken);
 
-    public Task<string> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default) =>
-        Api.PostMessageAsync(AppConfig.Routes.ChangePassword, request, authorized: true, cancellationToken: cancellationToken);
+    public async Task<string> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var message = await Api.PostMessageAsync(AppConfig.Routes.ChangePassword, request, authorized: true, cancellationToken: cancellationToken);
+        SecureStorage.Default.Remove("swapDigit.accessToken");
+        SecureStorage.Default.Remove("swapDigit.refreshToken");
+        RestaurantSession.Clear();
+        return message;
+    }
 
     public async Task<User> SignInAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
