@@ -7,7 +7,7 @@ public partial class ChangePasswordPage : ContentPage
     public ChangePasswordPage()
     {
         InitializeComponent();
-        BindingContext = new PasswordFlowViewModel();
+        BindingContext = new PasswordFlowViewModel(new RestaurantManagement.UI.Services.AuthService());
     }
 
     private void ToggleCurrentPassword(object sender, EventArgs e)
