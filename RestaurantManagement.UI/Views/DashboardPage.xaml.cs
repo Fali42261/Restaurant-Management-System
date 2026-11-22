@@ -358,6 +358,24 @@ public partial class DashboardPage : ContentPage
         }
     }
 
+    private async void RefreshSubscriptionClicked(object sender, EventArgs e)
+    {
+        if (RefreshSubscriptionButton is null || !RefreshSubscriptionButton.IsEnabled)
+            return;
+
+        RefreshSubscriptionButton.IsEnabled = false;
+        RefreshSubscriptionButton.Text = "…";
+        try
+        {
+            await LoadSubscriptionDataAsync();
+        }
+        finally
+        {
+            RefreshSubscriptionButton.Text = "⟳";
+            RefreshSubscriptionButton.IsEnabled = true;
+        }
+    }
+
     private void BillingCycleChanged(object sender, EventArgs e)
     {
         if (BillingCyclePicker.SelectedItem is string cycle)
