@@ -60,10 +60,47 @@ public sealed class SettingsController(SqlDataAccess db) : ApiControllerBase(db)
     [HttpGet("settings/subscriptions/plans")]
     [HttpGet("subscriptions/plans")]
     [AllowAnonymous]
-    public async Task<IActionResult> Plans() =>
-        Success(await Db.QueryAsync(
-            "SELECT PlanId,PlanCode,Name,MonthlyPrice,QuarterlyPrice,YearlyPrice,FeaturesJson " +
-            "FROM dbo.SubscriptionPlans WHERE IsActive=1 ORDER BY SortOrder"));
+    public async Task<IActionResult> Plans()
+    {
+        // Keep the plan catalogue available on databases where the optional
+        // subscription seed script has not yet been applied.
+        await Db.ExecuteAsync(
+            """
+            IF OBJECT_ID(N'dbo.SubscriptionPlans', N'U') IS NULL
+                THROW 51010, 'SubscriptionPlans table is missing. Run the database installer first.', 1;
+
+            IF NOT EXISTS (SELECT 1 FROM dbo.SubscriptionPlans WHERE PlanCode = N'BASIC')
+                INSERT dbo.SubscriptionPlans
+                    (PlanId, PlanCode, Name, MonthlyPrice, QuarterlyPrice, YearlyPrice, FeaturesJson, SortOrder, IsActive)
+                VALUES
+                    (NEWID(), N'BASIC', N'Basic', 499, 1299, 4999,
+                     N'["POS Billing","Orders","Tables","Basic Reports"]', 1, 1);
+
+            IF NOT EXISTS (SELECT 1 FROM dbo.SubscriptionPlans WHERE PlanCode = N'PRO')
+                INSERT dbo.SubscriptionPlans
+                    (PlanId, PlanCode, Name, MonthlyPrice, QuarterlyPrice, YearlyPrice, FeaturesJson, SortOrder, IsActive)
+                VALUES
+                    (NEWID(), N'PRO', N'Professional', 999, 2699, 9999,
+                     N'["Everything in Basic","Inventory","Reservations","KOT","Advanced Reports"]', 2, 1);
+
+            IF NOT EXISTS (SELECT 1 FROM dbo.SubscriptionPlans WHERE PlanCode = N'BUSINESS')
+                INSERT dbo.SubscriptionPlans
+                    (PlanId, PlanCode, Name, MonthlyPrice, QuarterlyPrice, YearlyPrice, FeaturesJson, SortOrder, IsActive)
+                VALUES
+                    (NEWID(), N'BUSINESS', N'Business', 1999, 5399, 19999,
+                     N'["Everything in Professional","Staff Management","Priority Support"]', 3, 1);
+            """);
+
+        var plans = await Db.QueryAsync(
+            """
+            SELECT PlanId, PlanCode, Name, MonthlyPrice, QuarterlyPrice, YearlyPrice, FeaturesJson
+            FROM dbo.SubscriptionPlans
+            WHERE IsActive = 1
+            ORDER BY SortOrder, Name
+            """);
+
+        return Success(plans, "Subscription plans loaded successfully.");
+    }
 
     // Payment is not integrated yet. The owner explicitly selects a plan, so this
     // endpoint activates it immediately and retains the selected user/restaurant.
