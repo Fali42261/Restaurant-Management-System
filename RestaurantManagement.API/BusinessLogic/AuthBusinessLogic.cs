@@ -51,7 +51,16 @@ public sealed class AuthBusinessLogic(
 
     private async Task<AuthResult> ChangePasswordCoreAsync(Guid userId,ChangePasswordRequest request)
     {
-        if(string.IsNullOrWhiteSpace(request.CurrentPassword)||!StrongPassword(request.NewPassword))return Bad(400,PasswordMessage());
+        var mail=request.Email?.Trim().ToLowerInvariant();
+        if(string.IsNullOrWhiteSpace(mail)||!System.Net.Mail.MailAddress.TryCreate(mail,out _))
+            return Bad(400,"Enter a valid email address.");
+        if(string.IsNullOrWhiteSpace(request.CurrentPassword)||!StrongPassword(request.NewPassword))
+            return Bad(400,PasswordMessage());
+
+        var account=await data.GetUserIdByEmailAsync(mail);
+        if(account.Count==0||!Guid.TryParse(T(account[0],"UserId"),out var emailUserId)||emailUserId!=userId)
+            return Bad(400,"Email does not match the signed-in account.");
+
         var rows=await data.GetPasswordRecordAsync(userId);
         if(rows.Count==0||hasher.VerifyHashedPassword(userId.ToString(),T(rows[0],"PasswordHash"),request.CurrentPassword)==PasswordVerificationResult.Failed)
         {logger.LogWarning("Change password rejected. UserId={UserId}",userId);return Bad(400,"Current password is incorrect.");}
