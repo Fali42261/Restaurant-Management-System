@@ -521,13 +521,14 @@
                         </Grid>
 
                         <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#111C35}" Stroke="{AppThemeBinding Light=#DCE5F5, Dark=#263A5E}" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <VerticalStackLayout Spacing="8">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="9">
                                     <Label Text="⌕" FontSize="21" TextColor="{AppThemeBinding Light=#64748B, Dark=#A9B9D5}" VerticalTextAlignment="Center" />
                                     <Entry Grid.Column="1" Placeholder="Search by item name, category or description" FontSize="13" ClearButtonVisibility="WhileEditing" TextChanged="MenuSearchTextChanged" />
                                 </Grid>
-                                <Picker Grid.Column="1" WidthRequest="150" Title="All categories" ItemsSource="{Binding MenuCategories}" SelectedItem="{Binding SelectedMenuCategory}" FontSize="12" />
-                            </Grid>
+                                <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#E8EEFF, Dark=#263A5E}" />
+                                <Picker Title="Filter by category" ItemsSource="{Binding MenuCategories}" SelectedItem="{Binding SelectedMenuCategory}" FontSize="12" />
+                            </VerticalStackLayout>
                         </Border>
 
                         <Label Text="{Binding MenuLoadStatus}" FontSize="12" TextColor="{AppThemeBinding Light=#64748B, Dark=#A9B9D5}" />
