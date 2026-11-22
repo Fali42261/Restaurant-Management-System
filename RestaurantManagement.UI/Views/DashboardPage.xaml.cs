@@ -124,6 +124,8 @@ public partial class DashboardPage : ContentPage
                     _ = LoadProductsAsync(vm);
                 else if (vm.SelectedSection.Equals("Sales / Bills", StringComparison.OrdinalIgnoreCase))
                     _ = LoadBillsAsync(vm);
+                else if (vm.SelectedSection.Equals("Subscription", StringComparison.OrdinalIgnoreCase))
+                    _ = LoadSubscriptionDataAsync();
                 ((Border)FindByName("UserMenu")).IsVisible = false;
                 ((Border)FindByName("NotificationPopup")).IsVisible = false;
             }
@@ -390,11 +392,16 @@ public partial class DashboardPage : ContentPage
 
     private async Task LoadSubscriptionDataAsync()
     {
+        if (SubscriptionPlansLayout is null || BillingCyclePicker is null)
+            return;
+
         BillingCyclePicker.ItemsSource = new[] { "Monthly", "Quarterly", "Yearly" };
         if (BillingCyclePicker.SelectedIndex < 0)
             BillingCyclePicker.SelectedIndex = 0;
 
+        CurrentSubscriptionLabel.Text = "Loading current subscription...";
         await LoadSubscriptionPlansAsync();
+
         try
         {
             var current = await _apiClient.GetAsync<SubscriptionCurrentDto>(
