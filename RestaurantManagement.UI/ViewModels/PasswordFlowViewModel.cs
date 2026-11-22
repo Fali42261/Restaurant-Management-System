@@ -68,12 +68,12 @@ public sealed class PasswordFlowViewModel : BaseViewModel
     private async Task ChangePasswordAsync()
     {
         if (IsBusy) return;
-        var validation = AuthRequestValidator.ValidateChange(CurrentPassword, NewPassword, ConfirmPassword);
+        var validation = AuthRequestValidator.ValidateChange(Email, CurrentPassword, NewPassword, ConfirmPassword);
         if (validation is not null) { ToastService.Error(validation); return; }
 
         await RunRequestAsync(async () =>
         {
-            var message = await _authService.ChangePasswordAsync(new ChangePasswordRequest(CurrentPassword, NewPassword));
+            var message = await _authService.ChangePasswordAsync(new ChangePasswordRequest(Email.Trim(), CurrentPassword, NewPassword));
             ToastService.Success(message);
             await Task.Delay(TimeSpan.FromSeconds(5));
             await Shell.Current.GoToAsync("//LoginPage");
