@@ -656,24 +656,24 @@ public partial class DashboardPage : ContentPage
 
     private void UpdateNavigationSelection(string selected)
     {
-        UpdateButtons(((Grid)FindByName("Sidebar")), selected);
-        UpdateButtons(((ScrollView)FindByName("MobileNavigation")), selected);
+        UpdateButtons(((Grid)FindByName("Sidebar")), selected, mobile: false);
+        UpdateButtons(((ScrollView)FindByName("MobileNavigation")), selected, mobile: true);
     }
 
-    private static void UpdateButtons(Element root, string selected)
+    private static void UpdateButtons(Element root, string selected, bool mobile)
     {
         if (root is Button button && button.CommandParameter is string section)
         {
             var active = section.Equals(selected, StringComparison.OrdinalIgnoreCase);
-            button.BackgroundColor = Color.FromArgb(active ? "#2563EB" : "#E8EEFF");
+            button.BackgroundColor = Color.FromArgb(active ? "#2563EB" : mobile ? "#E8EEFF" : "#142342");
             button.BorderColor = button.BackgroundColor;
             button.BorderWidth = 0;
-            button.TextColor = Color.FromArgb("#1E3A8A");
+            button.TextColor = Color.FromArgb(active ? "#FFFFFF" : mobile ? "#1E3A8A" : "#DCE6FF");
             button.FontAttributes = active ? FontAttributes.Bold : FontAttributes.None;
             button.CornerRadius = 9;
         }
         if (root is IElementController controller)
             foreach (var child in controller.LogicalChildren)
-                if (child is Element element) UpdateButtons(element, selected);
+                if (child is Element element) UpdateButtons(element, selected, mobile);
     }
 }
