@@ -8,6 +8,9 @@ namespace RestaurantManagement.UI.ViewModels;
 public sealed class DashboardViewModel : BaseViewModel
 {
     private string _searchText = "";
+    private string _menuSearchText = "";
+    private string _selectedMenuCategory = "All categories";
+    private string _menuLoadStatus = "Loading menu items...";
     private string _selectedSection = "Dashboard";
     private int _orderSequence = 2000;
     private string _reportPeriod = "Today";
@@ -104,15 +107,10 @@ public sealed class DashboardViewModel : BaseViewModel
             new("INV-2003", "Priya Verma", "Takeaway", 540m, "Paid", DateTime.Now.AddDays(-1))
         };
         Bills.CollectionChanged += (_, _) => { NotifySalesSummary(); NotifyReportSummary(); };
-        SelfServiceProducts = new ObservableCollection<MenuProduct>
-        {
-            new("Paneer Butter Masala", "Main Course", 240, "Rich tomato gravy with paneer"),
-            new("Veg Biryani", "Rice", 190, "Fragrant basmati rice"),
-            new("Masala Dosa", "South Indian", 130, "Crispy dosa with chutney"),
-            new("Butter Naan", "Breads", 55, "Freshly baked naan"),
-            new("Cold Coffee", "Beverages", 110, "Chilled coffee"),
-            new("Gulab Jamun", "Dessert", 80, "Two pieces")
-        };
+        SelfServiceProducts = new ObservableCollection<MenuProduct>();
+        MenuManagementProducts = new ObservableCollection<MenuProduct>();
+        FilteredMenuProducts = new ObservableCollection<MenuProduct>();
+        MenuCategories = new ObservableCollection<string> { "All categories" };
         SelfServiceCart = new ObservableCollection<CartLine>();
         PosCart = new ObservableCollection<CartLine>();
         PosCart.CollectionChanged += (_, _) => RefreshPosTotals();
@@ -468,6 +466,63 @@ public sealed class DashboardViewModel : BaseViewModel
     public int PaidBillCount => Bills.Count(b => b.Status == "Paid");
     public int UnpaidBillCount => Bills.Count(b => b.Status == "Unpaid");
     public ObservableCollection<MenuProduct> SelfServiceProducts { get; }
+    public ObservableCollection<MenuProduct> MenuManagementProducts { get; }
+    public ObservableCollection<MenuProduct> FilteredMenuProducts { get; }
+    public ObservableCollection<string> MenuCategories { get; }
+    public string MenuLoadStatus { get => _menuLoadStatus; private set => SetProperty(ref _menuLoadStatus, value); }
+    public string MenuSearchText
+    {
+        get => _menuSearchText;
+        set { if (SetProperty(ref _menuSearchText, value ?? "")) RefreshFilteredMenuProducts(); }
+    }
+    public string SelectedMenuCategory
+    {
+        get => _selectedMenuCategory;
+        set { if (SetProperty(ref _selectedMenuCategory, value ?? "All categories")) RefreshFilteredMenuProducts(); }
+    }
+    public int MenuTotalCount => MenuManagementProducts.Count;
+    public int MenuAvailableCount => MenuManagementProducts.Count(p => p.IsAvailable);
+    public int MenuUnavailableCount => MenuManagementProducts.Count(p => !p.IsAvailable);
+    public int MenuCategoryCount => MenuManagementProducts.Select(p => p.Category).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+
+    public void SetMenuProducts(IEnumerable<MenuProduct> products)
+    {
+        MenuManagementProducts.Clear();
+        foreach (var product in products) MenuManagementProducts.Add(product);
+
+        MenuCategories.Clear();
+        MenuCategories.Add("All categories");
+        foreach (var category in MenuManagementProducts.Select(p => p.Category)
+                     .Where(c => !string.IsNullOrWhiteSpace(c))
+                     .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(c => c))
+            MenuCategories.Add(category);
+
+        if (!MenuCategories.Contains(SelectedMenuCategory))
+            SelectedMenuCategory = "All categories";
+
+        OnPropertyChanged(nameof(MenuTotalCount));
+        OnPropertyChanged(nameof(MenuAvailableCount));
+        OnPropertyChanged(nameof(MenuUnavailableCount));
+        OnPropertyChanged(nameof(MenuCategoryCount));
+        RefreshFilteredMenuProducts();
+    }
+
+    public void SetMenuLoadStatus(string status) => MenuLoadStatus = status;
+
+    private void RefreshFilteredMenuProducts()
+    {
+        if (FilteredMenuProducts == null || MenuManagementProducts == null) return;
+        var search = MenuSearchText.Trim();
+        var category = SelectedMenuCategory;
+        var filtered = MenuManagementProducts.Where(p =>
+            (category == "All categories" || p.Category.Equals(category, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(search) ||
+             p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+             p.Category.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+             p.Description.Contains(search, StringComparison.OrdinalIgnoreCase))).ToList();
+        FilteredMenuProducts.Clear();
+        foreach (var product in filtered) FilteredMenuProducts.Add(product);
+    }
     public ObservableCollection<CartLine> SelfServiceCart { get; }
     public ObservableCollection<CartLine> PosCart { get; }
     public decimal PosSubtotal => PosCart.Sum(x => x.LineTotal);
@@ -806,13 +861,15 @@ public sealed class FloorRecord : BaseViewModel
 
 public sealed class MenuProduct
 {
-    public MenuProduct(string name, string category, decimal price, string description)
-    { Name = name; Category = category; Price = price; Description = description; }
+    public MenuProduct(string name, string category, decimal price, string description, bool isAvailable = true)
+    { Name = name; Category = category; Price = price; Description = description; IsAvailable = isAvailable; }
     public string Name { get; }
     public string Category { get; }
     public decimal Price { get; }
-    public string PriceText => $"₹{Price:N0}";
+    public string PriceText => $"₹{Price:N2}";
     public string Description { get; }
+    public bool IsAvailable { get; }
+    public string AvailabilityText => IsAvailable ? "Available" : "Unavailable";
 }
 
 public sealed class CartLine : BaseViewModel
