@@ -765,7 +765,7 @@ public partial class DashboardPage : ContentPage
                 {
                     Stroke = Color.FromArgb("#DCE5F5"),
                     StrokeThickness = 1,
-                    StrokeShape = new RoundRectangle { CornerRadius = 8 },
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 8 },
                     Padding = 2,
                     Content = new Image
                     {
