@@ -524,22 +524,22 @@ public partial class DashboardPage : ContentPage
     private void PosTotalsChanged(object sender, TextChangedEventArgs e)
     {
         if (BindingContext is not DashboardViewModel vm) return;
-        decimal.TryParse(PosDiscountEntry.Text, out var discount);
-        decimal.TryParse(PosTaxEntry.Text, out var tax);
+        decimal.TryParse(((Entry)FindByName("PosDiscountEntry")).Text, out var discount);
+        decimal.TryParse(((Entry)FindByName("PosTaxEntry")).Text, out var tax);
         vm.PosDiscountPercent = Math.Clamp(discount, 0m, 100m);
         vm.PosTaxPercent = Math.Clamp(tax, 0m, 100m);
-        PosDiscountAmountLabel.Text = vm.PosDiscountAmountText;
-        PosTaxAmountLabel.Text = vm.PosTaxAmountText;
-        PosGrandTotalLabel.Text = vm.PosGrandTotalText;
+        ((Label)FindByName("PosDiscountAmountLabel")).Text = vm.PosDiscountAmountText;
+        ((Label)FindByName("PosTaxAmountLabel")).Text = vm.PosTaxAmountText;
+        ((Label)FindByName("PosGrandTotalLabel")).Text = vm.PosGrandTotalText;
     }
 
     private async void PosCheckoutClicked(object sender, EventArgs e)
     {
         if (BindingContext is not DashboardViewModel vm) return;
-        decimal.TryParse(PosDiscountEntry.Text, out var discount);
-        decimal.TryParse(PosTaxEntry.Text, out var tax);
-        decimal.TryParse(PosCashReceivedEntry.Text, out var cashReceived);
-        var paymentMethod = PosPaymentPicker.SelectedItem?.ToString() ?? "Cash";
+        decimal.TryParse(((Entry)FindByName("PosDiscountEntry")).Text, out var discount);
+        decimal.TryParse(((Entry)FindByName("PosTaxEntry")).Text, out var tax);
+        decimal.TryParse(((Entry)FindByName("PosCashReceivedEntry")).Text, out var cashReceived);
+        var paymentMethod = ((Picker)FindByName("PosPaymentPicker")).SelectedItem?.ToString() ?? "Cash";
         if (vm.PosCart.Count == 0)
         {
             await DisplayAlert("Cannot checkout", "Add at least one product to the bill.", "OK");
@@ -552,7 +552,7 @@ public partial class DashboardPage : ContentPage
             await DisplayAlert("Menu changed", $"These products are no longer available: {string.Join(", ", missing)}. Refresh the menu and try again.", "OK");
             return;
         }
-        var orderText = PosTableEntry.Text?.Trim() ?? "Takeaway";
+        var orderText = ((Entry)FindByName("PosTableEntry")).Text?.Trim() ?? "Takeaway";
         var selectedTable = _tables.FirstOrDefault(t =>
             t.Name.Equals(orderText, StringComparison.OrdinalIgnoreCase) ||
             $"Table {t.Name}".Equals(orderText, StringComparison.OrdinalIgnoreCase));
@@ -580,19 +580,19 @@ public partial class DashboardPage : ContentPage
         try
         {
             var result = await new OrdersPosApiService().CheckoutAsync(new PosCheckoutRequest(
-                PosCustomerEntry.Text?.Trim(), orderType, selectedTable?.TableId,
+                ((Entry)FindByName("PosCustomerEntry")).Text?.Trim(), orderType, selectedTable?.TableId,
                 discountAmount, taxAmount, method, cashReceived, items));
             if (result is null) throw new InvalidOperationException("The API did not return the saved invoice.");
             vm.PosCart.Clear();
             vm.RefreshPosTotals();
             await LoadOrdersAsync(vm);
             await LoadBillsAsync(vm);
-            PosCashReceivedEntry.Text = "";
-            PosDiscountEntry.Text = "0";
-            PosTaxEntry.Text = "5";
-            PosDiscountAmountLabel.Text = vm.PosDiscountAmountText;
-            PosTaxAmountLabel.Text = vm.PosTaxAmountText;
-            PosGrandTotalLabel.Text = vm.PosGrandTotalText;
+            ((Entry)FindByName("PosCashReceivedEntry")).Text = "";
+            ((Entry)FindByName("PosDiscountEntry")).Text = "0";
+            ((Entry)FindByName("PosTaxEntry")).Text = "5";
+            ((Label)FindByName("PosDiscountAmountLabel")).Text = vm.PosDiscountAmountText;
+            ((Label)FindByName("PosTaxAmountLabel")).Text = vm.PosTaxAmountText;
+            ((Label)FindByName("PosGrandTotalLabel")).Text = vm.PosGrandTotalText;
             await DisplayAlert("Payment completed", $"Order {result.OrderNumber}\nInvoice {result.InvoiceNumber}\nTotal ₹{result.Total:N2}\nPaid ₹{result.AmountPaid:N2}\nStatus: {result.Status}", "OK");
             vm.NavigateCommand.Execute("Sales / Bills");
         }
