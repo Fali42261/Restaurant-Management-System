@@ -35,6 +35,7 @@ public sealed class SettingsController(SqlDataAccess db) : ApiControllerBase(db)
     }
 
     [HttpGet("settings/subscriptions/current")]
+    [HttpGet("subscriptions/current")]
     public async Task<IActionResult> CurrentSubscription()
     {
         if (CurrentRestaurantId == Guid.Empty || CurrentUserId == Guid.Empty)
@@ -57,6 +58,7 @@ public sealed class SettingsController(SqlDataAccess db) : ApiControllerBase(db)
     }
 
     [HttpGet("settings/subscriptions/plans")]
+    [HttpGet("subscriptions/plans")]
     [AllowAnonymous]
     public async Task<IActionResult> Plans() =>
         Success(await Db.QueryAsync(
@@ -66,6 +68,7 @@ public sealed class SettingsController(SqlDataAccess db) : ApiControllerBase(db)
     // Payment is not integrated yet. The owner explicitly selects a plan, so this
     // endpoint activates it immediately and retains the selected user/restaurant.
     [HttpPost("settings/subscriptions/request"), Authorize(Roles = "Owner")]
+    [HttpPost("subscriptions/request"), Authorize(Roles = "Owner")]
     public async Task<IActionResult> RequestSubscription([FromBody] SubscriptionRequest request)
     {
         if (CurrentRestaurantId == Guid.Empty || CurrentUserId == Guid.Empty)
