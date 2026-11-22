@@ -918,6 +918,13 @@
                 </Grid>
             </Border>
             <Border BackgroundColor="Transparent" StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="10,9">
+                <Border.GestureRecognizers><TapGestureRecognizer Tapped="MenuManagementMenuTapped" /></Border.GestureRecognizers>
+                <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                    <Label Text="🍽" FontSize="15" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                    <Label Grid.Column="1" Text="Menu Management" FontSize="13" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" VerticalTextAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border BackgroundColor="Transparent" StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="10,9">
                 <Border.GestureRecognizers><TapGestureRecognizer Tapped="SettingsMenuTapped" /></Border.GestureRecognizers>
                 <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
                     <Label Text="⚙" FontSize="15" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
