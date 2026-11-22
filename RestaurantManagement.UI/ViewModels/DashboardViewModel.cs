@@ -40,7 +40,11 @@ public sealed class DashboardViewModel : BaseViewModel
         ["Sales / Bills"] = "Sales transactions and customer bills.",
         ["Store / Godown"] = "Store, godown and stock management.",
         ["Reports"] = "Review daily sales and operational reports.",
-        ["Floors and Tables"] = "Manage restaurant floors and table setup."
+        ["Floors and Tables"] = "Manage restaurant floors and table setup.",
+        ["Menu Management"] = "Manage restaurant menu items and categories.",
+        ["Customers"] = "Manage restaurant customer information.",
+        ["Staff Management"] = "Manage restaurant staff and access.",
+        ["Inventory"] = "Manage restaurant stock and inventory."
     };
 
     public DashboardViewModel()
