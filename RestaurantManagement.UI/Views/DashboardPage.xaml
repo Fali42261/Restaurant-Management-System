@@ -102,7 +102,7 @@
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="▦" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Floors &amp; Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors &amp; Tables" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Floors and Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors and Tables" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="☷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
@@ -145,7 +145,7 @@
                     <Button Text="Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Floors &amp; Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors &amp; Tables" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Floors and Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors and Tables" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavChipStyle}" />
                 </HorizontalStackLayout>            </ScrollView>
 
@@ -625,7 +625,7 @@
 
                     <VerticalStackLayout x:Name="TableDashboard" IsVisible="{Binding IsTablesSection}" Spacing="13">
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                            <Label Text="Floors &amp; Tables" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}" />
+                            <Label Text="Floors and Tables" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}" />
                             <Button Grid.Column="1" Text="+ Add Floor" Clicked="AddFloorClicked" BackgroundColor="#2563EB" TextColor="White" FontSize="12" Padding="12,6" />
                             <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8" Margin="0,10,0,0">
                                 <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding AvailableTableCount, StringFormat='Available {0}'}" TextColor="{AppThemeBinding Light=#1E3A8A, Dark=#B9C5BF}" FontAttributes="Bold" /></Border>
