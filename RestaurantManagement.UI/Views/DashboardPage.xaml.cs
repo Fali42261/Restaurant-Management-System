@@ -338,6 +338,8 @@ public partial class DashboardPage : ContentPage
     }
 
     private void CloseNotificationPopup(object sender, EventArgs e) => ((Border)FindByName("NotificationPopup")).IsVisible = false;
+    private void MenuManagementMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Menu Management"); ((Border)FindByName("UserMenu")).IsVisible = false; }
+    private void MenuManagementMenuTapped(object sender, TappedEventArgs e) => MenuManagementMenuClicked(sender, EventArgs.Empty);
     private void SettingsMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Settings"); ((Border)FindByName("UserMenu")).IsVisible = false; }
     private void SubscriptionMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Subscription"); ((Border)FindByName("UserMenu")).IsVisible = false; }
     private void SettingsMenuTapped(object sender, TappedEventArgs e) => SettingsMenuClicked(sender, EventArgs.Empty);
