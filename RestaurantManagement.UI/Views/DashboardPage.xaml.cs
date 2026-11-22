@@ -432,22 +432,59 @@ public partial class DashboardPage : ContentPage
                     _ => plan.MonthlyPrice
                 };
 
-                var features = string.IsNullOrWhiteSpace(plan.FeaturesJson)
-                    ? "Restaurant management features included."
-                    : string.Join(" • ", JsonSerializer.Deserialize<List<string>>(plan.FeaturesJson) ?? new List<string>());
+                var planName = string.IsNullOrWhiteSpace(plan.Name) ? plan.PlanCode : plan.Name;
+                var features = ParseSubscriptionFeatures(plan.FeaturesJson);
 
-                var content = new VerticalStackLayout { Spacing = 9 };
-                content.Children.Add(new Label { Text = plan.Name, FontSize = 19, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#2563EB") });
-                content.Children.Add(new Label { Text = $"₹{price:N0}", FontSize = 27, FontAttributes = FontAttributes.Bold });
-                content.Children.Add(new Label { Text = $"per {_selectedBillingCycle.ToLowerInvariant()}", FontSize = 12 });
-                content.Children.Add(new Label { Text = features, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap });
+                var content = new VerticalStackLayout { Spacing = 10 };
+                content.Children.Add(new Label
+                {
+                    Text = planName,
+                    FontSize = 19,
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = Color.FromArgb("#2563EB")
+                });
+                content.Children.Add(new Label
+                {
+                    Text = $"₹{price:N0}",
+                    FontSize = 29,
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = Application.Current?.RequestedTheme == AppTheme.Dark
+                        ? Color.FromArgb("#F1F5F9") : Color.FromArgb("#0F1F45")
+                });
+                content.Children.Add(new Label
+                {
+                    Text = $"per {_selectedBillingCycle.ToLowerInvariant()}",
+                    FontSize = 12,
+                    TextColor = Color.FromArgb("#718096")
+                });
+                content.Children.Add(new BoxView
+                {
+                    HeightRequest = 1,
+                    BackgroundColor = Application.Current?.RequestedTheme == AppTheme.Dark
+                        ? Color.FromArgb("#34445F") : Color.FromArgb("#E2E8F0")
+                });
+
+                foreach (var feature in features)
+                {
+                    content.Children.Add(new Label
+                    {
+                        Text = $"✓  {feature}",
+                        FontSize = 12,
+                        LineBreakMode = LineBreakMode.WordWrap,
+                        TextColor = Application.Current?.RequestedTheme == AppTheme.Dark
+                            ? Color.FromArgb("#DCE6F5") : Color.FromArgb("#334155")
+                    });
+                }
+
                 var choose = new Button
                 {
-                    Text = $"Choose {plan.Name}",
+                    Text = $"Choose {planName}",
                     CommandParameter = plan.PlanCode,
                     BackgroundColor = Color.FromArgb("#2563EB"),
                     TextColor = Colors.White,
-                    FontAttributes = FontAttributes.Bold
+                    FontAttributes = FontAttributes.Bold,
+                    CornerRadius = 10,
+                    HeightRequest = 44
                 };
                 choose.Clicked += SubscriptionPlanClicked;
                 content.Children.Add(choose);
@@ -455,12 +492,14 @@ public partial class DashboardPage : ContentPage
                 SubscriptionPlansLayout.Children.Add(new Border
                 {
                     Content = content,
-                    Padding = 16,
+                    Padding = 18,
                     Margin = new Thickness(0, 0, 12, 12),
                     WidthRequest = 270,
-                    Stroke = Color.FromArgb("#DCE5F5"),
+                    MinimumHeightRequest = 280,
+                    Stroke = Application.Current?.RequestedTheme == AppTheme.Dark
+                        ? Color.FromArgb("#34445F") : Color.FromArgb("#DCE5F5"),
                     StrokeThickness = 1,
-                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 },
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
                     BackgroundColor = Application.Current?.RequestedTheme == AppTheme.Dark
                         ? Color.FromArgb("#111C35") : Colors.White
                 });
@@ -470,6 +509,24 @@ public partial class DashboardPage : ContentPage
         {
             SubscriptionPlansLayout.Children.Clear();
             SubscriptionPlansLayout.Children.Add(new Label { Text = $"Unable to load plans: {ex.Message}" });
+        }
+    }
+
+    private static List<string> ParseSubscriptionFeatures(string? featuresJson)
+    {
+        if (string.IsNullOrWhiteSpace(featuresJson))
+            return new List<string> { "Restaurant management features included" };
+
+        try
+        {
+            var features = JsonSerializer.Deserialize<List<string>>(featuresJson);
+            return features?.Where(feature => !string.IsNullOrWhiteSpace(feature)).ToList()
+                ?? new List<string> { "Restaurant management features included" };
+        }
+        catch (JsonException)
+        {
+            // A malformed optional feature list must never prevent the plan card itself from rendering.
+            return new List<string> { "Restaurant management features included" };
         }
     }
 
