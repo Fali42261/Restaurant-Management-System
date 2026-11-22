@@ -1,4 +1,7 @@
 using RestaurantManagement.UI.Services;
+using RestaurantManagement.UI.Services.Api;
+using RestaurantManagement.UI.Configuration;
+using System.Text.Json;
 using RestaurantManagement.UI.Models;
 using RestaurantManagement.UI.ViewModels;
 
@@ -8,6 +11,8 @@ public partial class DashboardPage : ContentPage
 {
     private double _lastWidth = -1;
     private bool _changingRestaurant;
+    private readonly ApiClient _apiClient = new();
+    private string _selectedBillingCycle = "Monthly";
     private readonly Dictionary<string, Guid> _productIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Guid> _orderIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Guid> _billIds = new(StringComparer.OrdinalIgnoreCase);
@@ -31,6 +36,7 @@ public partial class DashboardPage : ContentPage
             _ = LoadProductsAsync(vm);
             _ = LoadOrdersAsync(vm);
             _ = LoadBillsAsync(vm);
+            _ = LoadSubscriptionDataAsync();
             _tableTimer.Start();
         };
         _tableTimer = Dispatcher.CreateTimer();
@@ -333,8 +339,135 @@ public partial class DashboardPage : ContentPage
     private void SubscriptionMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Subscription"); ((Border)FindByName("UserMenu")).IsVisible = false; }
     private async void SubscriptionPlanClicked(object sender, EventArgs e)
     {
-        if (sender is Button button && button.CommandParameter is string plan)
-            await DisplayAlert("Plan selected", $"{plan}\n\nOnline payment and subscription activation will be enabled after payment gateway integration.", "OK");
+        if (sender is not Button button || button.CommandParameter is not string planCode)
+            return;
+
+        try
+        {
+            var response = await _apiClient.PostResponseAsync<JsonElement>(
+                AppConfig.Routes.SelectSubscription,
+                new { planCode, billingCycle = _selectedBillingCycle },
+                authorized: true);
+            await DisplayAlert("Subscription activated",
+                response.Message ?? "Your subscription has been saved successfully.", "OK");
+            await LoadSubscriptionDataAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Subscription not saved", ex.Message, "OK");
+        }
+    }
+
+    private void BillingCycleChanged(object sender, EventArgs e)
+    {
+        if (BillingCyclePicker.SelectedItem is string cycle)
+        {
+            _selectedBillingCycle = cycle;
+            _ = LoadSubscriptionPlansAsync();
+        }
+    }
+
+    private async Task LoadSubscriptionDataAsync()
+    {
+        BillingCyclePicker.ItemsSource = new[] { "Monthly", "Quarterly", "Yearly" };
+        if (BillingCyclePicker.SelectedIndex < 0)
+            BillingCyclePicker.SelectedIndex = 0;
+
+        await LoadSubscriptionPlansAsync();
+        try
+        {
+            var current = await _apiClient.GetAsync<SubscriptionCurrentDto>(
+                AppConfig.Routes.CurrentSubscription, authorized: true);
+            CurrentSubscriptionLabel.Text = current is null
+                ? "No active subscription found for this restaurant."
+                : $"{current.PlanName ?? current.PlanCode} • {current.Status} • Expires {current.ExpiresAt:dd MMM yyyy}";
+        }
+        catch (Exception ex)
+        {
+            CurrentSubscriptionLabel.Text = $"Unable to load subscription: {ex.Message}";
+        }
+    }
+
+    private async Task LoadSubscriptionPlansAsync()
+    {
+        try
+        {
+            var plans = await _apiClient.GetAsync<List<SubscriptionPlanDto>>(
+                AppConfig.Routes.SubscriptionPlans);
+            SubscriptionPlansLayout.Children.Clear();
+
+            if (plans is null || plans.Count == 0)
+            {
+                SubscriptionPlansLayout.Children.Add(new Label { Text = "No subscription plans are currently available." });
+                return;
+            }
+
+            foreach (var plan in plans)
+            {
+                var price = _selectedBillingCycle switch
+                {
+                    "Quarterly" => plan.QuarterlyPrice,
+                    "Yearly" => plan.YearlyPrice,
+                    _ => plan.MonthlyPrice
+                };
+
+                var features = string.IsNullOrWhiteSpace(plan.FeaturesJson)
+                    ? "Restaurant management features included."
+                    : string.Join(" • ", JsonSerializer.Deserialize<List<string>>(plan.FeaturesJson) ?? new List<string>());
+
+                var content = new VerticalStackLayout { Spacing = 9 };
+                content.Children.Add(new Label { Text = plan.Name, FontSize = 19, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#2563EB") });
+                content.Children.Add(new Label { Text = $"₹{price:N0}", FontSize = 27, FontAttributes = FontAttributes.Bold });
+                content.Children.Add(new Label { Text = $"per {_selectedBillingCycle.ToLowerInvariant()}", FontSize = 12 });
+                content.Children.Add(new Label { Text = features, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap });
+                var choose = new Button
+                {
+                    Text = $"Choose {plan.Name}",
+                    CommandParameter = plan.PlanCode,
+                    BackgroundColor = Color.FromArgb("#2563EB"),
+                    TextColor = Colors.White,
+                    FontAttributes = FontAttributes.Bold
+                };
+                choose.Clicked += SubscriptionPlanClicked;
+                content.Children.Add(choose);
+
+                SubscriptionPlansLayout.Children.Add(new Border
+                {
+                    Content = content,
+                    Padding = 16,
+                    Margin = new Thickness(0, 0, 12, 12),
+                    WidthRequest = 270,
+                    Stroke = Color.FromArgb("#DCE5F5"),
+                    StrokeThickness = 1,
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 },
+                    BackgroundColor = Application.Current?.RequestedTheme == AppTheme.Dark
+                        ? Color.FromArgb("#111C35") : Colors.White
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            SubscriptionPlansLayout.Children.Clear();
+            SubscriptionPlansLayout.Children.Add(new Label { Text = $"Unable to load plans: {ex.Message}" });
+        }
+    }
+
+    private sealed class SubscriptionPlanDto
+    {
+        public string PlanCode { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public decimal MonthlyPrice { get; set; }
+        public decimal QuarterlyPrice { get; set; }
+        public decimal YearlyPrice { get; set; }
+        public string? FeaturesJson { get; set; }
+    }
+
+    private sealed class SubscriptionCurrentDto
+    {
+        public string PlanCode { get; set; } = string.Empty;
+        public string? PlanName { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime ExpiresAt { get; set; }
     }
     private void HelpMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Help Support"); ((Border)FindByName("UserMenu")).IsVisible = false; }
     private async void LogoutMenuClicked(object sender, EventArgs e)
