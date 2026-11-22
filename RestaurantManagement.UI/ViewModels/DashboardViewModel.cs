@@ -481,6 +481,8 @@ public sealed class DashboardViewModel : BaseViewModel
         set { if (SetProperty(ref _selectedMenuCategory, value ?? "All categories")) RefreshFilteredMenuProducts(); }
     }
     public int MenuTotalCount => MenuManagementProducts.Count;
+    public bool MenuEmpty => MenuManagementProducts.Count == 0;
+    public bool MenuFilterEmpty => MenuManagementProducts.Count > 0 && FilteredMenuProducts.Count == 0;
     public int MenuAvailableCount => MenuManagementProducts.Count(p => p.IsAvailable);
     public int MenuUnavailableCount => MenuManagementProducts.Count(p => !p.IsAvailable);
     public int MenuCategoryCount => MenuManagementProducts.Select(p => p.Category).Distinct(StringComparer.OrdinalIgnoreCase).Count();
@@ -501,6 +503,7 @@ public sealed class DashboardViewModel : BaseViewModel
             SelectedMenuCategory = "All categories";
 
         OnPropertyChanged(nameof(MenuTotalCount));
+        OnPropertyChanged(nameof(MenuEmpty));
         OnPropertyChanged(nameof(MenuAvailableCount));
         OnPropertyChanged(nameof(MenuUnavailableCount));
         OnPropertyChanged(nameof(MenuCategoryCount));
@@ -522,6 +525,7 @@ public sealed class DashboardViewModel : BaseViewModel
              p.Description.Contains(search, StringComparison.OrdinalIgnoreCase))).ToList();
         FilteredMenuProducts.Clear();
         foreach (var product in filtered) FilteredMenuProducts.Add(product);
+        OnPropertyChanged(nameof(MenuFilterEmpty));
     }
     public ObservableCollection<CartLine> SelfServiceCart { get; }
     public ObservableCollection<CartLine> PosCart { get; }
