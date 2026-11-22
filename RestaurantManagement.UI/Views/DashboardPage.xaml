@@ -66,47 +66,47 @@
                 <VerticalStackLayout Spacing="7">
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="▦" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="▥" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="☷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="POS Billing (F3)" Command="{Binding NavigateCommand}" CommandParameter="POS Billing" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="POS Billing (F3)" Command="{Binding NavigateCommand}" CommandParameter="POS Billing" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="★" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Self Service (F4)" Command="{Binding NavigateCommand}" CommandParameter="Self Service" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Self Service (F4)" Command="{Binding NavigateCommand}" CommandParameter="Self Service" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="♨" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="KOT (Kitchen)" Command="{Binding NavigateCommand}" CommandParameter="KOT" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="KOT (Kitchen)" Command="{Binding NavigateCommand}" CommandParameter="KOT" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="◷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="₹" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="▣" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="▤" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="▦" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Floors and Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors and Tables" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Floors and Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors and Tables" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                     <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
                         <Label Text="☷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavButtonStyle}" HorizontalTextAlignment="Start" Padding="8,8" />
+                        <Button Grid.Column="1" Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
                     </Grid>
                 </VerticalStackLayout>
             </ScrollView>
