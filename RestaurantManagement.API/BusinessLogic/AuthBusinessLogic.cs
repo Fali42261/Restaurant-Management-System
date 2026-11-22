@@ -39,7 +39,7 @@ public sealed class AuthBusinessLogic(
         if(string.IsNullOrWhiteSpace(request.EmailOrMobile)||string.IsNullOrWhiteSpace(request.Password))return Bad(400,"Email/mobile and password are required.");
         var rows=await data.LoginUserAsync(request.EmailOrMobile.Trim());
         if(rows.Count==0||!Bool(rows[0],"IsActive")||hasher.VerifyHashedPassword(T(rows[0],"UserId"),T(rows[0],"PasswordHash"),request.Password)==PasswordVerificationResult.Failed)
-        {logger.LogWarning("Login rejected. IdentifierProvided={IdentifierProvided}",true);return Bad(401,"Invalid login details.");}
+        {logger.LogWarning("Login rejected. IdentifierProvided={IdentifierProvided}",true);return Bad(401,"We couldn’t sign you in. Check your email/mobile number and password, then try again.");}
         var user=rows[0];var id=Guid.Parse(T(user,"UserId"));var restaurants=await data.GetRestaurantsAsync(id);
         var refresh=NewToken();var now=DateTime.UtcNow;
         await data.CreateRefreshTokenAsync(id,null,Hash(refresh),now.AddDays(_settings.Jwt.RefreshTokenDays));
