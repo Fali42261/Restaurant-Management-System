@@ -497,7 +497,7 @@ public partial class DashboardPage : ContentPage
                     CornerRadius = 10,
                     HeightRequest = 44
                 };
-                choose.Clicked += SubscriptionPlanClicked;
+                choose.Clicked += (sender, e) => SubscriptionPlanClicked(sender, e);
                 content.Children.Add(choose);
 
                 SubscriptionPlansLayout.Children.Add(new Border
