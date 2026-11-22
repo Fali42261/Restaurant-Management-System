@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Create account"
     Shell.NavBarIsVisible="False"
-    BackgroundColor="#F4F7FB">
+    BackgroundColor="{AppThemeBinding Light=#F4F7FF, Dark=#0B1220}">
     <ContentPage.Resources>
         <Style TargetType="Entry">
             <Setter Property="HeightRequest" Value="48" />
@@ -20,29 +20,29 @@
             <Grid Padding="24" RowDefinitions="*,Auto,*">
                 <VerticalStackLayout Grid.Row="1" Spacing="18" HorizontalOptions="Center" MaximumWidthRequest="520" VerticalOptions="Center">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                        <Label Text="Create owner account" FontSize="26" FontAttributes="Bold" TextColor="#172B27" HorizontalTextAlignment="Center" />
-                        <Label Text="Register your restaurant as the owner." FontSize="14" TextColor="#718078" HorizontalTextAlignment="Center" />
+                        <Label Text="Create owner account" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#172554, Dark=#EAF0FF}" HorizontalTextAlignment="Center" />
+                        <Label Text="Register your restaurant as the owner." FontSize="14" TextColor="{AppThemeBinding Light=#64748B, Dark=#A9B9D5}" HorizontalTextAlignment="Center" />
                     </VerticalStackLayout>
-                    <Border BackgroundColor="White" Stroke="#E5EBE8" StrokeThickness="1" StrokeShape="RoundRectangle 24" Padding="24">
+                    <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#111C35}" Stroke="{AppThemeBinding Light=#DCE5F5, Dark=#263A5E}" StrokeThickness="1" StrokeShape="RoundRectangle 24" Padding="24">
                         <VerticalStackLayout Spacing="14">
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Full name" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Entry BackgroundColor="Transparent" Placeholder="Your full name" Text="{Binding FullName}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <Label Text="Full name" FontSize="13" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#1E3A8A, Dark=#DCE6FF}" />
+                                <Entry BackgroundColor="Transparent" Placeholder="Your full name" Text="{Binding FullName}" TextColor="#172554" PlaceholderColor="#94A3B8" />
                                 
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Email address" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Entry BackgroundColor="Transparent" Placeholder="name@example.com" Keyboard="Email" Text="{Binding Email}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <Label Text="Email address" FontSize="13" FontAttributes="Bold" TextColor="#1E3A8A" />
+                                <Entry BackgroundColor="Transparent" Placeholder="name@example.com" Keyboard="Email" Text="{Binding Email}" TextColor="#172554" PlaceholderColor="#94A3B8" />
                                 
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Mobile number" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Entry BackgroundColor="Transparent" Placeholder="Enter your mobile number" Keyboard="Telephone" Text="{Binding MobileNumber}" TextColor="#172B27" PlaceholderColor="#9AA9A2" />
+                                <Label Text="Mobile number" FontSize="13" FontAttributes="Bold" TextColor="#1E3A8A" />
+                                <Entry BackgroundColor="Transparent" Placeholder="Enter your mobile number" Keyboard="Telephone" Text="{Binding MobileNumber}" TextColor="#172554" PlaceholderColor="#94A3B8" />
                                 
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Image x:Name="PasswordEyeButton" Source="eye.png" Grid.Column="1" WidthRequest="24" HeightRequest="24" Aspect="AspectFit" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label Text="Password" FontSize="13" FontAttributes="Bold" TextColor="#1E3A8A" />
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="PasswordEntry" BackgroundColor="Transparent" Placeholder="At least 8 characters" IsPassword="True" Text="{Binding Password}" TextColor="#172554" PlaceholderColor="#94A3B8" /><Image x:Name="PasswordEyeButton" Source="eye.png" Grid.Column="1" WidthRequest="24" HeightRequest="24" Aspect="AspectFit" HorizontalOptions="Center" VerticalOptions="Center">
                                     <Image.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="TogglePasswordVisibility" />
                                     </Image.GestureRecognizers>
@@ -50,19 +50,19 @@
                                 
                             </VerticalStackLayout>
                             <VerticalStackLayout Spacing="5">
-                                <Label Text="Confirm password" FontSize="13" FontAttributes="Bold" TextColor="#344A43" />
-                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="ConfirmPasswordEntry" BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172B27" PlaceholderColor="#9AA9A2" /><Image x:Name="ConfirmPasswordEyeButton" Source="eye.png" Grid.Column="1" WidthRequest="24" HeightRequest="24" Aspect="AspectFit" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label Text="Confirm password" FontSize="13" FontAttributes="Bold" TextColor="#1E3A8A" />
+                                <Grid ColumnDefinitions="*,Auto"><Entry x:Name="ConfirmPasswordEntry" BackgroundColor="Transparent" Placeholder="Re-enter your password" IsPassword="True" Text="{Binding ConfirmPassword}" TextColor="#172554" PlaceholderColor="#94A3B8" /><Image x:Name="ConfirmPasswordEyeButton" Source="eye.png" Grid.Column="1" WidthRequest="24" HeightRequest="24" Aspect="AspectFit" HorizontalOptions="Center" VerticalOptions="Center">
                                     <Image.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="ToggleConfirmPasswordVisibility" />
                                     </Image.GestureRecognizers>
                                 </Image></Grid>
                                 
                             </VerticalStackLayout>
-                            <Label Text="Owner account registration. Staff members must sign in with credentials provided by the owner." FontSize="12" TextColor="#718078" />
-                            <Button Text="Create account" Command="{Binding RegisterCommand}" IsEnabled="{Binding IsRegisterEnabled}" BackgroundColor="#1F6B57" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="52" />
+                            <Label Text="Owner account registration. Staff members must sign in with credentials provided by the owner." FontSize="12" TextColor="#64748B" />
+                            <Button Text="Create account" Command="{Binding RegisterCommand}" IsEnabled="{Binding IsRegisterEnabled}" BackgroundColor="#2563EB" TextColor="White" FontAttributes="Bold" CornerRadius="12" HeightRequest="52" />
                             <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
-                                <Label Text="Already have an account?" TextColor="#718078" FontSize="13" VerticalTextAlignment="Center" />
-                                <Label Text="Sign in" TextColor="#1F6B57" FontSize="13" FontAttributes="Bold" VerticalTextAlignment="Center">
+                                <Label Text="Already have an account?" TextColor="#64748B" FontSize="13" VerticalTextAlignment="Center" />
+                                <Label Text="Sign in" TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}" FontSize="13" FontAttributes="Bold" VerticalTextAlignment="Center">
                                     <Label.GestureRecognizers>
                                         <TapGestureRecognizer Command="{Binding GoToLoginCommand}" />
                                     </Label.GestureRecognizers>
