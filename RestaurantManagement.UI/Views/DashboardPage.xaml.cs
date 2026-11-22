@@ -36,7 +36,8 @@ public partial class DashboardPage : ContentPage
             _ = LoadProductsAsync(vm);
             _ = LoadOrdersAsync(vm);
             _ = LoadBillsAsync(vm);
-            _ = LoadSubscriptionDataAsync();
+            // Subscription endpoints are intentionally called only when the user
+            // opens Subscription from the menu (or presses its refresh button).
             _tableTimer.Start();
         };
         _tableTimer = Dispatcher.CreateTimer();
