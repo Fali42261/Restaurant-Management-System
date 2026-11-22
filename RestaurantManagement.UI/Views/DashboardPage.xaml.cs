@@ -701,7 +701,7 @@ public partial class DashboardPage : ContentPage
                 }
             }
 
-            vm.SetMenuProducts(menuItems);
+            // Menu Management currently displays its approved dummy UI preview; keep API products for POS only.
             vm.SetMenuLoadStatus(products.Count == 0
                 ? "No menu items found. Items added to your restaurant menu will appear here."
                 : $"Showing {products.Count} menu item(s) from your restaurant.");
@@ -749,8 +749,7 @@ public partial class DashboardPage : ContentPage
 
     private async void RefreshMenuClicked(object sender, EventArgs e)
     {
-        if (BindingContext is DashboardViewModel vm)
-            await LoadProductsAsync(vm);
+        await DisplayAlert("Menu preview", "This Menu Management page is using dummy UI content. API integration will be added after UI approval.", "OK");
     }
 
     private void MenuSearchTextChanged(object sender, TextChangedEventArgs e)
