@@ -475,10 +475,28 @@
                     </VerticalStackLayout>
 
                     <VerticalStackLayout IsVisible="{Binding IsSubscriptionSection}" Spacing="14">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Subscription Plans" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#0F1F45, Dark=#EAF0FF}" />
-                            <Label Text="Select a plan and billing cycle. Your selection will be saved to your account." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#A9B9D5}" />
-                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center">
+                                <Label Text="Subscription Plans" FontSize="26" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#0F1F45, Dark=#EAF0FF}" />
+                                <Label Text="Select a plan and billing cycle. Your selection will be saved to your account." FontSize="13" TextColor="{AppThemeBinding Light=#718078, Dark=#A9B9D5}" />
+                            </VerticalStackLayout>
+                            <Button x:Name="RefreshSubscriptionButton"
+                                    Grid.Column="1"
+                                    Text="⟳"
+                                    FontSize="25"
+                                    FontAttributes="Bold"
+                                    WidthRequest="46"
+                                    HeightRequest="46"
+                                    Padding="0"
+                                    CornerRadius="12"
+                                    BackgroundColor="{AppThemeBinding Light=#EAF0FF, Dark=#1A2B4A}"
+                                    TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}"
+                                    BorderColor="{AppThemeBinding Light=#CFE2DC, Dark=#35575A}"
+                                    BorderWidth="1"
+                                    VerticalOptions="Center"
+                                    Clicked="RefreshSubscriptionClicked"
+                                    SemanticProperties.Description="Refresh subscription plans and current subscription" />
+                        </Grid>
                         <Border BackgroundColor="{AppThemeBinding Light=#EAF0FF, Dark=#1A2B4A}" Stroke="{AppThemeBinding Light=#CFE2DC, Dark=#35575A}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="16">
                             <VerticalStackLayout Spacing="7">
                                 <Label Text="YOUR CURRENT SUBSCRIPTION" FontSize="12" FontAttributes="Bold" CharacterSpacing="1" TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}" />
