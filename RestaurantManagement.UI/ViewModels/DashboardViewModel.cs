@@ -390,7 +390,18 @@ public sealed class DashboardViewModel : BaseViewModel
         }
     }
 
-    public string SectionTitle => SelectedSection;
+    public string SectionTitle => SelectedSection switch
+    {
+        "Dashboard" => "Business Dashboard",
+        "Tables" => "Table Dashboard",
+        "Self Service" => "Self Services",
+        "KOT" => "KOT (Kitchen)",
+        "Reservations" => "Reservation",
+        "Sales / Bills" => "Sale/Billing",
+        "Store / Godown" => "Store/Godown",
+        "Floors and Tables" => "Floor & Tables",
+        _ => SelectedSection
+    };
     public string SectionDescription => Descriptions.TryGetValue(SelectedSection, out var value) ? value : "Restaurant workspace";
     public bool IsDashboardSection => SelectedSection.Equals("Dashboard", StringComparison.OrdinalIgnoreCase);
     public bool IsTablesSection => SelectedSection.Equals("Tables", StringComparison.OrdinalIgnoreCase) || SelectedSection.Equals("Floors and Tables", StringComparison.OrdinalIgnoreCase);
