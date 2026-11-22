@@ -827,7 +827,7 @@ public partial class DashboardPage : ContentPage
                         if (child is Label label)
                         {
                             label.TextColor = Color.FromArgb(active ? "#FFFFFF" : "#DCE6FF");
-                            if (label.GridColumn == 1)
+                            if (Grid.GetColumn(label) == 1)
                                 label.FontAttributes = active ? FontAttributes.Bold : FontAttributes.None;
                         }
                     }
