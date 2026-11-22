@@ -14,6 +14,7 @@ public partial class DashboardPage : ContentPage
     private readonly ApiClient _apiClient = new();
     private string _selectedBillingCycle = "Monthly";
     private readonly Dictionary<string, Guid> _productIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<byte[]> _menuItemImageBytes = [];
     private readonly Dictionary<string, Guid> _orderIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Guid> _billIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<TableDto> _tables = [];
@@ -736,12 +737,69 @@ public partial class DashboardPage : ContentPage
         MenuItemCategoryEntry.Text = string.Empty;
         MenuItemPriceEntry.Text = string.Empty;
         MenuItemDescriptionEntry.Text = string.Empty;
+        MenuItemAvailabilityPicker.SelectedIndex = 0;
+        ClearMenuItemImages();
         MenuItemPopup.IsVisible = true;
+    }
+
+    private async void ChooseMenuItemImagesClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            var files = await Microsoft.Maui.Storage.FilePicker.PickMultipleAsync(new Microsoft.Maui.Storage.PickOptions
+            {
+                PickerTitle = "Select menu item images",
+                FileTypes = Microsoft.Maui.Storage.FilePickerFileType.Images
+            });
+
+            foreach (var file in files)
+            {
+                await using var stream = await file.OpenReadAsync();
+                using var memory = new MemoryStream();
+                await stream.CopyToAsync(memory);
+                var bytes = memory.ToArray();
+                if (bytes.Length == 0) continue;
+
+                _menuItemImageBytes.Add(bytes);
+                MenuItemImagePreview.Children.Add(new Border
+                {
+                    Stroke = Color.FromArgb("#DCE5F5"),
+                    StrokeThickness = 1,
+                    StrokeShape = new RoundRectangle { CornerRadius = 8 },
+                    Padding = 2,
+                    Content = new Image
+                    {
+                        Source = ImageSource.FromStream(() => new MemoryStream(bytes)),
+                        WidthRequest = 62,
+                        HeightRequest = 62,
+                        Aspect = Aspect.AspectFill
+                    }
+                });
+            }
+
+            MenuItemImageCountLabel.Text = _menuItemImageBytes.Count == 0
+                ? "No images selected"
+                : $"{_menuItemImageBytes.Count} image(s) selected";
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Image selection failed", ex.Message, "OK");
+        }
+    }
+
+    private void ClearMenuItemImagesClicked(object sender, EventArgs e) => ClearMenuItemImages();
+
+    private void ClearMenuItemImages()
+    {
+        _menuItemImageBytes.Clear();
+        MenuItemImagePreview.Children.Clear();
+        MenuItemImageCountLabel.Text = "No images selected";
     }
 
     private void CancelMenuItemPopup(object sender, EventArgs e)
     {
         MenuItemPopup.IsVisible = false;
+        ClearMenuItemImages();
     }
 
     private async void SaveMenuItemPopup(object sender, EventArgs e)
@@ -756,8 +814,11 @@ public partial class DashboardPage : ContentPage
             return;
         }
 
+        var imageCount = _menuItemImageBytes.Count;
+        var availability = MenuItemAvailabilityPicker.SelectedItem?.ToString() ?? "Available";
         MenuItemPopup.IsVisible = false;
-        await DisplayAlert("Preview only", $"'{name}' in category '{category}' is a UI preview. API and database saving will be connected in the next phase.", "OK");
+        await DisplayAlert("Preview only", $"'{name}' in category '{category}' is a UI preview. Images selected: {imageCount}. Availability: {availability}. API and database saving will be connected in the next phase.", "OK");
+        ClearMenuItemImages();
     }
 
     private async void EditDummyMenuItemClicked(object sender, EventArgs e)
