@@ -813,6 +813,27 @@ public partial class DashboardPage : ContentPage
 
     private static void UpdateButtons(Element root, string selected, bool mobile)
     {
+        if (root is Border navItem)
+        {
+            var tap = navItem.GestureRecognizers.OfType<TapGestureRecognizer>().FirstOrDefault();
+            if (tap?.CommandParameter is string navSection)
+            {
+                var active = navSection.Equals(selected, StringComparison.OrdinalIgnoreCase);
+                navItem.BackgroundColor = Color.FromArgb(active ? "#2563EB" : "#142342");
+                if (navItem.Content is Grid navGrid)
+                {
+                    foreach (var child in navGrid.Children)
+                    {
+                        if (child is Label label)
+                        {
+                            label.TextColor = Color.FromArgb(active ? "#FFFFFF" : "#DCE6FF");
+                            if (label.GridColumn == 1)
+                                label.FontAttributes = active ? FontAttributes.Bold : FontAttributes.None;
+                        }
+                    }
+                }
+            }
+        }
         if (root is Button button && button.CommandParameter is string section)
         {
             var active = section.Equals(selected, StringComparison.OrdinalIgnoreCase);
