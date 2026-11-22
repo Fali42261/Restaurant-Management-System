@@ -712,6 +712,41 @@ public partial class DashboardPage : ContentPage
         }
     }
 
+    // Menu Management is currently a visual dummy-data preview. CRUD is intentionally not persisted.
+    private async void AddDummyCategoryClicked(object sender, EventArgs e)
+    {
+        await DisplayAlert("Category preview", "Category creation will be enabled after the dummy UI is approved.", "OK");
+    }
+
+    private async void EditDummyCategoryClicked(object sender, EventArgs e)
+    {
+        var category = (sender as Button)?.CommandParameter?.ToString() ?? "Category";
+        await DisplayAlert("Edit category", $"'{category}' is shown as a UI preview. No changes are saved.", "OK");
+    }
+
+    private async void DeleteDummyCategoryClicked(object sender, EventArgs e)
+    {
+        var category = (sender as Button)?.CommandParameter?.ToString() ?? "Category";
+        await DisplayAlert("Delete category", $"'{category}' is demo content only. No category was deleted.", "OK");
+    }
+
+    private async void AddDummyMenuItemClicked(object sender, EventArgs e)
+    {
+        await DisplayAlert("Add menu item", "The add-item screen will be implemented after this UI preview is approved.", "OK");
+    }
+
+    private async void EditDummyMenuItemClicked(object sender, EventArgs e)
+    {
+        var item = (sender as Button)?.CommandParameter?.ToString() ?? "Menu item";
+        await DisplayAlert("Edit menu item", $"'{item}' is demo content only. The edit form will be added in the next phase.", "OK");
+    }
+
+    private async void DeleteDummyMenuItemClicked(object sender, EventArgs e)
+    {
+        var item = (sender as Button)?.CommandParameter?.ToString() ?? "Menu item";
+        await DisplayAlert("Delete menu item", $"'{item}' is demo content only. No item was deleted.", "OK");
+    }
+
     private async void RefreshMenuClicked(object sender, EventArgs e)
     {
         if (BindingContext is DashboardViewModel vm)
