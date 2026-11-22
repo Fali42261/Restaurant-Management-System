@@ -672,22 +672,60 @@ public partial class DashboardPage : ContentPage
     {
         _productIds.Clear();
         vm.SelfServiceProducts.Clear();
+        vm.SetMenuLoadStatus("Refreshing menu items...");
         try
         {
             var page = await new OrdersPosApiService().GetProductsAsync();
-            if (page is null) return;
-            foreach (var product in page.Items.Where(x => x.IsAvailable))
+            var products = page?.Items ?? [];
+            var menuItems = new List<MenuProduct>();
+
+            foreach (var product in products)
             {
-                _productIds[product.Name] = product.ProductId;
-                vm.SelfServiceProducts.Add(new MenuProduct(
-                    product.Name, product.CategoryName ?? product.Category ?? "Menu",
-                    product.Price, product.Description ?? ""));
+                var category = string.IsNullOrWhiteSpace(product.CategoryName)
+                    ? (string.IsNullOrWhiteSpace(product.Category) ? "Uncategorised" : product.Category)
+                    : product.CategoryName;
+
+                menuItems.Add(new MenuProduct(
+                    product.Name, category, product.Price,
+                    product.Description ?? "No description available.",
+                    product.IsAvailable));
+
+                if (product.IsAvailable)
+                {
+                    _productIds[product.Name] = product.ProductId;
+                    vm.SelfServiceProducts.Add(new MenuProduct(
+                        product.Name, category, product.Price, product.Description ?? ""));
+                }
             }
+
+            vm.SetMenuProducts(menuItems);
+            vm.SetMenuLoadStatus(products.Count == 0
+                ? "No menu items found. Items added to your restaurant menu will appear here."
+                : $"Showing {products.Count} menu item(s) from your restaurant.");
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Menu API unavailable", ex.Message, "OK");
+            vm.SetMenuLoadStatus($"Unable to load menu items: {ex.Message}");
         }
+    }
+
+    private async void RefreshMenuClicked(object sender, EventArgs e)
+    {
+        if (BindingContext is DashboardViewModel vm)
+            await LoadProductsAsync(vm);
+    }
+
+    private void MenuSearchTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (BindingContext is DashboardViewModel vm)
+            vm.MenuSearchText = e.NewTextValue ?? "";
+    }
+
+    private void MenuCategoryChanged(object sender, EventArgs e)
+    {
+        if (sender is Picker picker && BindingContext is DashboardViewModel vm &&
+            picker.SelectedItem is string category)
+            vm.SelectedMenuCategory = category;
     }
 
     private async Task LoadOrdersAsync(DashboardViewModel vm)
