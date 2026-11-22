@@ -40,7 +40,7 @@ public sealed class DashboardViewModel : BaseViewModel
         ["Sales / Bills"] = "Sales transactions and customer bills.",
         ["Store / Godown"] = "Store, godown and stock management.",
         ["Reports"] = "Review daily sales and operational reports.",
-        ["Floors & Tables"] = "Manage restaurant floors and table setup."
+        ["Floors and Tables"] = "Manage restaurant floors and table setup."
     };
 
     public DashboardViewModel()
@@ -390,7 +390,7 @@ public sealed class DashboardViewModel : BaseViewModel
     public string SectionTitle => SelectedSection;
     public string SectionDescription => Descriptions.TryGetValue(SelectedSection, out var value) ? value : "Restaurant workspace";
     public bool IsDashboardSection => SelectedSection.Equals("Dashboard", StringComparison.OrdinalIgnoreCase);
-    public bool IsTablesSection => SelectedSection.Equals("Tables", StringComparison.OrdinalIgnoreCase) || SelectedSection.Equals("Floors & Tables", StringComparison.OrdinalIgnoreCase);
+    public bool IsTablesSection => SelectedSection.Equals("Tables", StringComparison.OrdinalIgnoreCase) || SelectedSection.Equals("Floors and Tables", StringComparison.OrdinalIgnoreCase);
     public bool IsOrdersSection => SelectedSection.Equals("Orders", StringComparison.OrdinalIgnoreCase);
     public bool IsSettingsSection => SelectedSection.Equals("Settings", StringComparison.OrdinalIgnoreCase);
     public bool IsSubscriptionSection => SelectedSection.Equals("Subscription", StringComparison.OrdinalIgnoreCase);
