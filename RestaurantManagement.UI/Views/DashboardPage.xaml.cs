@@ -730,9 +730,34 @@ public partial class DashboardPage : ContentPage
         await DisplayAlert("Delete category", $"'{category}' is demo content only. No category was deleted.", "OK");
     }
 
-    private async void AddDummyMenuItemClicked(object sender, EventArgs e)
+    private void AddDummyMenuItemClicked(object sender, EventArgs e)
     {
-        await DisplayAlert("Add menu item", "The add-item screen will be implemented after this UI preview is approved.", "OK");
+        MenuItemNameEntry.Text = string.Empty;
+        MenuItemCategoryEntry.Text = string.Empty;
+        MenuItemPriceEntry.Text = string.Empty;
+        MenuItemDescriptionEntry.Text = string.Empty;
+        MenuItemPopup.IsVisible = true;
+    }
+
+    private void CancelMenuItemPopup(object sender, EventArgs e)
+    {
+        MenuItemPopup.IsVisible = false;
+    }
+
+    private async void SaveMenuItemPopup(object sender, EventArgs e)
+    {
+        var name = MenuItemNameEntry.Text?.Trim();
+        var category = MenuItemCategoryEntry.Text?.Trim();
+        var price = MenuItemPriceEntry.Text?.Trim();
+
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(category) || string.IsNullOrWhiteSpace(price))
+        {
+            await DisplayAlert("Required fields", "Please enter item name, category and price.", "OK");
+            return;
+        }
+
+        MenuItemPopup.IsVisible = false;
+        await DisplayAlert("Preview only", $"'{name}' in category '{category}' is a UI preview. API and database saving will be connected in the next phase.", "OK");
     }
 
     private async void EditDummyMenuItemClicked(object sender, EventArgs e)
