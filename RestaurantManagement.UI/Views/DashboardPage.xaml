@@ -891,11 +891,29 @@
             </ScrollView>
         </Grid>
     <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="{AppThemeBinding Light=White, Dark=#111C35}" Stroke="{AppThemeBinding Light=#DCE5F5, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="8" WidthRequest="230" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="100">
-        <VerticalStackLayout Spacing="4">
-            <Button Text="💳   Subscription Plans" Clicked="SubscriptionMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" FontSize="13" HorizontalOptions="Fill" Padding="12,10" />
-            <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" FontSize="13" HorizontalOptions="Fill" Padding="12,10" />
+        <VerticalStackLayout Spacing="3">
+            <Border BackgroundColor="Transparent" StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="10,9">
+                <Border.GestureRecognizers><TapGestureRecognizer Tapped="SubscriptionMenuTapped" /></Border.GestureRecognizers>
+                <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                    <Label Text="💳" FontSize="15" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                    <Label Grid.Column="1" Text="Subscription Plans" FontSize="13" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" VerticalTextAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border BackgroundColor="Transparent" StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="10,9">
+                <Border.GestureRecognizers><TapGestureRecognizer Tapped="SettingsMenuTapped" /></Border.GestureRecognizers>
+                <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                    <Label Text="⚙" FontSize="15" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                    <Label Grid.Column="1" Text="Settings" FontSize="13" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" VerticalTextAlignment="Center" />
+                </Grid>
+            </Border>
             <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#DCE5F5, Dark=#34464B}" Margin="6,3" />
-            <Button Text="↪   Logout" Clicked="LogoutMenuClicked" BackgroundColor="Transparent" TextColor="#B94B45" FontSize="13" HorizontalOptions="Fill" Padding="12,10" />
+            <Border BackgroundColor="Transparent" StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="10,9">
+                <Border.GestureRecognizers><TapGestureRecognizer Tapped="LogoutMenuTapped" /></Border.GestureRecognizers>
+                <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                    <Label Text="↪" FontSize="15" TextColor="{AppThemeBinding Light=#B94B45, Dark=#FCA5A5}" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                    <Label Grid.Column="1" Text="Logout" FontSize="13" TextColor="{AppThemeBinding Light=#B94B45, Dark=#FCA5A5}" VerticalTextAlignment="Center" />
+                </Grid>
+            </Border>
         </VerticalStackLayout>
     </Border>
     <Border x:Name="NotificationPopup" Grid.Column="1" IsVisible="False" BackgroundColor="{AppThemeBinding Light=White, Dark=#111C35}" Stroke="{AppThemeBinding Light=#DCE5F5, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12" WidthRequest="270" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="101">
