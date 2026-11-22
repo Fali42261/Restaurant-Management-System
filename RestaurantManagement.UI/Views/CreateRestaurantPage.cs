@@ -15,29 +15,29 @@ public sealed class CreateRestaurantPage : ContentPage
     private readonly TimePicker _opening = new() { Time = new TimeSpan(9, 0, 0), BackgroundColor = Colors.White };
     private readonly TimePicker _closing = new() { Time = new TimeSpan(22, 0, 0), BackgroundColor = Colors.White };
     private readonly Dictionary<string, CheckBox> _days = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Button _save = new() { Text = "Create Restaurant", BackgroundColor = Color.FromArgb("#08766F"), TextColor = Colors.White, CornerRadius = 10, HeightRequest = 48, FontAttributes = FontAttributes.Bold };
+    private readonly Button _save = new() { Text = "Create Restaurant", BackgroundColor = Color.FromArgb("#2563EB"), TextColor = Colors.White, CornerRadius = 10, HeightRequest = 48, FontAttributes = FontAttributes.Bold };
 
     public CreateRestaurantPage(User user)
     {
         _user = user;
         Title = "Create Restaurant";
-        BackgroundColor = Color.FromArgb("#F3F5F4");
+        BackgroundColor = Color.FromArgb("#F4F7FF");
         var days = new FlexLayout { Wrap = FlexWrap.Wrap, Direction = FlexDirection.Row, JustifyContent = FlexJustify.SpaceBetween };
         foreach (var day in new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" })
         {
-            var check = new CheckBox { IsChecked = true, Color = Color.FromArgb("#08766F") };
+            var check = new CheckBox { IsChecked = true, Color = Color.FromArgb("#2563EB") };
             _days[day] = check;
             days.Children.Add(new HorizontalStackLayout
             {
                 Spacing = 1,
-                Children = { check, new Label { Text = day[..3], FontSize = 12, VerticalTextAlignment = TextAlignment.Center, TextColor = Color.FromArgb("#42534B") } }
+                Children = { check, new Label { Text = day[..3], FontSize = 12, VerticalTextAlignment = TextAlignment.Center, TextColor = Color.FromArgb("#1E3A8A") } }
             });
         }
 
         var card = new Border
         {
             BackgroundColor = Colors.White,
-            Stroke = Color.FromArgb("#DCE6E0"),
+            Stroke = Color.FromArgb("#DCE5F5"),
             StrokeThickness = 1,
             StrokeShape = new RoundRectangle { CornerRadius = 18 },
             Padding = 20,
@@ -48,8 +48,8 @@ public sealed class CreateRestaurantPage : ContentPage
                     Spacing = 10,
                     Children =
                     {
-                        new Label { Text = "Create your restaurant", FontSize = 23, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#173C43") },
-                        new Label { Text = "Add your restaurant details to start using swapDigit.", FontSize = 12, TextColor = Color.FromArgb("#718078") },
+                        new Label { Text = "Create your restaurant", FontSize = 23, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#172554") },
+                        new Label { Text = "Add your restaurant details to start using swapDigit.", FontSize = 12, TextColor = Color.FromArgb("#64748B") },
                         Field("Restaurant Name"), _name,
                         Field("Mobile Number"), _mobile,
                         Field("Address"), _address,
@@ -69,7 +69,7 @@ public sealed class CreateRestaurantPage : ContentPage
         _save.Clicked += SaveClicked;
     }
 
-    private static Label Field(string title) => new() { Text = title, FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#40564D") };
+    private static Label Field(string title) => new() { Text = title, FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#1E3A8A") };
 
     private async void SaveClicked(object? sender, EventArgs e)
     {
