@@ -64,50 +64,105 @@
             </VerticalStackLayout>
             <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never" Margin="0,0,0,0">
                 <VerticalStackLayout Spacing="7">
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="▦" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="▥" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="☷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="POS Billing (F3)" Command="{Binding NavigateCommand}" CommandParameter="POS Billing" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="★" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Self Service (F4)" Command="{Binding NavigateCommand}" CommandParameter="Self Service" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="♨" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="KOT (Kitchen)" Command="{Binding NavigateCommand}" CommandParameter="KOT" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="◷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="₹" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="▣" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="▤" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="▦" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Floors and Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors and Tables" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
-                    <Grid ColumnDefinitions="30,*" HeightRequest="44" BackgroundColor="#142342">
-                        <Label Text="☷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
-                        <Button Grid.Column="1" Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavButtonStyle}" Padding="8,8" />
-                    </Grid>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Dashboard" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="▥" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Dashboard" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="POS Billing" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="▤" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="POS / Billing" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Orders" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="☷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Orders" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="KOT" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="♨" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="KOT" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Reservations" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="◷" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Reservations" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Tables" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="▦" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Table Management" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Menu Management" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="☰" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Menu Management" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Customers" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="♙" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Customers" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Staff Management" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="♟" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Staff Management" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Inventory" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="▣" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Inventory" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 9" BackgroundColor="#142342" HeightRequest="42" Padding="10,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateCommand}" CommandParameter="Reports" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="26,*" ColumnSpacing="8">
+                            <Label Text="▤" FontSize="16" TextColor="#DCE6FF" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
+                            <Label Grid.Column="1" Text="Reports" FontSize="13" TextColor="#DCE6FF" VerticalTextAlignment="Center" LineBreakMode="TailTruncation" />
+                        </Grid>
+                    </Border>
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
@@ -136,17 +191,17 @@
 
             <ScrollView x:Name="MobileNavigation" Grid.Row="1" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" BackgroundColor="{AppThemeBinding Light=#E8EEFF, Dark=#111C35}">
                 <HorizontalStackLayout Spacing="6" Padding="10,4">
-                    <Button Text="Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="POS Billing (F3)" Command="{Binding NavigateCommand}" CommandParameter="POS Billing" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Self Service (F4)" Command="{Binding NavigateCommand}" CommandParameter="Self Service" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="KOT (Kitchen)" Command="{Binding NavigateCommand}" CommandParameter="KOT" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Sales / Bills" Command="{Binding NavigateCommand}" CommandParameter="Sales / Bills" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Store / Godown" Command="{Binding NavigateCommand}" CommandParameter="Store / Godown" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavChipStyle}" />
-                    <Button Text="Floors and Tables" Command="{Binding NavigateCommand}" CommandParameter="Floors and Tables" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="POS / Billing" Command="{Binding NavigateCommand}" CommandParameter="POS Billing" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Orders" Command="{Binding NavigateCommand}" CommandParameter="Orders" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="KOT" Command="{Binding NavigateCommand}" CommandParameter="KOT" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Reservations" Command="{Binding NavigateCommand}" CommandParameter="Reservations" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Table Management" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Menu Management" Command="{Binding NavigateCommand}" CommandParameter="Menu Management" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Customers" Command="{Binding NavigateCommand}" CommandParameter="Customers" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Staff Management" Command="{Binding NavigateCommand}" CommandParameter="Staff Management" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Inventory" Command="{Binding NavigateCommand}" CommandParameter="Inventory" Style="{StaticResource NavChipStyle}" />
+                    <Button Text="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource NavChipStyle}" />
                 </HorizontalStackLayout>            </ScrollView>
 
             <ScrollView Grid.Row="2" BackgroundColor="{AppThemeBinding Light=#F4F7FF, Dark=#0B1220}">
@@ -835,18 +890,12 @@
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>
-    <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="{AppThemeBinding Light=White, Dark=#111C35}" Stroke="{AppThemeBinding Light=#DCE5F5, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="10" WidthRequest="230" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="100">
-        <VerticalStackLayout Spacing="3">
-            <Label Text="ACCOUNT" FontSize="10" CharacterSpacing="1" TextColor="{AppThemeBinding Light=#87938B, Dark=#A9B9D5}" Margin="8,4,0,3"/>
-            <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" FontSize="14" HorizontalOptions="Center" WidthRequest="190" />
-            <Label Text="THEMES" FontSize="10" CharacterSpacing="1" TextColor="{AppThemeBinding Light=#87938B, Dark=#A9B9D5}" Margin="8,8,0,0"/>
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="6" Margin="2,0,2,4">
-                <Button Text="☾  Dark" Clicked="DarkThemeClicked" BackgroundColor="#E8EEFF" TextColor="White" FontSize="12" Padding="5,7" BorderColor="#E8EEFF" BorderWidth="0" />
-                <Button Grid.Column="1" Text="◐  System" Clicked="SystemThemeClicked" BackgroundColor="{AppThemeBinding Light=#E8EEFF, Dark=#172554}" TextColor="{AppThemeBinding Light=#E8EEFF, Dark=#D9EFEC}" FontSize="12" Padding="5,7" BorderColor="{AppThemeBinding Light=#E8EEFF, Dark=#172554}" BorderWidth="0" />
-            </Grid>
-            <Button Text="❔   Help &amp; Support" Clicked="HelpMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" FontSize="14" HorizontalOptions="Fill" />
-            <BoxView HeightRequest="1" BackgroundColor="#DCE5F5" Margin="4,4" />
-            <Button Text="↪   Logout" Clicked="LogoutMenuClicked" BackgroundColor="Transparent" TextColor="#B94B45" FontSize="14" HorizontalOptions="Fill" />
+    <Border x:Name="UserMenu" Grid.Column="1" IsVisible="False" BackgroundColor="{AppThemeBinding Light=White, Dark=#111C35}" Stroke="{AppThemeBinding Light=#DCE5F5, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="8" WidthRequest="230" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="100">
+        <VerticalStackLayout Spacing="4">
+            <Button Text="💳   Subscription Plans" Clicked="SubscriptionMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" FontSize="13" HorizontalOptions="Fill" Padding="12,10" />
+            <Button Text="⚙   Settings" Clicked="SettingsMenuClicked" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#1E293B, Dark=#EAF0FF}" FontSize="13" HorizontalOptions="Fill" Padding="12,10" />
+            <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light=#DCE5F5, Dark=#34464B}" Margin="6,3" />
+            <Button Text="↪   Logout" Clicked="LogoutMenuClicked" BackgroundColor="Transparent" TextColor="#B94B45" FontSize="13" HorizontalOptions="Fill" Padding="12,10" />
         </VerticalStackLayout>
     </Border>
     <Border x:Name="NotificationPopup" Grid.Column="1" IsVisible="False" BackgroundColor="{AppThemeBinding Light=White, Dark=#111C35}" Stroke="{AppThemeBinding Light=#DCE5F5, Dark=#34464B}" StrokeThickness="1" StrokeShape="RoundRectangle 14" Padding="12" WidthRequest="270" HorizontalOptions="End" VerticalOptions="Start" Margin="0,62,8,0" ZIndex="101">
