@@ -337,7 +337,7 @@ public partial class DashboardPage : ContentPage
     private void CloseNotificationPopup(object sender, EventArgs e) => ((Border)FindByName("NotificationPopup")).IsVisible = false;
     private void SettingsMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Settings"); ((Border)FindByName("UserMenu")).IsVisible = false; }
     private void SubscriptionMenuClicked(object sender, EventArgs e) { ((DashboardViewModel)BindingContext).NavigateCommand.Execute("Subscription"); ((Border)FindByName("UserMenu")).IsVisible = false; }
-    private async void SubscriptionPlanClicked(object sender, EventArgs e)
+    private async void SubscriptionPlanClicked(object? sender, EventArgs e)
     {
         if (sender is not Button button || button.CommandParameter is not string planCode)
             return;
