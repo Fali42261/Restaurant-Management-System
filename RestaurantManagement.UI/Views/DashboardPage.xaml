@@ -21,12 +21,12 @@
                 <Setter Property="Padding" Value="13" />
             </Style>
             <Style x:Key="NavButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="#E8EEFF" />
-                <Setter Property="TextColor" Value="#1E3A8A" />
-                <Setter Property="BorderColor" Value="#E8EEFF" />
+                <Setter Property="BackgroundColor" Value="#142342" />
+                <Setter Property="TextColor" Value="#DCE6FF" />
+                <Setter Property="BorderColor" Value="#142342" />
                 <Setter Property="BorderWidth" Value="0" />
-                <Setter Property="CornerRadius" Value="10" />
-                <Setter Property="HeightRequest" Value="48" />
+                <Setter Property="CornerRadius" Value="9" />
+                <Setter Property="HeightRequest" Value="44" />
                 <Setter Property="HorizontalOptions" Value="Fill" />
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="Padding" Value="12,8" />
@@ -54,16 +54,16 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid x:Name="RootLayout" ColumnDefinitions="190,*" RowDefinitions="*">
+    <Grid x:Name="RootLayout" ColumnDefinitions="220,*" RowDefinitions="*">
         <!-- Desktop navigation -->
-        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*" BackgroundColor="#E8EEFF" Padding="10,16,16,10">
+        <Grid x:Name="Sidebar" Grid.Column="0" RowDefinitions="Auto,*" BackgroundColor="#0B1220" Padding="12,20,12,12">
             <VerticalStackLayout Spacing="3" Padding="8,4,4,18">
-                <Label Text="swapDigit" FontSize="23" FontAttributes="Bold" TextColor="White" />
-                <Label Text="RESTAURANT MANAGEMENT" FontSize="9" CharacterSpacing="1" TextColor="#64856B" />
-                <Label x:Name="SidebarRestaurantName" Text="My Restaurant" FontSize="12" FontAttributes="Bold" TextColor="#FFFFFF" Margin="0,5,0,0" />
+                <Label Text="swapDigit" FontSize="24" FontAttributes="Bold" TextColor="#FFFFFF" />
+                <Label Text="RESTAURANT MANAGEMENT" FontSize="9" CharacterSpacing="1.2" TextColor="#8FA6D6" />
+                <Label x:Name="SidebarRestaurantName" Text="My Restaurant" FontSize="12" FontAttributes="Bold" TextColor="#DCE6FF" Margin="0,7,0,0" />
             </VerticalStackLayout>
             <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never" Margin="0,0,0,0">
-                <VerticalStackLayout Spacing="6">
+                <VerticalStackLayout Spacing="7">
                     <Button Text="▦  Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavButtonStyle}" />
                     <Button Text="▥  Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavButtonStyle}" />
                     <Button Text="☷  POS Billing (F3)" Command="{Binding NavigateCommand}" CommandParameter="POS Billing" Style="{StaticResource NavButtonStyle}" />
@@ -101,7 +101,7 @@
                 </Border>
             </Grid>
 
-            <ScrollView x:Name="MobileNavigation" Grid.Row="1" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" BackgroundColor="#E8EEFF">
+            <ScrollView x:Name="MobileNavigation" Grid.Row="1" IsVisible="False" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" BackgroundColor="{AppThemeBinding Light=#E8EEFF, Dark=#111C35}">
                 <HorizontalStackLayout Spacing="6" Padding="10,4">
                     <Button Text="Tables Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Tables" Style="{StaticResource NavChipStyle}" />
                     <Button Text="Business Dashboard" Command="{Binding NavigateCommand}" CommandParameter="Dashboard" Style="{StaticResource NavChipStyle}" />
