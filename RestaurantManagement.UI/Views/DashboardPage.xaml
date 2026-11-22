@@ -562,7 +562,7 @@
                             <Label Text="Billing cycle" FontSize="14" FontAttributes="Bold" VerticalOptions="Center" TextColor="{AppThemeBinding Light=#0F1F45, Dark=#EAF0FF}" />
                             <Picker x:Name="BillingCyclePicker" Title="Select cycle" WidthRequest="180" SelectedIndexChanged="BillingCycleChanged" />
                         </HorizontalStackLayout>
-                        <FlexLayout x:Name="SubscriptionPlansLayout" Direction="Row" Wrap="Wrap" JustifyContent="Start" AlignItems="Stretch" />
+                        <FlexLayout x:Name="SubscriptionPlansLayout" Direction="Row" Wrap="Wrap" JustifyContent="Start" AlignItems="Stretch" AlignContent="Start" HorizontalOptions="Fill" />
                         <Label Text="Note: Plan selection activates the subscription immediately in this development build. Online payment and automatic renewal are not integrated yet." FontSize="11" TextColor="{AppThemeBinding Light=#87938B, Dark=#A9B9D5}" />
                     </VerticalStackLayout>
 
