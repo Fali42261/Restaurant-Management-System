@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Sign in"
     Shell.NavBarIsVisible="False"
-    BackgroundColor="{AppThemeBinding Light=#F4F7FB, Dark=#10191D}">
+    BackgroundColor="{AppThemeBinding Light=#F4F7FF, Dark=#0B1220}">
 
     <ContentPage.Resources><Style TargetType="Entry"><Setter Property="HeightRequest" Value="48" /><Setter Property="FontSize" Value="15" /><Setter Property="HorizontalOptions" Value="Fill" /><Setter Property="VerticalOptions" Value="Center" /><Setter Property="Margin" Value="0" /><Setter Property="BackgroundColor" Value="Transparent" /></Style></ContentPage.Resources>
     <Grid><ScrollView>
@@ -19,15 +19,15 @@
                     <Label Text="swapDigit"
                            FontSize="29"
                            FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light=#172B27, Dark=#E7EFEB}"
+                           TextColor="{AppThemeBinding Light=#172B27, Dark=#EAF0FF}"
                            HorizontalTextAlignment="Center" />
                     <Label Text="Welcome back. Sign in to continue."
                            FontSize="14"
-                           TextColor="{AppThemeBinding Light=#718078, Dark=#AAB8B0}"
+                           TextColor="{AppThemeBinding Light=#718078, Dark=#A9B9D5}"
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
 
-                <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#1B292E}"
+                <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#111C35}"
                         Stroke="{AppThemeBinding Light=#E5EBE8, Dark=#34464B}"
                         StrokeThickness="1"
                         StrokeShape="RoundRectangle 24"
@@ -71,7 +71,7 @@
                         </VerticalStackLayout>
 
                         <HorizontalStackLayout HorizontalOptions="End">
-                            <Label Text="Change password" TextColor="#548F61" FontSize="13" FontAttributes="Bold">
+                            <Label Text="Change password" TextColor="#2563EB" FontSize="13" FontAttributes="Bold">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding GoToChangePasswordCommand}" />
                                 </Label.GestureRecognizers>
