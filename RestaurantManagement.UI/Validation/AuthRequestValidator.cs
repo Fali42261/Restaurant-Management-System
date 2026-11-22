@@ -42,8 +42,9 @@ public static class AuthRequestValidator
         return null;
     }
 
-    public static string? ValidateChange(string currentPassword, string newPassword, string confirmPassword)
+    public static string? ValidateChange(string email, string currentPassword, string newPassword, string confirmPassword)
     {
+        if (!IsValidEmail(email)) return "Enter the email address linked to your account.";
         if (string.IsNullOrWhiteSpace(currentPassword)) return "Enter your current password.";
         var passwordError = ValidatePassword(newPassword);
         if (passwordError is not null) return passwordError;
