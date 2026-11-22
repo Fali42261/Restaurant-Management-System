@@ -387,6 +387,7 @@ public sealed class DashboardViewModel : BaseViewModel
                 OnPropertyChanged(nameof(IsSalesBillsSection));
                 OnPropertyChanged(nameof(IsReportsSection));
                 OnPropertyChanged(nameof(IsPosBillingSection));
+                OnPropertyChanged(nameof(IsMenuManagementSection));
             }
         }
     }
@@ -405,7 +406,8 @@ public sealed class DashboardViewModel : BaseViewModel
     public bool IsSalesBillsSection => SelectedSection.Equals("Sales / Bills", StringComparison.OrdinalIgnoreCase);
     public bool IsReportsSection => SelectedSection.Equals("Reports", StringComparison.OrdinalIgnoreCase);
     public bool IsPosBillingSection => SelectedSection.Equals("POS Billing", StringComparison.OrdinalIgnoreCase);
-    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection && !IsReservationsSection && !IsSalesBillsSection && !IsReportsSection && !IsPosBillingSection;
+    public bool IsMenuManagementSection => SelectedSection.Equals("Menu Management", StringComparison.OrdinalIgnoreCase);
+    public bool IsOtherSection => !IsDashboardSection && !IsTablesSection && !IsOrdersSection && !IsSettingsSection && !IsSubscriptionSection && !IsHelpSupportSection && !IsSelfServiceSection && !IsKotSection && !IsReservationsSection && !IsSalesBillsSection && !IsReportsSection && !IsPosBillingSection && !IsMenuManagementSection;
 
     public int AvailableTableCount => Tables.Count(t => t.Status == "Available");
     public int ReservedTableCount => Tables.Count(t => t.Status == "Reserved");
