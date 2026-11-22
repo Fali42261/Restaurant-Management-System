@@ -689,7 +689,7 @@
 
                     <VerticalStackLayout x:Name="TableDashboard" IsVisible="{Binding IsTablesSection}" Spacing="13">
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                            <Label Text="Floors and Tables" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}" />
+                            <Label Text="{Binding SectionTitle}" FontSize="21" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}" />
                             <Button Grid.Column="1" Text="+ Add Floor" Clicked="AddFloorClicked" BackgroundColor="#2563EB" TextColor="White" FontSize="12" Padding="12,6" />
                             <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,*,*,*" ColumnSpacing="8" Margin="0,10,0,0">
                                 <Border BackgroundColor="#EAF0F1" StrokeThickness="0" Padding="10,7" StrokeShape="RoundRectangle 9"><Label Text="{Binding AvailableTableCount, StringFormat='Available {0}'}" TextColor="{AppThemeBinding Light=#1E3A8A, Dark=#B9C5BF}" FontAttributes="Bold" /></Border>
