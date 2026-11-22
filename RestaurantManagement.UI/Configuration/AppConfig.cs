@@ -55,8 +55,8 @@ public static class AppConfig
         public const string DeleteOrder = "api/v1/orders/{0}";
         public const string PayBill = "api/v1/pos/bills/{0}/pay";
         public const string UpdateKotStatus = "api/v1/kots/{0}/status";
-        public const string SubscriptionPlans = "api/v1/subscriptions/plans";
-        public const string CurrentSubscription = "api/v1/subscriptions/current";
-        public const string SelectSubscription = "api/v1/subscriptions/request";
+        public const string SubscriptionPlans = "api/v1/settings/subscriptions/plans";
+        public const string CurrentSubscription = "api/v1/settings/subscriptions/current";
+        public const string SelectSubscription = "api/v1/settings/subscriptions/request";
     }
 }
