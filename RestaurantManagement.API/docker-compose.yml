@@ -1,0 +1,32 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: swapdigit-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: swapdigit-api
+    depends_on:
+      - sqlserver
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:5080
+      ASPNETCORE_ENVIRONMENT: Production
+      App__Database__ConnectionString: "Server=sqlserver,1433;Database=swapDigitDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True;"
+      App__Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env}
+    ports:
+      - "5080:5080"
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
