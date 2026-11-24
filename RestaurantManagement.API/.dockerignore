@@ -1,0 +1,10 @@
+**/bin
+**/obj
+SysLogs/
+.vs/
+.git/
+*.user
+*.suo
+*.log
+.env
+.env.*
