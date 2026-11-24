@@ -8,3 +8,8 @@ secrets.json
 # Runtime logs are local and must not be committed
 SysLogs/*.log
 SysLogs/*.log.*
+
+# Local Docker secrets/configuration
+.env
+.env.*
+!.env.example
